@@ -79,14 +79,27 @@ cálculo ou de documento público e está explicitado no texto.
 17. **Pipeline de volume decifrado por disassembly.** A placa tem 5 tabelas de
     121 passos (`vol_table_po_gain_l/m/h/sh/uh`); o código soma
     `tabela[step] + gain_table[pogain]`, faz clamp em 255 e chama
-    `ops->set_volume_db`. Ganho analógico é compensado por atenuação digital.
+    `ops->set_volume_db`. Curvas diferentes por modo de ganho (sem
+    "compensação": hipótese refutada pelo datasheet).
     Dados em `analysis/fw-1.1.1/volume-tables.csv`, análise em
     `docs/11-disassembly-do-audio.md`.
 18. **Energia, GPIOs e controles ALSA decompilados.** Mapa dos 7 GPIOs, ordem de
     energia com tempos reais (20/10/10/50 ms), caminho SPDIF que desliga os
     DACs, modo de canal `SPECIAL_MODE_2` (dual DAC paralelo), boot em High gain,
-    endereçamento `(página << 16) | reg` e as sequências de filtro/DRE:
+    mapeamento dos registradores reais do CS43198 e as sequências de filtro/DRE:
     `docs/12-energia-e-controles.md`.
+19. **Especificações oficiais incorporadas e duas correções.** Potência real é
+    **245 mW/canal** no 3,5 mm (não 280) e 700 mW/canal no 4,4 mm; o PCM
+    768 kHz / DSD512 é **só do caminho USB Audio** (local fica em 384 kHz /
+    DSD256). O 3,5 mm é **compartilhado com coaxial SPDIF**.
+20. **Datasheet do CS43198 confirma e corrige o driver.** Endereços do driver são
+    os do chip (`0x90000` filtro, `0x90001/2` volume PCM, `0x70000/1` volume
+    DSD); a escala é **0x00 = 0 dB e 0xFF = mute**, o que refuta a hipótese de
+    "255 = 0 dB" e mostra que step 0 = mute e step 120 = máximo.
+21. **HAL → kernel é notifier chain, não ioctl.** Os `PLAYER_*` são eventos
+    0–8 de `player_notifier_cb`, com struct própria (rate/format/bits/modo) e
+    desligamento por tempo de 3 s. A HAL entra por kcontrols e sysfs. Ver
+    `docs/13-eventos-hal-kernel.md`.
 
 ---
 
@@ -196,8 +209,14 @@ de `anolog_board_update_volume`, e o que ainda falta no driver do DAC:
 ## 11. Energia, GPIOs e controles ALSA
 
 Sequência de energia com tempos, mapa dos GPIOs, caminho SPDIF, modo de canal,
-registradores de filtro/DRE e o endereçamento de página do CS43198:
+registradores de filtro/DRE e o mapeamento real do CS43198:
 **[docs/12-energia-e-controles.md](docs/12-energia-e-controles.md)**
+
+## 12. Eventos HAL ↔ kernel
+
+A notifier chain que liga a HAL ao `dac_core` (eventos 0–8, struct de
+notificação, formatos DSD privados e desligamento por tempo):
+**[docs/13-eventos-hal-kernel.md](docs/13-eventos-hal-kernel.md)**
 
 ---
 

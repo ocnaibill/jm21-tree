@@ -161,6 +161,11 @@ estado exposto para a UI (`get_mqa_ui_state`). `[?]` Se é MQA completo ou apena
 
 ## 4. O contrato com o kernel (`dac_core_module.ko`) `[DRV]`
 
+> **Correção (fase Ghidra):** estes não são ioctls. São eventos de uma *notifier
+> chain* interna (`fiio_notifier_call_chain`), consumidos por
+> `player_notifier_cb`. Ver `13-eventos-hal-kernel.md` para o contrato completo,
+> incluindo o layout do struct de notificação e o que cada código 0–8 faz.
+
 Eventos/ioctls observados nas mensagens do módulo:
 
 | Evento | Significado provável |

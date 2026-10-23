@@ -183,24 +183,76 @@ da placa, uma por modo — `vol_table_po_gain_l`, `_m`, `_h`, `_sh`, `_uh` — c
 121 entradas cada (ver `11-disassembly-do-audio.md` e
 `analysis/fw-1.1.1/volume-tables.csv`).
 
-O ganho é implementado como **compensação**: ao subir o modo, o código digital
-cai na mesma posição de volume (em step 60: `l`=84, `m`=72, `h`=60). Ou seja,
-o ganho analógico sobe e a atenuação digital compensa, mantendo o nível
-percebido — e é isso que define o headroom real de cada modo.
+Com a escala do datasheet (0x00 = 0 dB, 0xFF = mute), o topo de cada curva é:
+`h` = 0 dB, `uh` = −2 dB, `sh` = −5 dB, `m` = −6 dB, `l` = −12 dB. São curvas
+diferentes por modo, **não** um offset de compensação (essa hipótese foi
+descartada pelo datasheet).
 
 `[?]` No caminho normal apenas `l`/`m`/`h` são alcançáveis (o switch usa `h`
 como default); `sh`/`uh` servem a outro caminho ou a outros modelos. A UI do
 JM21 expõe quantos? Pendente.
 
-## 6. Saídas e números do fabricante
+## 6. Saídas e números oficiais
 
-| Saída | Alegação FiiO | Evidência |
-|-------|---------------|-----------|
-| 3,5 mm SE | ≥ 280 mW @ 32 Ω; 8–150 Ω | `[FAB]` |
-| 4,4 mm BAL | ≥ 700 mW @ 32 Ω; 8–350 Ω | `[FAB]` |
+Fonte: página de parâmetros oficial do JM21 (`fiio.com/jm21_parameters`,
+consultada em 2026-10-23) — `[FAB]` no sentido de "medido pelo fabricante",
+mas com números concretos e condições de teste declaradas.
 
-Nada no firmware confirma potência. O que o firmware confirma é a existência de
-`out_sel`, dois enables de amp e detecção separada de 3,5/4,4 `[DT]`.
+### 6.1 Potência e qualidade (High gain, USB DAC)
+
+| Métrica | 3,5 mm SE | 4,4 mm BAL |
+|---------|-----------|------------|
+| Potência @16 Ω | ≥ 360 mW + 360 mW | ≥ 605 mW + 605 mW |
+| Potência @32 Ω | **≥ 245 mW + 245 mW** | **≥ 700 mW + 700 mW** |
+| Potência @300 Ω | ≥ 30 mW + 30 mW | ≥ 80 mW + 80 mW |
+| Impedância de saída | < 1 Ω | < 1,5 Ω |
+| Tensão de pico | 7,9 Vp-p | 13,2 Vp-p |
+| SNR (A-wtd) | ≥ 124 dB | ≥ 129 dB |
+| THD+N | < 0,0012 % | < 0,0006 % |
+| Crosstalk | ≥ 70 dB | ≥ 110 dB |
+| Piso de ruído | < 1,6 µV | < 1,7 µV |
+| Impedância de fone | 8–150 Ω | 8–350 Ω |
+
+**Correção do dossiê original:** o texto dizia "≥ 280 mW @ 32 Ω" no 3,5 mm; o
+número oficial é **245 mW por canal** (L+R ≥ 245+245 mW). O 700 mW do 4,4 mm
+está certo, também por canal.
+
+### 6.2 Taxas máximas — dependem do caminho `[FAB]`
+
+| Caminho | PCM | DSD |
+|---------|-----|-----|
+| Decodificação local | 384 kHz / 32 bit | DSD256 nativo |
+| USB DAC (entrada) | 384 kHz / 32 bit | DSD256 nativo |
+| **USB Audio (host/UAC)** | **768 kHz / 32 bit** | **DSD512** (DoP / D2P / nativo) |
+| Saída coaxial (3,5 mm) | 384 kHz / 24 bit | DSD128 (D2P / DoP) |
+
+Isso fecha o `[?]` do dossiê sobre 768 kHz: **não é decodificação local**, é o
+caminho USB Audio. Casa com `persist.sys.fiio.config.pcm.sample=768000` e
+`persist.sys.fiio.config.dsd.native=256` (o DSD256 é o limite local).
+
+### 6.3 Saídas físicas `[FAB]`
+
+- 3,5 mm: PO (fone) **e coaxial SPDIF compartilhado** — confirma
+  `config_fiio_35mm_multiplexing_spdif_enabled` e o caminho SPDIF que desliga
+  os DACs (`12-energia-e-controles.md` §3).
+- 4,4 mm: BAL.
+- Line out: compartilhado com 3,5 mm + 4,4 mm.
+- Balanço de canal: **L20~R20, 0,5 dB por passo** — casa com `lrbalance` e com o
+  `cmp #0x15`/`sub #0x14` (±20) visto no driver.
+
+### 6.4 Modos de operação `[FAB]`
+
+Android · Pure Music · USB DAC · Bluetooth recepção. Bluetooth 5.0:
+transmissão AAC/SBC/aptX/aptX HD/LDAC/LHDC; recepção SBC/AAC/LDAC — coerente
+com `liblhdc.so`, `libbluetooth_audio_session_qti*` e `fiio.a2dp.sink.active`.
+
+Outros dados úteis para o laboratório: 156 g, 120,7 × 68 × 13 mm, tela 4,7"
+750×1334, 3/4 GB RAM, 32/64 GB, microSD até 2 TB, carga 5 V/≥2 A.
+
+**Detalhe de ouro para os testes:** o teste de bateria oficial usa **volume 49
+(3,5 mm) e 38 (4,4 mm) em High gain**. Ou seja, na escala 0–120 do aparelho, o
+uso típico fica na metade inferior — e o ganho padrão de boot (High) é o mesmo
+usado pela FiiO para medir.
 
 ## 7. FPGA Gowin
 

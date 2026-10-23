@@ -52,3 +52,6 @@ analysis/decompiled/
 
 # --- projetos Ghidra ---
 analysis/ghidra/
+
+# --- datasheets de terceiros (licenca) ---
+analysis/datasheets/

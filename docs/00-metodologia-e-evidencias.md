@@ -133,14 +133,29 @@ Hashes em `analysis/fw-1.1.1/SHA256SUMS.txt`. Identidade do pacote:
 byte-idêntico ao que o dispositivo verifica. Saídas: `analysis/fw-1.1.1/avb-*.txt`
 e `ota-cert.txt`.
 
-## 6. O que este dossiê **não** prova
+## 6. Fontes externas usadas
 
-- Não prova que o JM21 usa os dois cs43198 em modo mono diferencial nem que o
-  FPGA converte/reamostra. O caminho FPGA→DAC é **inferido** de três módulos e
-  duas propriedades, não observado em execução.
-- Não prova nenhuma taxa máxima real de PCM/DSD. As propriedades
-  (`pcm.sample=768000`, `dsd.native=256`) dizem o que o sistema **oferece**.
-- Não prova a potência de saída (280 mW / 700 mW continuam `[FAB]`).
+| Fonte | Uso |
+|-------|-----|
+| [FiiO JM21 — parâmetros oficiais](https://www.fiio.com/jm21_parameters) | potência, SNR, taxas máximas por caminho, saídas, modos |
+| [Fórum FiiO — tópico de firmware do JM21](https://forum.fiio.com/note/showNoteContent.do?id=202412181641298410115&tid=17) | changelog e links oficiais completo × incremental |
+| [Cirrus Logic CS43198 — datasheet DS1156F2](https://statics.cirrus.com/pubs/proDatasheet/CS43198_DS1156F2.pdf) | mapa de registradores, escala de volume, filtros, NOS |
+| [bkerler/edl](https://github.com/bkerler/edl) e [bkerler/Loaders](https://github.com/bkerler/Loaders/issues/97) | viabilidade de EDL/Sahara |
+
+O PDF do datasheet fica em `analysis/datasheets/` (fora do git, por licença) e
+o texto extraído é usado só como referência de leitura.
+
+**Nota de utilidade:** `alldatasheet.com` com o termo "JM21" **não serve** — ele
+retorna a família NJM21xx (op-amps e reset ICs da Nisshinbo), sem relação com o
+DAP. Para este projeto os datasheets que importam são CS43198, SGM8262 e a
+documentação do SM6225.
+
+## 7. O que este dossiê **não** prova
+
+- Não prova que o FPGA converte/reamostra. O caminho FPGA→DAC é **inferido** de
+  três módulos e das structs de configuração, não observado em execução.
+- Não prova a potência de saída: os números do §`01` §6 são do fabricante, com
+  condições de teste declaradas (High gain, USB DAC), não medidos por nós.
 - Não cobre a partição `userdata` (não vem no OTA) nem dados de calibração
   gravados em fábrica.
 

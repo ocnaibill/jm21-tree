@@ -108,19 +108,45 @@ Observações objetivas:
 - Todas começam em **255** e terminam entre **0 e 24**.
 - O passo 0→1 cai 24–42 unidades; depois 8, 8, 6, 6, 6, 4, 4… e, do meio para o
   fim, **1 unidade por step** (curva fina no fim, grossa no topo).
-- **Quanto maior o ganho, menor o código na mesma posição**: em step 60,
-  `l`=84, `m`=72, `h`=60. Ou seja, ao subir o ganho analógico o sistema aplica
-  **mais atenuação digital** — é compensação de ganho para manter o nível
-  percebido, e não "mais volume no mesmo step".
+- Em step 60: `l`=84, `m`=72, `h`=60.
 
-`gain_table` (5 `int`, `anolog_board_jm21.ko` +0x1640) está **zerada** no
-arquivo `[FW]`: é um offset somado ao código, preenchido depois (config/DT)
-`[HIP]`.
+### Escala — resolvida pelo datasheet `[FW]` externo
 
-`[HIP]` Escala: o campo se chama `volumeL_DB` e o clamp é em `255`, consistente
-com "código do DAC" onde 255 = 0 dB e cada unidade ≈ 0,5 dB. Com isso a tabela
-`l` vai de 0 dB a ≈ −115,5 dB. **Não confirmado** — a conversão real está dentro
-de `cs43198_set_volume_db` (registradores), próximo passo.
+O datasheet do CS43198 (DS1156F2, §7.5.3) define `PCM_VOLUME` assim:
+
+```
+0000 0000   0 dB
+0000 0001  -0,5 dB
+...
+0111 1000  -60 dB   (default)
+1111 1110  -127 dB
+1111 1111  mute digital
+```
+
+Ou seja: **0x00 = 0 dB** e **0xFF = mute**, 0,5 dB por LSB. Isso inverte a
+leitura que estava aqui antes (255 = 0 dB) e muda a interpretação:
+
+| step | l | m | h | sh | uh |
+|------|---|---|---|----|----|
+| 0 | 0xFF | 0xFF | 0xFF | 0xFF | 0xFF |
+| 60 | -42 dB | -36 dB | -30 dB | -35 dB | -32 dB |
+| 120 | **-12 dB** | **-6 dB** | **0 dB** | **-5 dB** | **-2 dB** |
+
+Leitura correta:
+
+1. **Step 0 = mute**, step 120 = máximo. A escala de UI é direta (0–120), como
+   no aparelho.
+2. Os 5 modos **não são compensação de ganho** (hipótese anterior, descartada):
+   são curvas diferentes que terminam em níveis digitais diferentes — `h` chega
+   a 0 dB, `m` para em −6 dB, `l` em −12 dB. O ganho analógico de cada modo é
+   fixo no hardware; a tabela só molda a curva.
+3. O `min(code, tabela[0])` faz sentido: `tabela[0]` = 0xFF = mute é o **teto**
+   de atenuação, não um "máximo de volume".
+4. `gain_table[pogain]` é um offset opcional (zerado na imagem) — se algum dia
+   for preenchido, desloca a curva inteira.
+
+O default `0x78` (−60 dB) do chip explica por que o driver **sempre** escreve
+volume após o `config_dac`: sem isso o DAC sairia a −60 dB.
 
 ## 5. Modos de ganho
 

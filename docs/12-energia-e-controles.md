@@ -162,17 +162,23 @@ anterior".
 
 ## 6. Filtros digitais e DRE (registradores reais)
 
-`cs43198_set_lpf` mapeia o índice do usuário para o registrador **0x90000**
-(página 9, reg 0x00), e **só se aplica em PCM**:
+`cs43198_set_lpf` mapeia o índice do usuário para o **PCM Filter Option**
+(registrador `0x90000` do chip), e **só se aplica em PCM**:
 
-| `lpf_setting` | Valor escrito | Nota |
-|---------------|---------------|------|
-| 0 | `0x02` | filtro 1 |
-| 1 | `0x82` | filtro 2 |
-| 2 | `0x42` | filtro 3 |
-| 3 | `0xC2` | filtro 4 |
-| 4 | `0x03` | filtro 5 |
-| 5 | `0x22` + `nos_status=1` | **NOS** (non-oversampling) |
+| `lpf_setting` | Valor escrito | Composição |
+|---------------|---------------|------------|
+| 0 | `0x02` | base 2 |
+| 1 | `0x82` | base 2 + bit 7 |
+| 2 | `0x42` | base 2 + bit 6 |
+| 3 | `0xC2` | base 2 + bits 6 e 7 |
+| 4 | `0x03` | base 3 |
+| 5 | `0x22` + `nos_status=1` | base 2 + **bit 5 = NOS** |
+
+O datasheet confirma o bit 5 como NOS (`Enable NOS filter → 0x90000 OR 0x20`) e
+nomeia os bits 7 e 6 nas tabelas de características como `FILTER_SLOW_FASTB`
+(roll-off lento × rápido) e `PHCOMP_LOWLATB` (compensação de fase / baixa
+latência). `[HIP]` A combinação exata usada pela FiiO em cada preset vem da UI;
+os 6 valores são inequívocos, os nomes dos bits 6/7 ainda são leitura de tabela.
 
 `cs43198_set_dre` (Dynamic Range Enhancement):
 
@@ -185,28 +191,41 @@ write 0x10010 = 0;                          // lock
 
 O padrão "0x99 → altera → 0" é a sequência de desbloqueio de página do CS43198.
 
-## 7. Endereçamento de registrador
+## 7. Endereçamento de registrador `[FW]` + datasheet
 
-`cs43198_readable_register` revela que o endereço é **`(página << 16) | reg`**:
+O datasheet do CS43198 (DS1156F2) usa os **mesmos endereços** que o driver
+escreve — o "9" e o "7" são blocos reais do mapa, não uma convenção nossa:
 
-| Página | Faixa legível |
-|--------|---------------|
-| 0x1 | `0x10000–0x1000d` (máscara `0x387f`) |
-| 0x2 | `0x20000`, `0x20052` |
-| 0x3 | `0x30001–0x3001b` (máscara `0x400029f`) |
-| 0x4 | `0x40002–0x40029` |
-| 0x5 | `0x50000–0x5000b` |
-| 0x6 | `0x60000–0x6000b` |
-| 0x7 | `0x70000–0x70006` (**DSD**) |
-| 0x8 | `0x80000` |
-| 0x9 | `0x90000–0x90004` (**PCM: filtro, volume, saída**) |
-| 0xb | `0xb0000` |
-| 0xd | `0xd0000–0xd0001` |
-| 0xe | `0xe0000–0xe001a` |
-| 0xf | `0xf0000–0xf0014` |
+| Endereço | Registro | Fonte |
+|----------|----------|-------|
+| `0x90000` | PCM Filter Option (bit 5 = NOS) | datasheet §7.5.2 / driver |
+| `0x90001` | PCM Volume B | datasheet §7.5.3 |
+| `0x90002` | PCM Volume A | datasheet §7.5.4 |
+| `0x90003` | PCM Path Signal Control 1 | datasheet §7.5.5 |
+| `0x70000` | DSD Volume B | datasheet §7.4.1 |
+| `0x70001` | DSD Volume A | datasheet §7.4.2 |
+| `0x70002` | DSD Processor Path Signal Control 1 | datasheet §7.4.3 |
+| `0x70003` | DSD Interface Configuration | datasheet §7.4.4 |
+| `0x70004` | DSD Processor Path Signal Control 2 | datasheet §7.4.5 |
 
-Isso explica os endereços "estranhos" do §4 e §6: `0x90002` = página 9, reg 2;
-`0x70001` = página 7, reg 1.
+`cs43198_readable_register` então define o recorte de acessibilidade por bloco:
+
+| Bloco | Faixa legível |
+|-------|---------------|
+| `0x1` | `0x10000–0x1000d` (máscara `0x387f`) |
+| `0x2` | `0x20000`, `0x20052` |
+| `0x3` | `0x30001–0x3001b` |
+| `0x4` | `0x40002–0x40029` |
+| `0x5` | `0x50000–0x5000b` |
+| `0x6` | `0x60000–0x6000b` |
+| `0x7` | `0x70000–0x70006` (**DSD**) |
+| `0x8` | `0x80000` |
+| `0x9` | `0x90000–0x90004` (**PCM**) |
+| `0xb`, `0xd`, `0xe`, `0xf` | `0xb0000`, `0xd0000–1`, `0xe0000–1a`, `0xf0000–14` |
+
+**Correção:** a leitura anterior de "(página << 16) | reg" era uma inferência
+errada; os endereços são os do chip, e os blocos são seções do mapa de
+registradores. O `regmap` é configurado com 32 bits de endereço.
 
 ## 8. Sequência de init do DAC (`cs43198_config_dac`)
 
