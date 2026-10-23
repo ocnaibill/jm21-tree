@@ -46,18 +46,20 @@ isolado). Rota adotada:
    decompilação com Ghidra/IDA **ainda não instalados**.
 6. **APK/dex** — `unzip` + `strings`; JADX **ainda não instalado**.
 
-### Ferramentas ausentes (bloqueio conhecido)
+### Ferramentas e estado
 
 | Ferramenta | Estado | Impacto |
 |------------|--------|---------|
 | `payload-dumper-go` | **resolvido** (compilado em `tools/bin`) | — |
+| `avbtool` 1.3.0 | **resolvido** (AOSP `external/avb`, em `tools/bin`) | AVB/rollback lidos |
+| `openssl` | presente | certificado do OTA lido |
 | `jadx` | ausente | decompilar `FiiOMusic.apk`, `framework.jar`, `services.jar` |
 | `ghidra` / IDA | ausente | pseudocódigo de `libfiioaudio.so`, `.ko` |
 | `dtc` | ausente | substituído por `tools/dt_dump.py` |
 | `binwalk` / `unblob` | ausente | não necessário nesta fase |
 | `aapt2` | ausente | ler `AndroidManifest` (contornado com `strings`) |
 | `adb` | **presente** | pronto para a fase com o aparelho |
-| `protoc` | presente | já foi usado indiretamente; útil para `care_map.pb` |
+| `protoc` | presente | útil para `care_map.pb` |
 
 Nenhuma dessas ausências impede a fase atual. JADX e Ghidra entram na fase de
 decompilação (`08-roadmap`, F3/F4).
@@ -75,8 +77,13 @@ decompilação (`08-roadmap`, F3/F4).
 ## 4. Reprodução (do zero)
 
 ```bash
-# 1. ferramenta
+# 1. ferramenta de payload
 GOBIN="$PWD/tools/bin" go install github.com/ssut/payload-dumper-go@latest
+
+# 1b. avbtool oficial (AOSP external/avb)
+curl -sS "https://android.googlesource.com/platform/external/avb/+/refs/heads/main/avbtool.py?format=TEXT" \
+  | base64 -d > tools/bin/avbtool.py
+python3 tools/bin/avbtool.py version    # 1.3.0
 
 # 2. listar partições antes de extrair
 ./tools/bin/payload-dumper-go -l fw/JM21-update-1.1.1/payload.bin
@@ -115,6 +122,12 @@ Hashes em `analysis/fw-1.1.1/SHA256SUMS.txt`. Identidade do pacote:
 | `ro.product.version` | `1.1.1` `[PROP]` |
 | `ro.vendor.build.version.incremental` | `eng.fiio.20260428.154610` `[PROP]` |
 | `apex_info.pb` | 0 bytes (nenhum APEX no payload) `[FW]` |
+
+**Atestado de integridade:** os 5 hash descriptors do `vbmeta`
+(`boot`, `dtbo`, `init_boot`, `recovery`, `vendor_boot`) foram recalculados
+(`SHA256(salt || imagem)`) e **batem 5/5**. O material extraído é
+byte-idêntico ao que o dispositivo verifica. Saídas: `analysis/fw-1.1.1/avb-*.txt`
+e `ota-cert.txt`.
 
 ## 6. O que este dossiê **não** prova
 

@@ -138,7 +138,43 @@ Sem JADX, o caminho barato é: `strings` + `dexdump` (do Android SDK build-tools
 para listar classes/métodos e comparar nomes. `[?]` `dexdump` não verificado no
 host.
 
-## 5. OTA e atualização
+## 5. Histórico de firmware e changelog oficial
+
+Fonte: tópico oficial de firmware do JM21 no fórum da FiiO (atualizado
+2026-04-29) —
+[forum.fiio.com/note/showNoteContent.do?id=202412181641298410115](https://forum.fiio.com/note/showNoteContent.do?id=202412181641298410115&tid=17)
+— e o anúncio oficial [fiio.com/newsinfo/1128867.html](https://www.fiio.com/newsinfo/1128867.html).
+Os itens abaixo são os que **tocam áudio** — e cada um casa com um caminho de
+código que já vimos no firmware.
+
+| Versão | Data | Item de changelog | Correlação no binário |
+|--------|------|-------------------|-----------------------|
+| 1.0.2 | 2024-11-18 | corrige ruído/volume em saída USB em apps de terceiros; ruído em DSD via Bluetooth | caminho USB (`audio.usb.bengal.so`) |
+| 1.0.3 | 2024-12-31 | compatibilidade de USB Audio | idem |
+| 1.0.4 | 2025-01-09 | corrige crash na reprodução em Pure Music | `ModeSelection`/Pure Music |
+| 1.0.5 | 2025-01-20 | double tap to wake | — |
+| **1.0.6** | 2025-04-21 | **PEQ do sistema**, **ALL TO DSD**, **MQA**, **DoP em USB DAC**, decode de iPhone no modo USB DAC | `init_pcm2dsd`/shaper, `libfiioaqm.so`, DoP, UAC |
+| 1.0.7 | 2025-06-05 | modo cassete, volume da saída USB do sistema ajustável, remote control | `FiiOTape` |
+| **1.0.8** | 2025-09-26 | **switch do DAC DRE**, temas de VU/spectrum, carga otimizada | `anolog_board_dac_dre_store`, `board_dac_dre_switch`, `dre_setting` |
+| **1.1.0** | 2025-12-23 | car mode, AUTO EQ, **corrige "pop" na primeira reprodução e na troca de faixa** | `volume_fade_in`, `pre_write_zero_size`, `get_dsd_write_zero_mark` |
+| **1.1.1** | 2026-04-29 | RETRO BOX por Bluetooth, compartilhamento de EQ, tema Pod Mode, temas de cassete; corrige reboot em loop ao carregar após desligamento por bateria baixa, anormalidade em transmissão BT, corrente de carga baixa | — |
+
+Leituras:
+
+- **"ALL TO DSD"** é o `init_pcm2dsd` + *noise shaping* que a `libfiioaudio.so`
+  carrega. É uma função de **upsampling para DSD**, não reprodução nativa.
+- **"DAC DRE"** é *Dynamic Range Enhancement* do CS43198 — confirma que
+  `dre_setting` é uma opção exposta ao usuário e persistida.
+- A correção de "pop" da 1.1.0 é exatamente a razão de existirem as rotinas de
+  silêncio inicial (`get_pcm*_pre_write_zero_size`) e `volume_fade_in`.
+- **MQA** e **DoP em USB DAC** chegaram juntos na 1.0.6 → coerente com
+  `libfiioaqm.so` e com os modos UAC.
+
+`[?]` O texto do changelog não é idêntico ao `log_1.1.1.txt` referenciado na
+propriedade `ro.product.version.update_log` (esse arquivo vem do servidor junto
+do pacote, não do firmware).
+
+## 6. OTA e atualização
 
 `[FW]` `FiiOUpdate.apk` usa:
 
@@ -149,9 +185,10 @@ ro.product.version=1.1.1
 ro.product.version.update_log=log_1.1.1.txt
 ```
 
-`[?]` `log_1.1.1.txt` não foi localizado nas partições do payload (provavelmente
-baixado do servidor junto com o pacote). Próximo passo: recuperar o changelog
-oficial e anexar resumido aqui.
+Links oficiais e distinção completo × incremental estão em
+`02-firmware-e-particionamento.md` §6. Resumo: o arquivo local é o **completo**
+(`beta/JM21-update-1.1.1.zip`, 1 642 845 150 bytes); o nome `JM21-ota-…` é o
+**incremental** (92 668 277 bytes).
 
 ## 6. Outros artefatos curiosos
 

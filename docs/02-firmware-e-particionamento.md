@@ -164,24 +164,93 @@ só acessível no aparelho).
 
 ## 5. Integridade, AVB e assinatura
 
-`[FW]` `vbmeta.img` e `vbmeta_system.img` presentes; build assinado com
-`dev-keys`.
+Lido com `avbtool 1.3.0` (AOSP `external/avb`). Saídas completas em
+`analysis/fw-1.1.1/avb-vbmeta.txt` e `avb-vbmeta_system.txt`.
 
-Implicações práticas:
+### 5.1 `vbmeta.img` (topo) `[FW]`
+
+| Campo | Valor |
+|-------|-------|
+| Algoritmo | `SHA256_RSA4096` |
+| Chave pública (sha1) | `2597c218aae470a130f61162feaae70afd97f011` |
+| **Rollback Index** | **0** |
+| Rollback Index Location | 0 |
+| **Flags** | **0** (verity e verificação **ligadas**) |
+| Release string | `avbtool 1.2.0` |
+| Header / Auth / Aux | 256 / 576 / 5 952 bytes |
+
+Descritores: *chain partition* para `vbmeta_system` (chave
+`cdbb77177f731920bbe0a0f94f84d9038ae0617d`, rollback location 2),
+`boot`, `dtbo`, `init_boot`, `recovery`, `vendor_boot` como **hash
+descriptors**, e `odm`, `system_dlkm`, `vendor`, `vendor_dlkm` como
+**hashtree** (dm-verity v1, FEC 2 roots, blocos 4096).
+
+### 5.2 `vbmeta_system.img` `[FW]`
+
+| Campo | Valor |
+|-------|-------|
+| Algoritmo | `SHA256_RSA2048` |
+| Chave pública (sha1) | `cdbb77177f731920bbe0a0f94f84d9038ae0617d` |
+| **Rollback Index** | **1 675 555 200** (= 2023-02-05 00:00 UTC) |
+| Flags | 0 |
+| Descritores | hashtree de `product`, `system`, `system_ext` |
+
+O rollback index é literalmente **a data do patch de segurança em epoch** —
+padrão Qualcomm. Isso significa que um firmware com patch mais antigo tem
+rollback index menor e **deve** ser rejeitado por um bootloader com
+anti-rollback ativo `[HIP]`.
+
+### 5.3 Verificação das imagens extraídas (feita)
+
+Recalculando `SHA256(salt || imagem[0:image_size])` de cada hash descriptor:
+
+| Partição | Tamanho AVB | Resultado |
+|----------|-------------|-----------|
+| `boot` | 49 651 712 | **OK** |
+| `dtbo` | 2 752 406 | **OK** |
+| `init_boot` | 2 011 136 | **OK** |
+| `recovery` | 14 540 800 | **OK** |
+| `vendor_boot` | 8 323 072 | **OK** |
+
+5/5 batem com os digests do `vbmeta` → a extração do `payload.bin` é
+**byte-idêntica** ao que o dispositivo verifica. Esse é o atestado de qualidade
+do dump.
+
+Observação: o descritor de `boot` cobre 49,65 MB, mas a partição tem 96 MB —
+o resto é padding. O mesmo vale para `init_boot`/`recovery`/`vendor_boot`.
+`dtbo` é o único em que tamanho AVB = tamanho real do blob (2 752 406 bytes,
+idêntico ao header DTBO).
+
+### 5.4 Certificado do pacote OTA `[FW]`
+
+`META-INF/com/android/otacert` (PEM, 1 407 bytes):
+
+```
+subject/issuer: C=CN, ST=Guangdong, L=Guangzhou, OU=Android, CN=Android,
+                emailAddress=pengweizhong@fiio.net
+notBefore: 2024-07-15 12:00:04 GMT
+notAfter:  2051-12-01 12:00:04 GMT
+serial:    228A5E6ADE54E1F8D5015C8D98446B8DA4881EC7
+SHA-256:   4B:B8:80:EE:C6:16:FE:28:E4:3C:0C:1F:F3:F3:D1:B7:
+           E8:EE:F8:54:82:CD:F1:B9:07:33:9C:D2:D1:86:41:5E
+```
+
+Autoassinado, e-mail de um engenheiro da FiiO — consistente com build `dev-keys`.
+Não confundir com a chave AVB (`2597c218…`): são chaves distintas (pacote OTA ×
+verificação de boot).
+
+### 5.5 Implicações práticas
 
 1. **Não há chave de release no caminho.** Recompilar `boot`/`vendor_boot` e
    assinar com chave própria é viável **se** o bootloader estiver desbloqueado.
-2. `[?]` Se o JM21 permite `fastboot flashing unlock`. Não há evidência no
-   firmware; depende do aparelho.
-3. `[?]` Rollback index e flags do `vbmeta` não foram lidos (falta `avbtool`).
-   Próximo passo: `avbtool info_image --image vbmeta.img`.
-4. `[?]` Presença de dm-verity/AVB em `system`/`vendor` deve ser confirmada nos
-   descriptors dos `vbmeta`.
-5. **Regra do laboratório**: nenhum flash antes de ter (a) dump completo via
-   `adb pull`, (b) imagem de `fiioconfig` e persist, (c) caminho de recuperação
-   validado (§`07-riscos-e-recuperacao.md`).
+2. `[?]` Se o JM21 permite `fastboot flashing unlock` — só o aparelho responde.
+3. `[?]` Anti-rollback do bootloader (`xbl`) não é visível no `vbmeta`; o
+   rollback index 0 no topo sugere folga, mas não prova nada sobre o XBL.
+4. **Regra do laboratório**: nenhum flash antes de ter (a) dump completo via
+   `adb pull`, (b) `fiioconfig`, `persist` e `modemst*`, (c) caminho de
+   recuperação validado (`07-riscos-e-recuperacao.md`).
 
-## 6. Atualização e canal
+## 6. Atualização, canal e procedência do arquivo
 
 `[PROP]`:
 
@@ -192,12 +261,49 @@ ro.product.version=1.1.1
 ro.product.version.update_log=log_1.1.1.txt
 ```
 
-- O host `jm21pack.fiio.net` é o canal de OTA. `[?]` Não foi sondado; sondar
-  depois (com cautela, apenas HEAD/GET de metadados públicos) para descobrir
-  versões disponíveis e permitir *downgrade* controlado.
-- `FiiOUpdate.apk` (16,7 MB) é o cliente de atualização `[FW]`.
-- `[HIP]` O pacote aceita instalação por recovery/sideload A/B
-  (`update_engine`), e o `payload.bin` é auto-suficiente.
+### 6.1 Dois pacotes, nomes parecidos
+
+O changelog oficial (fórum FiiO) publica **dois** arquivos por versão:
+
+| Tipo | URL oficial | Tamanho |
+|------|-------------|---------|
+| **Completo** | `jm21pack.fiio.net/beta/JM21-update-1.1.1.zip` | **1 642 845 150** |
+| **Incremental** | `jm21pack.fiio.net/1.1.0/JM21-ota-1.1.1.zip` | 92 668 277 |
+
+`[FW]` O arquivo em `fw/JM21-update-1.1.1.zip` tem **exatamente**
+1 642 845 150 bytes → é o **pacote completo** (`beta/`), confirmado por
+`Content-Length` do servidor oficial (Last-Modified 2026-04-29 03:33 UTC).
+
+O nome em `ro.product.ota.package_name` (`JM21-ota-1.1.1.zip`) corresponde ao
+**incremental** — detalhe que confunde na hora de baixar. Nome do pacote de OTA
+não indica "completo".
+
+`[?]` O incremental (92,7 MB) não foi baixado. Ele descreve o delta 1.1.0 → 1.1.1
+e é útil para provar o que mudou entre versões, mas não é necessário para o
+laboratório agora.
+
+### 6.2 Diretório e disponibilidade
+
+- `jm21pack.fiio.net` é Alibaba OSS atrás de CDN (`Tengine`, `x-oss-cdn-auth`).
+- Listagem de diretório é **403**; só URLs completas funcionam.
+- A estrutura de pastas segue o padrão `/beta/` (pacote completo) e
+  `/1.0.8/`, `/1.1.0/` (incremental a partir da versão anterior).
+
+### 6.3 Downgrade
+
+O fórum oficial diz: *"If you would like to get the download link of the old
+firmware, please provide the SN code of your device to support@fiio.com"*.
+
+Ou seja: **links antigos não são públicos**. Qualquer plano de downgrade passa
+por (a) suporte da FiiO com o SN, ou (b) aplicar um rollback index menor e
+depender do estado do anti-rollback — que ainda é `[?]`.
+
+### 6.4 Cliente de atualização
+
+- `FiiOUpdate.apk` (16,7 MB) é o cliente de OTA `[FW]`, exposto em
+  *Technical Support → Firmware Upgrade → Local Upgrade*.
+- `[HIP]` O pacote aceita instalação por `update_engine` (A/B) e o `payload.bin`
+  é auto-suficiente.
 
 ## 7. Hashes de referência
 

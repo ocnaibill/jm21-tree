@@ -21,32 +21,45 @@
 
 ## 2. AVB, assinatura e `dev-keys`
 
-`[FW]` O build é assinado com **`dev-keys`**, não `release-keys`. Implicações:
+`[FW]` Build assinado com **`dev-keys`**; AVB lido com `avbtool 1.3.0`
+(detalhes em `02-firmware-e-particionamento.md` §5).
 
-1. Não existe "chave de fábrica secreta" a preservar — se o bootloader for
-   desbloqueável, qualquer imagem assinada com a nossa chave pode ser aceita
-   após `--disable-verification` no `vbmeta`.
-2. `[?]` O estado do bootloader (locked/unlocked) é desconhecido. Não há como
-   saber pelo firmware.
-3. `[?]` O conteúdo dos descritores AVB (`rollback_index`, `flags`,
-   `dm-verity`) não foi lido — falta `avbtool`.
+| Item | `vbmeta` | `vbmeta_system` |
+|------|----------|-----------------|
+| Algoritmo | SHA256_RSA4096 | SHA256_RSA2048 |
+| Chave (sha1) | `2597c218…011` | `cdbb7717…17d` |
+| Rollback Index | **0** | **1 675 555 200** (2023-02-05) |
+| Flags | **0** → verity + verificação **ligadas** | 0 |
+| dm-verity | em `odm`, `system_dlkm`, `vendor`, `vendor_dlkm` | em `system`, `system_ext`, `product` |
 
-Próximos passos offline (seguros, sem aparelho):
+Consequências:
 
-```bash
-pipx install avbtool   # ou clonar AOSP external/avb
-avbtool info_image --image dumps/fw-1.1.1/vbmeta.img
-avbtool info_image --image dumps/fw-1.1.1/vbmeta_system.img
-```
+1. **Verificação ligada.** Com o bootloader travado, qualquer imagem fora do
+   `vbmeta` não boota. Com o bootloader destravado, o Android normalmente entra
+   em modo "laranja" (verificação desativada no estado unlocked).
+2. **Chaves de desenvolvimento.** Não há chave de release no caminho: é o
+   cenário mais favorável para ROM customizada **se** o unlock for possível.
+3. **`vbmeta` do topo com rollback 0** dá folga contra anti-rollback no nível
+   AVB. Mas o anti-rollback do bootloader (`xbl`) é outro mecanismo e continua
+   `[?]`.
+4. `[?]` Estado do bootloader (locked/unlocked) — só o aparelho responde.
+
+As 5 imagens com hash descriptor (`boot`, `dtbo`, `init_boot`, `recovery`,
+`vendor_boot`) já foram **verificadas contra o `vbmeta` e batem** — o dump é
+fiel ao que o dispositivo valida.
 
 ## 3. Rollback / anti-rollback
 
-`[?]` Desconhecido. Sem ler `vbmeta` não se sabe o `rollback_index` nem se há
-anti-rollback de bootloader (`xbl` costura isso). **Consequência prática:** não
-tentar downgrade antes de resolver esta questão.
+`[FW]` O rollback index de `vbmeta_system` é a **data do patch em epoch**
+(2023-02-05). Isso é o padrão Qualcomm e implica: firmware com patch mais antigo
+tem índice menor.
 
-O canal de OTA (`jm21pack.fiio.net`) pode indicar versões disponíveis. Sondar
-apenas metadados, nunca instalar às cegas.
+`[?]` Falta saber se o XBL aplica anti-rollback e qual o valor gravado no
+dispositivo. Sem isso, **não tentar downgrade**.
+
+`[FW]` A FiiO não publica links de firmware antigo: o fórum oficial pede o **SN
+do aparelho** por e-mail ao suporte. Qualquer downgrade planejado deve começar
+por aí, não por um arquivo achado na internet.
 
 ## 4. Caminhos de recuperação
 
@@ -72,13 +85,30 @@ Ordem de preferência:
    Slot ativo: `fastboot getvar current-slot`.
 
 3. **EDL (9008) com `prog_firehose_ddr.elf`**
-   `[?]` **Não há programmer no pacote OTA.** Os 89 arquivos em
-   `/vendor/firmware` do OTA não incluem `prog_firehose*` nem `rawprogram*.xml`
-   — isso vem no pacote de serviço/QFIL da FiiO. **Este é o maior risco do
-   projeto**: sem programmer, um brick de bootloader só se resolve com
-   assistência técnica.
-   Ação recomendada: obter o pacote de firmware completo (QFIL) do JM21 antes de
-   qualquer flash.
+   `[FW]` **Não há programmer no pacote OTA.** Os 89 arquivos em
+   `/vendor/firmware` não incluem `prog_firehose*` nem `rawprogram*.xml` — isso
+   vem no pacote de serviço/QFIL da FiiO. **Este é o maior risco do projeto.**
+
+   Pesquisa feita (2026-10-23), resultado honesto:
+
+   - Não existe pacote QFIL/serviço público do JM21 que eu tenha localizado.
+   - Loaders de firehose são **amarrados ao hash do dispositivo quando o Secure
+     Boot está ligado**; existem loaders públicos de SM6225 (ex.: variante
+     `001b80e1` no repositório `bkerler/Loaders`), mas são *patched* e "só
+     funcionam em dispositivos sem Secure Boot".
+   - Ferramenta de software madura para EDL: [`bkerler/edl`](https://github.com/bkerler/edl)
+     (Sahara/Firehose), que ainda depende de um programmer compatível.
+   - Loaders públicos de SM6225 catalogados em
+     [`bkerler/Loaders`](https://github.com/bkerler/Loaders/issues/97); a
+     restrição de Secure Boot está descrita no próprio issue.
+   - Referência de procedimento QFIL/EDL:
+     [flashguidehub.com/qfil-qualcomm](https://flashguidehub.com/qfil-qualcomm/).
+   - `[?]` Se o XBL do JM21 exige programmer assinado só se descobre tentando —
+     e tentar às cegas com loader errado pode piorar (estado de Sahara travado).
+
+   **Conclusão operacional:** considerar EDL **indisponível** até que a FiiO
+   forneça o pacote de serviço. Planejar a recuperação como se só existissem
+   (1) OTA via recovery/sideload e (2) `fastboot` com bootloader destravado.
 
 4. **`update_engine` via `adb shell` (root)** — aplicar payload local:
    ```bash

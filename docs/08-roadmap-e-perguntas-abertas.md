@@ -57,9 +57,10 @@ Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
 |---|----------|-----|
 | Q1 | Qual barramento I2C hospeda `cs43198@0x30/0x33` e `fpga@0x36`? | 01, 04 |
 | Q2 | Qual das 5 DTB base é aplicada no JM21? | 04 |
-| Q3 | O bootloader é desbloqueável? Qual o `rollback_index`? | 07 |
-| Q4 | Existe pacote QFIL/EDL com `prog_firehose` para o khaje/JM21? | 07 |
+| Q3 | O bootloader é desbloqueável? *(rollback index já lido: 0 e 2023-02-05; anti-rollback do XBL segue `[?]`)* | 07 |
+| Q4 | Existe pacote QFIL/EDL com `prog_firehose` para o khaje/JM21? *(pesquisa não achou pacote público)* | 07 |
 | Q5 | O que o FPGA faz no caminho de dados? | 01, 03 |
+| Q24 | A FiiO fornece firmware antigo mediante SN? Qual o procedimento real? | 07 |
 
 ### 2.2 Áudio (fim técnico)
 
@@ -87,7 +88,7 @@ Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
 | Q20 | Serviços expostos por `DebugTool`/`FactoryTest`/`EcaiTestAPP` | 05 |
 | Q21 | Diff exato de `framework.jar`/`services.jar` vs AOSP-13 | 05 |
 | Q22 | Conteúdo de `fiio_mtp_driver.iso` | 05 |
-| Q23 | Changelog oficial (`log_1.1.1.txt`) | 05 |
+| Q23 | ~~Changelog oficial (`log_1.1.1.txt`)~~ → **respondida**: histórico completo no fórum oficial, resumido em 05 §5 | 05 |
 
 ### 2.4 Já respondidas (registro)
 

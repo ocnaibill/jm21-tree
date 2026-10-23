@@ -1,0 +1,131 @@
+Minimum libavb version:   1.0
+Header Block:             256 bytes
+Authentication Block:     576 bytes
+Auxiliary Block:          5952 bytes
+Public key (sha1):        2597c218aae470a130f61162feaae70afd97f011
+Algorithm:                SHA256_RSA4096
+Rollback Index:           0
+Flags:                    0
+Rollback Index Location:  0
+Release String:           'avbtool 1.2.0'
+Descriptors:
+    Chain Partition descriptor:
+      Partition Name:          vbmeta_system
+      Rollback Index Location: 2
+      Public key (sha1):       cdbb77177f731920bbe0a0f94f84d9038ae0617d
+      Flags:                   0
+    Prop: com.android.build.boot.os_version -> '13'
+    Prop: com.android.build.boot.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.boot.security_patch -> '2023-02-05'
+    Prop: com.android.build.boot.security_patch -> '2023-02-05'
+    Prop: com.android.build.init_boot.os_version -> '13'
+    Prop: com.android.build.init_boot.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.init_boot.security_patch -> '2023-02-05'
+    Prop: com.android.build.vendor_boot.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.recovery.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.vendor.os_version -> '13'
+    Prop: com.android.build.vendor.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.vendor.security_patch -> '2023-02-05'
+    Prop: com.android.build.vendor.security_patch -> '2023-02-05'
+    Prop: com.android.build.odm.os_version -> '13'
+    Prop: com.android.build.odm.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.vendor_dlkm.os_version -> '13'
+    Prop: com.android.build.vendor_dlkm.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.system_dlkm.os_version -> '13'
+    Prop: com.android.build.system_dlkm.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Prop: com.android.build.dtbo.fingerprint -> 'qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys'
+    Hash descriptor:
+      Image Size:            49651712 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        boot
+      Salt:                  7c484acc746e710eaefc71a3fb0e929ef3f96ce04e72ecffc51003c547e7622a
+      Digest:                9de961b3b97abbd86a87f85f44c4598280eaeef75793600d1296ab44e23c5b23
+      Flags:                 0
+    Hash descriptor:
+      Image Size:            2752406 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        dtbo
+      Salt:                  46785350a5484045b10a07d05baeb8abcd179dfb296e1b50e4ff7802d91ef308
+      Digest:                fe50f5d64849dc078f58b9d3ec3f888c463a8ae6ad2d4a259d544ff16f10e86d
+      Flags:                 0
+    Hash descriptor:
+      Image Size:            2011136 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        init_boot
+      Salt:                  cdb507dacf099a4cbee1e7ace54e943a0eab4c0375c14afaabcb28b69295fe0f
+      Digest:                8621c46eb37cebaff61bbc5028a9176d563e58a32b5e9877ad8198a0bffd6e4e
+      Flags:                 0
+    Hash descriptor:
+      Image Size:            14540800 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        recovery
+      Salt:                  93e1076d3d50c4f98a8dfd55c9e4c74ab2a0f1748b938f53b807dfe1450e81c9
+      Digest:                c213b432a2989d06c0298b32265095452094673e2494960e4b29dff43509113e
+      Flags:                 0
+    Hash descriptor:
+      Image Size:            8323072 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        vendor_boot
+      Salt:                  2dea14a8ca22c3459255074c5043bd4129086a28f2c3cbda71d96a02e7871303
+      Digest:                2d538e1d9809224c1aeac3323edc869fb8cf920f4c81ff013cae35e99d5ff750
+      Flags:                 0
+    Hashtree descriptor:
+      Version of dm-verity:  1
+      Image Size:            1130496 bytes
+      Tree Offset:           1130496
+      Tree Size:             16384 bytes
+      Data Block Size:       4096 bytes
+      Hash Block Size:       4096 bytes
+      FEC num roots:         2
+      FEC offset:            1146880
+      FEC size:              16384 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        odm
+      Salt:                  0f6b1305f47c2fe438c990df208b542c7c1dbf6d7f6700fa7dcba70c1353cc3b
+      Root Digest:           36a3f4d2e04748c370b68e857d86660e0a2b6ef504c89af9b5700f1c9a647600
+      Flags:                 0
+    Hashtree descriptor:
+      Version of dm-verity:  1
+      Image Size:            348160 bytes
+      Tree Offset:           348160
+      Tree Size:             4096 bytes
+      Data Block Size:       4096 bytes
+      Hash Block Size:       4096 bytes
+      FEC num roots:         2
+      FEC offset:            352256
+      FEC size:              8192 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        system_dlkm
+      Salt:                  0f6b1305f47c2fe438c990df208b542c7c1dbf6d7f6700fa7dcba70c1353cc3b
+      Root Digest:           7ded3384707964b55f1a1fe27c1d9371b80ad42fe3a9fd4c8ee55ab152cd3bff
+      Flags:                 0
+    Hashtree descriptor:
+      Version of dm-verity:  1
+      Image Size:            641523712 bytes
+      Tree Offset:           641523712
+      Tree Size:             5058560 bytes
+      Data Block Size:       4096 bytes
+      Hash Block Size:       4096 bytes
+      FEC num roots:         2
+      FEC offset:            646582272
+      FEC size:              5111808 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        vendor
+      Salt:                  0f6b1305f47c2fe438c990df208b542c7c1dbf6d7f6700fa7dcba70c1353cc3b
+      Root Digest:           61386eefffa4d33232f16e7333fc63a2be1c79d6a8d0f49b008966aab9466092
+      Flags:                 0
+    Hashtree descriptor:
+      Version of dm-verity:  1
+      Image Size:            740089856 bytes
+      Tree Offset:           740089856
+      Tree Size:             5836800 bytes
+      Data Block Size:       4096 bytes
+      Hash Block Size:       4096 bytes
+      FEC num roots:         2
+      FEC offset:            745926656
+      FEC size:              5898240 bytes
+      Hash Algorithm:        sha256
+      Partition Name:        vendor_dlkm
+      Salt:                  0f6b1305f47c2fe438c990df208b542c7c1dbf6d7f6700fa7dcba70c1353cc3b
+      Root Digest:           45fb45927027944d678580cbc6288bdd85a5fb4f5191cd1af26671096cde2fb8
+      Flags:                 0
