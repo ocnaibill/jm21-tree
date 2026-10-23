@@ -64,6 +64,18 @@ cálculo ou de documento público e está explicitado no texto.
 12. **EDL é o ponto fraco:** não há `prog_firehose` no pacote e não existe
     pacote de serviço público do JM21. Recuperação hoje = OTA/sideload ou
     `fastboot` destravado.
+13. **BTF nos módulos = quase-fonte.** Todos os `.ko` FiiO têm `.BTF`; com
+    `pahole` saíram structs, enums e a vtable completos (`snd_dac_dai_ops`,
+    `dac_public_data`, `system_mode`, `dac_event_type`, `fpga_config_params`) —
+    sem decompilador. Ver `docs/10-abi-kernel-fiio.md`.
+14. **`services.jar` decompilado.** Lista real de pacotes FiiO, concessão
+    automática de permissões (incluindo um app de teste), ganchos no AMS/OOM,
+    USB, power e o `AudioSystem.setMasterVolumeDac` do `AudioService`.
+15. **A interface userspace↔kernel é sysfs**, não `/dev`:
+    `/sys/devices/platform/soc/soc:fiio_attr/...` (driver `fiio_attr`, dentro de
+    `fiio_underlay_modules.ko`).
+16. **Kernel config extraída:** `android13-8`, clang 14.0.7, `LTO_CLANG_FULL`,
+    `CFI_CLANG`, `SHADOW_CALL_STACK`, `KASAN=y`, `MODVERSIONS`, `KALLSYMS_ALL`.
 
 ---
 
@@ -157,6 +169,12 @@ Glossário: **[docs/09-glossario.md](docs/09-glossario.md)**
 Como cada conclusão foi obtida, o que é observação vs. inferência, limites das
 ferramentas e o ledger de evidências:
 **[docs/00-metodologia-e-evidencias.md](docs/00-metodologia-e-evidencias.md)**
+
+## 9. ABI interna dos módulos (BTF)
+
+Structs, enums, vtable e o contrato entre `dac_core`, `cs43198`, `anolog_board`,
+`headset_jack`, `mode_select` e FPGA — recuperados sem decompilador:
+**[docs/10-abi-kernel-fiio.md](docs/10-abi-kernel-fiio.md)**
 
 ---
 

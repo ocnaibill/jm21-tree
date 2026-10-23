@@ -3,7 +3,50 @@
 > Ordem de execução: **somente leitura primeiro**. Nada de flash, nada de
 > `remount`, nada de `dd` para fora antes de ter backup.
 
-## 0. Preparação do aparelho (quando conectar)
+## 0. Drivers: o que é preciso (Linux × Windows)
+
+**Linux (caso deste laboratório): nenhum driver proprietário da Qualcomm.**
+
+| Recurso | O que o kernel usa | Precisa instalar? |
+|---------|--------------------|-------------------|
+| `adb` | libusb (userspace) + regra udev | regra udev, não driver |
+| `fastboot` | libusb + regra udev | idem |
+| EDL 9008 | módulos `qcserial`/`option` → `/dev/ttyUSB*` | já presentes no host |
+| DAC USB / MTP | `snd-usb-audio`, `usb-storage` | já presentes |
+| Diag/QXDM | `qcserial` (`05c6:900e`) | idem |
+
+Estado do host em 2026-10-23:
+
+- `modinfo qcserial` e `modinfo option` → **presentes** (kernel 7.2.11-cachyos).
+- Regras udev Android → **ausentes** (`/etc/udev/rules.d` sem `51-android*`; não
+  há referência a `18d1` em `/usr/lib/udev/rules.d`).
+- Usuário **não** está em `plugdev` (grupos atuais: `sys network docker
+  nopasswdlogin rfkill users video storage lp audio wheel`).
+
+Ação preparada (não aplicada — requer `sudo`):
+
+```bash
+sudo install -m 0644 tools/udev/51-android-jm21.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules && sudo udevadm trigger
+sudo usermod -aG plugdev "$USER"     # relogar
+```
+
+O arquivo `tools/udev/51-android-jm21.rules` cobre `18d1` (Android), `05c6`
+(Qualcomm/EDL) e `2972` (FiiO). Alternativa empacotada: `android-udev`
+(AUR/extra), que já traz os IDs comuns.
+
+**Windows** — aí sim existem drivers:
+
+- ADB/fastboot: driver "Android ADB Interface" (Google/OEM).
+- EDL: **QDLoader HS-USB 9008** (Qualcomm), que vem com o QFIL/QPST.
+- Sem esse driver, o aparelho em EDL aparece como "Unknown device" no
+  Gerenciador de Dispositivos.
+
+Ou seja: a pergunta dos drivers só pesa se o caminho for Windows. No Linux, o
+que falta é **regra udev**, e o bloqueio real continua sendo o
+`prog_firehose` (`07-riscos-e-recuperacao.md` §4.3).
+
+## 0.1 Preparação do aparelho (quando conectar)
 
 1. Ativar **Opções do desenvolvedor** → **Depuração USB**.
 2. Autorizar a chave do host (`adb devices` deve mostrar `device`, não

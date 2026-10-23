@@ -207,27 +207,68 @@ mensagem `get anolog_board module failed!` em cenários de ordem errada).
 `modules.softdep` não tem nada específico de áudio — as dependências FiiO são
 resolvidas por *notifier* em runtime, não por softdep.
 
-## 6. Configuração do kernel
+## 6. Configuração do kernel (extraída)
 
-`[?]` Ainda não extraída. Receita (funciona se `CONFIG_IKCONFIG_PROC=y`):
+`[FW]` O `boot.img` traz o kernel **sem compressão** (Image arm64 com *stub*
+EFI — os primeiros bytes são `MZ`), e a config está embutida em `IKCFG_ST` …
+`IKCFG_ED` (gzip).
 
-```bash
-# extrair o kernel do boot.img (header v4) e procurar o IKCFG
-scripts/extract-ikconfig dumps/fw-1.1.1/boot.img > analysis/fw-1.1.1/kernel.config
+```python
+import gzip
+d = open('dumps/fw-1.1.1/boot.img','rb').read()
+i, j = d.find(b'IKCFG_ST'), d.find(b'IKCFG_ED')
+open('analysis/fw-1.1.1/kernel.config','wb').write(gzip.decompress(d[i+8:j]))
 ```
 
-Alternativas se falhar:
+`[FW]` Banner completo:
 
-1. `strings boot.img | grep -i "Linux version"` → pega a linha completa do boot.
-2. `modinfo -F vermagic`/CRC em qualquer `.ko` confirma ABI.
-3. `/proc/config.gz` no aparelho, se existir.
-4. Sem config, dá para reconstruir boa parte pelos `.ko` presentes e por
-   `modules.alias`/`modules.dep`.
+```
+Linux version 5.15.41-android13-8-g9ded8564ff52-dirty (build-user@build-host)
+  (Android (8508608, based on r450784e) clang version 14.0.7, LLD 14.0.7)
+  #1 SMP PREEMPT Tue Apr 28 08:23:10 UTC 2026
+```
 
-O que já se sabe da config por inferência `[DRV]`:
-`CONFIG_MODVERSIONS=y`, `CONFIG_PREEMPT=y`, `CONFIG_MODULES=y`,
-`CONFIG_SND_SOC=y` (driver CS43198 como codec ASoC), `CONFIG_SPI=y`,
-`CONFIG_I2C=y`, `CONFIG_FW_LOADER` (bitstream do FPGA por firmware).
+Isso fecha a questão do commit: a base é a **`android13-8`** do CAF, tag
+`g9ded8564ff52`, compilada com clang 14.0.7 da toolchain Android.
+
+`[FW]` Config (6 934 linhas, `analysis/fw-1.1.1/kernel.config`):
+
+| Opção | Valor | Por que importa |
+|-------|-------|-----------------|
+| `CONFIG_PREEMPT` | y | kernel preemptivo |
+| `CONFIG_MODULES` / `MODVERSIONS` | y / y | `.ko` com CRC por símbolo |
+| `CONFIG_MODULE_SIG_ALL` | y | módulos assinados na build |
+| `CONFIG_MODULE_SIG_FORCE` | **ausente** | assinatura **não é exigida** para carregar |
+| `CONFIG_LTO_CLANG_FULL` | y | LTO completo — funções inlined/fundidas |
+| `CONFIG_CFI_CLANG` / `CFI_CLANG_SHADOW` | y / y | *forward-edge CFI*, daí os símbolos `.cfi_jt` |
+| `CONFIG_TRIM_UNUSED_KSYMS` | y | ksymtab enxuta |
+| `CONFIG_KALLSYMS` / `KALLSYMS_ALL` | y / y | todos os símbolos no kallsyms |
+| `CONFIG_RANDOMIZE_BASE` | y | KASLR |
+| `CONFIG_SHADOW_CALL_STACK` | y | *back-edge* CFI |
+| `CONFIG_STACKPROTECTOR` | y | canário |
+| `CONFIG_SECURITY_SELINUX` | y | SELinux |
+| `CONFIG_DM_VERITY` | y | verity (casa com o AVB) |
+| `CONFIG_IKCONFIG` | y | permitiu esta extração |
+| `CONFIG_DEBUG_INFO` | y | compilado com debug (mas o `vmlinux` não vem no pacote) |
+| `CONFIG_KASAN` | **y** | sanitizer de memória **ligado em build de produção** — incomum, cheiro de build de engenharia |
+| `CONFIG_SND_USB_AUDIO` | y | áudio USB **built-in**, não módulo |
+
+`[FW]` Só **dois** módulos in-tree: `zsmalloc` e `zram`. Todo o resto é `=y`, e
+os `.ko` de `vendor_dlkm` são módulos **out-of-tree** compilados contra essa
+árvore — por isso não existe `CONFIG_SND_SOC_CS43198` no config.
+
+### No que isso muda a engenharia reversa
+
+1. **LTO + CFI**: decompilar `.ko` vai gerar código com chamadas indiretas
+   mediadas por *jump tables* CFI. Não estranhar `foo.cfi_jt` nem funções
+   fundidas. Se Ghidra travar no reconhecimento, desligar a análise de CFI e
+   seguir os stubs.
+2. **`TRIM_UNUSED_KSYMS`**: a lista de símbolos exportados é mínima — bom sinal:
+   o que sobrou ali é o que os módulos realmente usam.
+3. **`MODULE_SIG` sem `MODULE_SIG_FORCE`**: tecnicamente um `.ko` não assinado
+   poderia carregar, *se* o SELinux e o dm-verity permitirem. Não é o caminho
+   recomendado (o `vendor_dlkm` é verity-protegido).
+4. **`KASAN=y`**: se aparecer `kasan` no dmesg do aparelho, é esperado.
 
 ## 7. Superfície de RE do kernel
 
@@ -245,6 +286,12 @@ Ordem sugerida de análise (do mais informativo ao menos):
 
 Bônus: como `cs43198.ko` é módulo GPL com `modversions`, os **CRCs de símbolos**
 e a tabela `__ksymtab` ficam no ELF e ajudam a reconstruir assinaturas sem
+adivinhação.
+
+**Melhor ainda:** todos os `.ko` FiiO carregam `.BTF` com nomes de função,
+structs e enums. Antes de abrir qualquer decompilador, leia
+**[`10-abi-kernel-fiio.md`](10-abi-kernel-fiio.md)** — grande parte da estrutura
+já está recuperada, e o disassembly passa a ser trabalho de lógica, não de
 adivinhação.
 
 ## 8. Perguntas abertas

@@ -59,6 +59,89 @@ com.example.fiiotestappliction   ← app de teste esquecido no build
 `[?]` `com.fiio.control` e `com.fiio.devicevendor` são os mais interessantes:
 provavelmente donos de parte dos canais de controle de hardware.
 
+### 1.1 Os patches, já decompilados (JADX 1.5.6)
+
+`services.jar` (2 dex, 1 690 classes) foi decompilado em
+`analysis/decompiled/services/`. Os pontos alterados pela FiiO:
+
+**a) Lista literal de pacotes** (`com/android/server/am/ActivityManagerService.java`):
+
+```java
+FIIO_PACKAGE_NAMES = new String[]{
+    "com.fiio.music", "com.android.aboutfiio", "com.fiio.control",
+    "com.fiio.android", "com.fiio.devicevendor", "com.android.fiioupdate",
+    "com.android.fiio.scrcpy", "com.fiio.market"};
+public static boolean isHighPackage(String s) { ... }   // usado no AMS
+```
+
+`OomAdjuster` tem **outra** lista, com `com.alex.debugtool_player` no lugar de
+`com.fiio.music`, usada por `cantFreezePackage()` — esses processos são isentos
+do *freezer* de apps em cache. Listas divergentes = inconsistência real do patch.
+
+**b) Permissões concedidas automaticamente** (`DefaultPermissionGrantPolicy`):
+
+| Pacote | Conjuntos concedidos |
+|--------|----------------------|
+| `com.fiio.music` | location always, mic, +3 conjuntos |
+| `com.fiio.tape`, `com.fiio.dream` | microfone |
+| `com.fiio.market`, `com.android.fiioupdate`, `com.android.aboutfiio`, `com.android.fiioroon` | 1 conjunto |
+| **`com.example.fiiotestappliction`** | 1 conjunto |
+
+App de teste recebendo permissão automática no boot é um achado de segurança.
+
+**c) Áudio** (`AudioService`): uma única alteração —
+
+```java
+AudioSystem.setMasterVolumeDac(i);          // API de sistema da FiiO
+... Settings.System.getInt(cr, "usb_vol_ctl", 1) == 0
+    && SystemProperties.get("fiio.current.play.device", "HEADPHONES").equals("USB")
+```
+
+Ou seja: o *master volume* Android é espelhado no DAC, e existe um ajuste
+`usb_vol_ctl` que, quando desligado, fixa o volume USB no máximo.
+
+**d) USB** (`UsbAlsaManager`): ao inserir/remover DAC USB, o sistema envia
+
+```java
+new Intent("fiio.intent.action.USB_AUDIO_DEVICE_CHANGE").putExtra("EXTRA_ACTION", 1|0)
+```
+
+**e) Power** (`PhoneWindowManager`, `PowerManagerService`):
+
+```java
+// troca o diálogo de desligar por um broadcast
+sendBroadcastAsUser(new Intent("com.android.systemui.action.FIIO_POWER_KEY_DIALOG")
+                     .putExtra("dialogType", 3), UserHandle.ALL);
+allowAppInstallPermission("com.fiio.market");     // market pode instalar apps
+// recebe fiio.intent.action.ACTION_EXTERNAL_CHARGING/DISCHARGING (priority 1000)
+```
+
+**f) `framework.jar`** tem as flags de configuração da FiiO (`framework-res`):
+
+```
+config_fiio_35mm_multiplexing_spdif_enabled     ← 3,5 mm multiplexado com SPDIF
+config_fiio_spdif_out_switch_enabled
+config_fiio_spdif_input_mode_enabled
+config_fiio_aes_in_enabled
+config_fiio_bal_po_lo_select_enabled            ← BAL / PO / LO
+config_fiio_audio_vol_default
+config_fiio_bluetooth_{absolute_volume,audio_encoder,playback_quality,ldac,lhdc}_enabled
+config_fiio_battery_{disable_charger_setting,charger_optimize}_available
+config_fiio_control_double_leds_enabled
+config_fiio_leds_fixed_color_enabled
+```
+
+E revela a interface sysfs com o kernel:
+
+```
+/sys/devices/platform/soc/soc:fiio_attr/cw_batt_capacity
+```
+
+`soc:fiio_attr` é o platform device do driver `fiio_attr` (dentro de
+`fiio_underlay_modules.ko`, `drivers/fiio_modules/underlay_modules/fiio_attr.c`),
+declarado no DT como `fiio,fiio_attr`. **É por sysfs, não por `/dev`, que boa
+parte do userspace conversa com o kernel** — responde o `[?]` de `03` §4.
+
 ## 2. Inventário de apps de sistema
 
 `/system/app` `[FW]` — só os relevantes para o laboratório:

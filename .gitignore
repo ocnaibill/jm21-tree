@@ -48,3 +48,4 @@ __pycache__/
 
 # --- Estado de ferramentas do agente ---
 .commandcode/
+analysis/decompiled/

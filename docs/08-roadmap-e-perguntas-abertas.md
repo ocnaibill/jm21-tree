@@ -59,14 +59,14 @@ Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
 | Q2 | Qual das 5 DTB base é aplicada no JM21? | 04 |
 | Q3 | O bootloader é desbloqueável? *(rollback index já lido: 0 e 2023-02-05; anti-rollback do XBL segue `[?]`)* | 07 |
 | Q4 | Existe pacote QFIL/EDL com `prog_firehose` para o khaje/JM21? *(pesquisa não achou pacote público)* | 07 |
-| Q5 | O que o FPGA faz no caminho de dados? | 01, 03 |
+| Q5 | O que o FPGA faz no caminho de dados? *(BTF mostra `fpga_config_params`: I2S in/out, DSD, SPDIF/óptico — sem campo de reamostragem)* | 01, 03, 10 |
 | Q24 | A FiiO fornece firmware antigo mediante SN? Qual o procedimento real? | 07 |
 
 ### 2.2 Áudio (fim técnico)
 
 | # | Pergunta | Doc |
 |---|----------|-----|
-| Q6 | Dual DAC = mono por chip ou estéreo paralelo somado? | 01, 03 |
+| Q6 | Dual DAC = mono por chip ou estéreo paralelo somado? *(existe `cs43198_set_mono_mode`; divisão ainda não confirmada)* | 01, 03, 10 |
 | Q7 | DSD nativo sai por I2S do CS43198 ou o FPGA serializa? | 03 |
 | Q8 | O FPGA reamostra? O bit-perfect vai até o DAC? | 03 |
 | Q9 | `fiio.use.kernel.play` desvia do PAL para o dummy DAI? | 03 |
@@ -82,7 +82,7 @@ Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
 
 | # | Pergunta | Doc |
 |---|----------|-----|
-| Q17 | Lista real em `FIIO_PACKAGE_NAMES` | 05 |
+| Q17 | ~~Lista real em `FIIO_PACKAGE_NAMES`~~ → **respondida** (duas listas, em AMS e OomAdjuster) | 05 |
 | Q18 | O que `com.fiio.control` expõe (AIDL/binder)? | 05 |
 | Q19 | `libhello-jni.so` contém o decoder DSD/MQA? | 05 |
 | Q20 | Serviços expostos por `DebugTool`/`FactoryTest`/`EcaiTestAPP` | 05 |

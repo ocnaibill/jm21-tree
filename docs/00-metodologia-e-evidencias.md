@@ -53,8 +53,10 @@ isolado). Rota adotada:
 | `payload-dumper-go` | **resolvido** (compilado em `tools/bin`) | — |
 | `avbtool` 1.3.0 | **resolvido** (AOSP `external/avb`, em `tools/bin`) | AVB/rollback lidos |
 | `openssl` | presente | certificado do OTA lido |
-| `jadx` | ausente | decompilar `FiiOMusic.apk`, `framework.jar`, `services.jar` |
-| `ghidra` / IDA | ausente | pseudocódigo de `libfiioaudio.so`, `.ko` |
+| `jadx` 1.5.6 | **resolvido** (`tools/bin/jadx`) | `services.jar` decompilado |
+| `pahole` / `bpftool` | presentes | BTF dos `.ko` → structs/enums |
+| `llvm-objdump` | presente | primeiro passe de disassembly aarch64 |
+| `ghidra` / IDA | ausente | pseudocódigo (ainda não necessário) |
 | `dtc` | ausente | substituído por `tools/dt_dump.py` |
 | `binwalk` / `unblob` | ausente | não necessário nesta fase |
 | `aapt2` | ausente | ler `AndroidManifest` (contornado com `strings`) |

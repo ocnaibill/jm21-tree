@@ -1,0 +1,31 @@
+# udev rules para o laboratorio JM21 (Linux)
+#
+# Instalar (requer root):
+#   sudo install -m 0644 51-android-jm21.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#   sudo usermod -aG plugdev "$USER"    # relogar depois
+#
+# Nenhum driver proprietario da Qualcomm e necessario no Linux:
+#   - adb/fastboot: usam libusb + estas regras (ou o pacote android-udev)
+#   - EDL 9008: o kernel expoe como /dev/ttyUSB* via qcserial/option
+#   - audio USB / MTP: drivers genericos do kernel (snd-usb-audio, usb-storage)
+
+# --- Android generico (ADB / fastboot) ---
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee0", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee1", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee2", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee7", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# --- Qualcomm ---
+# 05c6:9008 = QDLoader 9008 (EDL)  -> aparece como /dev/ttyUSB0
+# 05c6:900e = diagnostic mode
+# 05c6:901d/9091 = variantes de diag/ADB composto
+SUBSYSTEM=="usb", ATTR{idVendor}=="05c6", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="05c6", MODE="0660", GROUP="plugdev", SYMLINK+="qc-%n"
+
+# --- FiiO (DAC USB / MTP) ---
+SUBSYSTEM=="usb", ATTR{idVendor}=="2972", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# --- Acesso sem root ao node de audio USB, quando aparecer como placa ---
+SUBSYSTEM=="sound", KERNEL=="card*", SUBSYSTEMS=="usb", ATTRS{idVendor}=="2972", MODE="0660", GROUP="audio"

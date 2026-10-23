@@ -192,10 +192,18 @@ Arquitetura: `dac_core` é o **orquestrador**; cada função é um módulo
 Isso explica o tamanho da pilha FiiO e facilita o RE: dá para analisar por
 função em vez de tudo de uma vez.
 
-`[?]` Node de dispositivo usado pela HAL para esses ioctls não apareceu como
-`/dev/...` literal nas strings (só `fiioconfig` no bloco). Pode ser `sysfs`,
-`/proc` ou nome montado em runtime. Confirmar no aparelho:
-`ls -l /dev | grep -i -E "dac|fiio"` e `ls /sys/class | grep -i dac`.
+`[FW]` **A interface é sysfs, não um `/dev`.** O `framework.jar` referencia
+`/sys/devices/platform/soc/soc:fiio_attr/cw_batt_capacity`, e o DT declara o nó
+`fiio,fiio_attr`, implementado em `fiio_attr.c` (dentro de
+`fiio_underlay_modules.ko`). No aparelho:
+
+```bash
+adb shell ls /sys/devices/platform/soc/soc:fiio_attr/
+adb shell cat /sys/devices/platform/soc/soc:fiio_attr/* 2>/dev/null
+```
+
+A lista de atributos expostos é a superfície de controle que o userspace usa —
+e é o que a `libfiioaudio.so` deve escrever quando muda ganho, filtro ou modo.
 
 ## 5. Política de áudio
 
