@@ -72,7 +72,7 @@ Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
 | Q9 | `fiio.use.kernel.play` desvia do PAL para o dummy DAI? | 03 |
 | Q10 | Qual `mixer_paths_*` é carregado e por qual regra? | 03 |
 | Q11 | Qual gatilho troca para `audio_policy_configuration_gaming.xml`? | 03 |
-| Q12 | Faixa e passo de `volume_table`, `pogain`, `gain_table` | 01, 03 |
+| Q12 | Faixa e passo de `volume_table`, `pogain`, `gain_table` *(tabelas extraídas: 121 passos, 5 modos; unidade exata em aberto)* | 01, 03, 11 |
 | Q13 | Quantos degraus de ganho a UI expõe (5 no driver) | 01 |
 | Q14 | MQA é decode completo ou só core? | 03 |
 | Q15 | O aparelho tem captura (mic) ativa? Qual codec? | 01 |

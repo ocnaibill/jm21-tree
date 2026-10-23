@@ -42,9 +42,11 @@ isolado). Rota adotada:
    localmente com Go).
 3. **Inspeção de filesystem** — `debugfs` (leitura ext4 sem root/mount).
 4. **Análise de DTBO/FDT** — `tools/dt_dump.py` (parser próprio, sem deps).
-5. **Análise de ELF/kernel module** — `readelf`, `strings`, `objdump`;
-   decompilação com Ghidra/IDA **ainda não instalados**.
-6. **APK/dex** — `unzip` + `strings`; JADX **ainda não instalado**.
+5. **Análise de ELF/kernel module** — `readelf`, `strings`, `llvm-objdump -dr`
+   (relocations resolvem os símbolos chamados); `pahole` lê o `.BTF`.
+   Decompilador (Ghidra/IDA) segue dispensável até agora.
+6. **APK/dex** — JADX 1.5.6 (`tools/bin/jadx`) para `services.jar`; `strings`
+   para varredura rápida.
 
 ### Ferramentas e estado
 
@@ -55,7 +57,7 @@ isolado). Rota adotada:
 | `openssl` | presente | certificado do OTA lido |
 | `jadx` 1.5.6 | **resolvido** (`tools/bin/jadx`) | `services.jar` decompilado |
 | `pahole` / `bpftool` | presentes | BTF dos `.ko` → structs/enums |
-| `llvm-objdump` | presente | primeiro passe de disassembly aarch64 |
+| `llvm-objdump` | presente | disassembly aarch64 com relocations resolvidas |
 | `ghidra` / IDA | ausente | pseudocódigo (ainda não necessário) |
 | `dtc` | ausente | substituído por `tools/dt_dump.py` |
 | `binwalk` / `unblob` | ausente | não necessário nesta fase |

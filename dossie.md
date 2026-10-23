@@ -76,6 +76,12 @@ cálculo ou de documento público e está explicitado no texto.
     `fiio_underlay_modules.ko`).
 16. **Kernel config extraída:** `android13-8`, clang 14.0.7, `LTO_CLANG_FULL`,
     `CFI_CLANG`, `SHADOW_CALL_STACK`, `KASAN=y`, `MODVERSIONS`, `KALLSYMS_ALL`.
+17. **Pipeline de volume decifrado por disassembly.** A placa tem 5 tabelas de
+    121 passos (`vol_table_po_gain_l/m/h/sh/uh`); o código soma
+    `tabela[step] + gain_table[pogain]`, faz clamp em 255 e chama
+    `ops->set_volume_db`. Ganho analógico é compensado por atenuação digital.
+    Dados em `analysis/fw-1.1.1/volume-tables.csv`, análise em
+    `docs/11-disassembly-do-audio.md`.
 
 ---
 
@@ -175,6 +181,12 @@ ferramentas e o ledger de evidências:
 Structs, enums, vtable e o contrato entre `dac_core`, `cs43198`, `anolog_board`,
 `headset_jack`, `mode_select` e FPGA — recuperados sem decompilador:
 **[docs/10-abi-kernel-fiio.md](docs/10-abi-kernel-fiio.md)**
+
+## 10. Disassembly do caminho de volume
+
+Tabelas de volume/ganho extraídas do `.rodata`, pipeline reconstruído a partir
+de `anolog_board_update_volume`, e o que ainda falta no driver do DAC:
+**[docs/11-disassembly-do-audio.md](docs/11-disassembly-do-audio.md)**
 
 ---
 

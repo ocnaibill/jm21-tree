@@ -166,9 +166,19 @@ Símbolos em `anolog_board_jm21.ko` / `fiio_underlay_modules.ko`:
 GAIN_L  GAIN_M  GAIN_H  GAIN_OVER_EAR  GAIN_SUPER_OVER_EAR  gain_table
 ```
 
-Ou seja, existem **5 degraus**, incluindo modos "over-ear" e
-"super over-ear". `[?]` A UI expõe quantos? Valores em dB/ganho por degrau estão
-em `gain_table` (binário). O dossiê original falava apenas em Low/Medium/High.
+`[FW]` Confirmado por disassembly: existem **5 tabelas de volume** no `.rodata`
+da placa, uma por modo — `vol_table_po_gain_l`, `_m`, `_h`, `_sh`, `_uh` — com
+121 entradas cada (ver `11-disassembly-do-audio.md` e
+`analysis/fw-1.1.1/volume-tables.csv`).
+
+O ganho é implementado como **compensação**: ao subir o modo, o código digital
+cai na mesma posição de volume (em step 60: `l`=84, `m`=72, `h`=60). Ou seja,
+o ganho analógico sobe e a atenuação digital compensa, mantendo o nível
+percebido — e é isso que define o headroom real de cada modo.
+
+`[?]` No caminho normal apenas `l`/`m`/`h` são alcançáveis (o switch usa `h`
+como default); `sh`/`uh` servem a outro caminho ou a outros modelos. A UI do
+JM21 expõe quantos? Pendente.
 
 ## 6. Saídas e números do fabricante
 
