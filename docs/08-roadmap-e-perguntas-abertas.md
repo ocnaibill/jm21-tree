@@ -66,14 +66,14 @@ Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
 
 | # | Pergunta | Doc |
 |---|----------|-----|
-| Q6 | Dual DAC = mono por chip ou estéreo paralelo somado? *(existe `cs43198_set_mono_mode`; divisão ainda não confirmada)* | 01, 03, 10 |
+| Q6 | ~~Dual DAC = mono por chip ou estéreo paralelo somado?~~ → **respondida**: `SPECIAL_MODE_2`, estéreo paralelo nos 2 chips | 12 |
 | Q7 | DSD nativo sai por I2S do CS43198 ou o FPGA serializa? | 03 |
 | Q8 | O FPGA reamostra? O bit-perfect vai até o DAC? | 03 |
 | Q9 | `fiio.use.kernel.play` desvia do PAL para o dummy DAI? | 03 |
 | Q10 | Qual `mixer_paths_*` é carregado e por qual regra? | 03 |
 | Q11 | Qual gatilho troca para `audio_policy_configuration_gaming.xml`? | 03 |
 | Q12 | Faixa e passo de `volume_table`, `pogain`, `gain_table` *(tabelas extraídas: 121 passos, 5 modos; unidade exata em aberto)* | 01, 03, 11 |
-| Q13 | Quantos degraus de ganho a UI expõe (5 no driver) | 01 |
+| Q13 | Quantos degraus de ganho a UI expõe (5 no driver) *(boot fixa `pogain=2` = High)* | 01, 12 |
 | Q14 | MQA é decode completo ou só core? | 03 |
 | Q15 | O aparelho tem captura (mic) ativa? Qual codec? | 01 |
 | Q16 | O que há na partição `fiioconfig`? | 02, 04 |

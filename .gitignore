@@ -49,3 +49,6 @@ __pycache__/
 # --- Estado de ferramentas do agente ---
 .commandcode/
 analysis/decompiled/
+
+# --- projetos Ghidra ---
+analysis/ghidra/

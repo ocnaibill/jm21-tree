@@ -82,6 +82,11 @@ cálculo ou de documento público e está explicitado no texto.
     `ops->set_volume_db`. Ganho analógico é compensado por atenuação digital.
     Dados em `analysis/fw-1.1.1/volume-tables.csv`, análise em
     `docs/11-disassembly-do-audio.md`.
+18. **Energia, GPIOs e controles ALSA decompilados.** Mapa dos 7 GPIOs, ordem de
+    energia com tempos reais (20/10/10/50 ms), caminho SPDIF que desliga os
+    DACs, modo de canal `SPECIAL_MODE_2` (dual DAC paralelo), boot em High gain,
+    endereçamento `(página << 16) | reg` e as sequências de filtro/DRE:
+    `docs/12-energia-e-controles.md`.
 
 ---
 
@@ -187,6 +192,12 @@ Structs, enums, vtable e o contrato entre `dac_core`, `cs43198`, `anolog_board`,
 Tabelas de volume/ganho extraídas do `.rodata`, pipeline reconstruído a partir
 de `anolog_board_update_volume`, e o que ainda falta no driver do DAC:
 **[docs/11-disassembly-do-audio.md](docs/11-disassembly-do-audio.md)**
+
+## 11. Energia, GPIOs e controles ALSA
+
+Sequência de energia com tempos, mapa dos GPIOs, caminho SPDIF, modo de canal,
+registradores de filtro/DRE e o endereçamento de página do CS43198:
+**[docs/12-energia-e-controles.md](docs/12-energia-e-controles.md)**
 
 ---
 

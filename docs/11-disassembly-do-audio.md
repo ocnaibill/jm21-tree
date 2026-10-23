@@ -126,7 +126,9 @@ de `cs43198_set_volume_db` (registradores), próximo passo.
 
 Os 5 sufixos (`l`, `m`, `h`, `sh`, `uh`) casam com os símbolos já vistos no
 driver: `GAIN_L`, `GAIN_M`, `GAIN_H`, `GAIN_OVER_EAR`, `GAIN_SUPER_OVER_EAR`
-(`gain_spe`/`pogain` na struct).
+(`gain_spe`/`pogain` na struct). O JM21 **inicia em `pogain=2` (High)** —
+`anolog_board_load_work` grava `pogain=2`, `pogain_bk=2`,
+`volume_table=vol_table_po_gain_h` no boot (`12-energia-e-controles.md` §4).
 
 O switch em `0x824` só mapeia **0→l, 1→m, 2→h** e usa `h` como default (`>2`).
 Logo, no caminho normal do JM21, apenas 3 tabelas são alcançáveis; `sh`/`uh`
@@ -140,6 +142,8 @@ existem para outros modelos ou outro caminho (ex.: `gain_update`) `[?]`.
 | Ganho analógico é compensado por atenuação digital | fato (tabelas) |
 | 121 passos, com passo fino no extremo inferior | fato |
 | `volumeL_DB`/`volumeR_DB` recebem o **mesmo** código (balanço à parte) | fato |
+| Os dois CS43198 recebem estéreo completo e idêntico (dual DAC paralelo) | fato — `SPECIAL_MODE_2`; ver `12` §4 |
+| Registradores de volume: PCM `0x90002`/`0x90001`, DSD `0x70000`/`0x70001` | fato (`cs43198_set_volume_db`) |
 | Unidade exata (0,5 dB/LSB) e ponto de 0 dB | hipótese |
 | `gain_table` é preenchida em runtime e por quem | desconhecido |
 | Uso de `sh`/`uh` no JM21 | desconhecido |

@@ -120,6 +120,18 @@ GPIOs declarados em `fiio,anolog_board` `[DT]`:
 com 2x SGM8262 — um por estágio/saída. Não há nó de DT para os SGM8262: eles
 não têm barramento de controle, só enable e a malha analógica.
 
+`[FW]` A ordem real, extraída por decompilação (`12-energia-e-controles.md` §3):
+
+```
+ON : ang_pwr → 20 ms → dac_pwr → 10 ms → dac_rst
+     → out_sel → 10 ms → sw_en → 10 ms → amp_pwr (+ amp2_pwr em tipos >= 3)
+OFF: 10 ms → amp_pwr=0, amp2_pwr=0 → 50 ms → sw_en=0 → out_sel=0
+     → dac_rst=0 → dac_pwr=0 → ang_pwr=0
+```
+
+No caminho SPDIF (`current_output_type == 2`) os DACs são desligados e a saída
+passa pelo FPGA — coherente com `config_fiio_35mm_multiplexing_spdif_enabled`.
+
 Sequência de energia observada em mensagens do driver `[DRV]`:
 
 ```
