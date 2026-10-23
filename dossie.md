@@ -128,6 +128,11 @@ cálculo ou de documento público e está explicitado no texto.
     símbolo `snd_dac_*` nem `fiio_*` no `Image`: os 4 `EXPORT_SYMBOL_GPL` do
     `dac_core` são **código morto** neste firmware, e o techpack de áudio da
     Qualcomm está em módulos, não no kernel.
+29. **PDF externo auditado.** Confirmou o mapa de registradores e os 5 filtros;
+    **refutado** em três pontos: `resourcemanager_bengal_idp.xml` **não** fixa
+    192 kHz (`fractional_sr=1`, só 8k/16k/44,1k/48k no arquivo), o driver
+    **não** varia `OUT_FS` em runtime, e a posição dos bits de `0x90000` está
+    trocada (bit 2 = WBF, bit 1 = high-pass, bit 0 = de-emphasis).
 
 ---
 

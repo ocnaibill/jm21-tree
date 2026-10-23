@@ -84,7 +84,75 @@ primeira mantém as outras.
    qualquer unlock (ver `07-riscos-e-recuperacao.md`).
 5. Sem `prog_firehose` público, um erro no bootloader é assistência técnica.
 
-## 7. Próximo passo deste lado
+## 8. Anexo — auditoria do PDF "Dossiê CS43198 / SGM8262-2 / SM6225"
+
+Arquivo: `dossie_engenharia_reversa_cs43198_sm6225.pdf` (11 páginas).
+Veredito por afirmação verificável:
+
+### 8.1 Confirmado
+
+| Afirmação | Como confere |
+|-----------|--------------|
+| Register map: `0x20000` default `0xFE`, `0x20052` default `0x04`, `0x80000` default `0x30`, `0x90000` default `0x02`, volume `0x90001/2` default `0x78` | datasheet DS1156F2 + nosso init (escreve exatamente `0xFE`, `0x90000=0x02`, `0x80000=0x30`) |
+| `0x80000`: `OUT_FS[5:4]` + `+1dB_EN` (bit 0) | datasheet §7.5.1; nosso `set_volume_db` liga o bit 0 |
+| `0x90000`: bits 7/6/5 = SLOW_FASTB / PHCOMP / **NOS** | datasheet §7.5.2; nossos presets `0x82`, `0x42`, `0xC2`, `0x22` |
+| Tabela dos 5 filtros (`0x02`, `0x42`, `0x82`, `0xC2`, `0x22`) | bate com os 6 valores do nosso driver (o sexto é `0x03`) |
+| I2C `0x30` + `0x33` (variante) | nosso DT: `reg = 0x30` e `0x33` |
+| Volume 0,5 dB/LSB, `0x00`=0 dB, `0xFF`=mute | datasheet §7.5.3 (já corrigimos o dossiê com isso) |
+| MCLK externo chaveado (22,5792/24,576 etc.) | nós provamos que o **FPGA** gera o MCLK (`fpga_set_mclk`) |
+| PAL/AudioReach, backends MI2S/TDM, `resourcemanager_bengal_idp.xml` existe | `[FW]` arquivo presente; `MI2S-LPAIF_VA-RX-PRIMARY` no backend de fone |
+| Regras `on property:` no init | `[FW]` existem (`fiio.handle.files`, `fiio.start.uac.service`) |
+
+### 8.2 Refutado
+
+| Afirmação | Evidência contrária |
+|-----------|---------------------|
+| "`resourcemanager_bengal_idp.xml` fixa `192000`/32 bits na saída wired" | `[FW]` o arquivo **não contém `192000`** (só 8000, 16000, 44100, 48000). O bloco `PAL_DEVICE_OUT_WIRED_HEADPHONE` não tem `<samplerate>` e declara **`fractional_sr=1`** — ou seja, taxa nativa |
+| "O driver ajusta `OUT_FS[5:4]` entre 1,0/1,7/2,0 Vrms" | `[FW]` `OUT_FS` é escrito **uma única vez** (`0x80000 = 0x30`) nos dois ramos do `config_dac`; não existe símbolo `set_performance_mode` no `cs43198.ko`; só o bit 0 muda |
+| "Bit 4 = DEEMPH; bits 3:1 = WIDEBAND_FLAT" em `0x90000` | datasheet §7.5.2: **bit 2 = PCM_WBF_EN**, **bit 1 = HIGH_PASS (default 1)**, **bit 0 = DEEMP_ON**, bits 4:3 reservados |
+| "`0x90004` tem os bits de Master Mute (`MUTE_A/B`)" | datasheet §7.5.6: `0x90004` = INV_A(3), INV_B(2), SWAP(1), COPY(0). Mute fica em `0x90003` |
+| "Cada SGM8262-2 por canal, somando 4 amps em BTL" | não refutado, mas **sem suporte** no firmware; o que sabemos é par diferencial entre chips (2 amps por saída), não 4 amps por canal |
+
+### 8.3 Não verificável aqui
+
+Kernel `gdfab679e3463` (seria do FW 1.0.8 — só temos o 1.1.1); `REV_ID 0xA1`
+(o probe do `cs43198.ko` não compara ID); repositórios `FiiOat`,
+`FiiO_Kernel_OpenSource` e `HioneOS`; suposto bug de máscara `0xC0` vs `0xE0`
+no NOS (nosso driver escreve o byte inteiro via `dac_dual_regmap_write`, então
+**não** tem esse bug).
+
+### 8.4 O que o PDF acerta e vale incorporar
+
+1. **Bit 2 (`PCM_WBF_EN`)** existe e só deve ser usado a 192 kHz, com `PDN_HP`
+   ligado — não usamos hoje; é um alvo se aparecer filtro wideband.
+2. A organização dos 5 filtros por combinação de bits 7/6/5 — já incorporada.
+3. A referência ao driver upstream `cs43130.c` para conferir semântica de
+   registrador — já usada.
+
+### 8.5 O que muda no nosso modelo
+
+- Ganho **não** é `OUT_FS` neste firmware (refutado). Continua valendo: digital
+  + `+1dB_EN` no volume máximo.
+- A alegação de SRC forçado a 192 kHz **cai**: a config PAL do JM21 suporta
+  taxa fracionária (`fractional_sr=1`) e não fixa 192 kHz no fone.
+- Continua em aberto (e é o único jeito de fechar): medir. Ver
+  `15-conflitos-e-metodo-de-prova.md`.
+
+## 9. Próximo passo deste lado
+
+1. `vmlinux-to-elf` sobre `analysis/fw-1.1.1/kernel.Image` — **feito** (152 139
+   símbolos; zero `fiio_*`/`snd_dac_*`).
+2. Comparar o `resourcemanager_bengal_idp.xml` com o do `qrd` para ver o que a
+   FiiO mudou no roteamento (dois backends distintos para headset e headphone).
+3. Medir: protocolo de bancada em `15-conflitos-e-metodo-de-prova.md` §4.
+
+## 10. Como usar material externo daqui pra frente
+
+Regra prática adotada: **toda afirmação de terceiro entra como `[EXT]` e só
+sobe para fato depois de cruzar com uma destas fontes** — datasheet oficial,
+arquivo do firmware, decompilação ou medição. O que não cruzar fica marcado
+como não verificado, mesmo que pareça razoável.
+
 
 `vmlinux-to-elf` sobre `analysis/fw-1.1.1/kernel.Image` para recuperar o
 kallsyms: (a) achar os símbolos FiiO embutidos, (b) descobrir quem chama os
