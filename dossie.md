@@ -100,6 +100,14 @@ cálculo ou de documento público e está explicitado no texto.
     0–8 de `player_notifier_cb`, com struct própria (rate/format/bits/modo) e
     desligamento por tempo de 3 s. A HAL entra por kcontrols e sysfs. Ver
     `docs/13-eventos-hal-kernel.md`.
+22. **`fiio_primary_modules.ko` é o SDK do stack.** 19 cadeias de notificação,
+    registro de módulos por nome, hub de atributos sysfs, helpers de I2C/regmap
+    e `report_playing_info`. Ver `docs/14-arquitetura-kernel-fiio.md`.
+23. **Pesquisa externa cruzada.** Acrescentou o part number do FPGA
+    (**GW1NZ-1**, review, não confirmado), o driver upstream `cs43130.c` como
+    referência e a leitura por bits do filtro; corrigiu nossa tabela de filtros
+    e explicou `0x20000` (Power Down Control) e `0x10010` (pop-free/DXD).
+    Conflito registrado sobre a topologia SE/BAL.
 
 ---
 
@@ -217,6 +225,13 @@ registradores de filtro/DRE e o mapeamento real do CS43198:
 A notifier chain que liga a HAL ao `dac_core` (eventos 0–8, struct de
 notificação, formatos DSD privados e desligamento por tempo):
 **[docs/13-eventos-hal-kernel.md](docs/13-eventos-hal-kernel.md)**
+
+## 13. Arquitetura do stack FiiO no kernel
+
+O "SDK" do kernel (19 cadeias, registro por nome, hub `soc:fiio_attr`) e o
+cruzamento com a pesquisa externa — o que confirmou, o que corrigiu e o que
+conflita:
+**[docs/14-arquitetura-kernel-fiio.md](docs/14-arquitetura-kernel-fiio.md)**
 
 ---
 

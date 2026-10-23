@@ -165,20 +165,19 @@ anterior".
 `cs43198_set_lpf` mapeia o índice do usuário para o **PCM Filter Option**
 (registrador `0x90000` do chip), e **só se aplica em PCM**:
 
-| `lpf_setting` | Valor escrito | Composição |
-|---------------|---------------|------------|
-| 0 | `0x02` | base 2 |
-| 1 | `0x82` | base 2 + bit 7 |
-| 2 | `0x42` | base 2 + bit 6 |
-| 3 | `0xC2` | base 2 + bits 6 e 7 |
-| 4 | `0x03` | base 3 |
-| 5 | `0x22` + `nos_status=1` | base 2 + **bit 5 = NOS** |
+| `lpf_setting` | Valor escrito | Bits (datasheet) |
+|---------------|---------------|------------------|
+| 0 | `0x02` | bit 1 = high-pass |
+| 1 | `0x82` | bit 7 (slow) + 1 |
+| 2 | `0x42` | bit 6 (phase comp / low-latency) + 1 |
+| 3 | `0xC2` | 7 + 6 + 1 |
+| 4 | `0x03` | 1 + **bit 0 = de-emphasis (44,1 kHz)** |
+| 5 | `0x22` | **bit 5 = NOS** + 1 |
 
-O datasheet confirma o bit 5 como NOS (`Enable NOS filter → 0x90000 OR 0x20`) e
-nomeia os bits 7 e 6 nas tabelas de características como `FILTER_SLOW_FASTB`
-(roll-off lento × rápido) e `PHCOMP_LOWLATB` (compensação de fase / baixa
-latência). `[HIP]` A combinação exata usada pela FiiO em cada preset vem da UI;
-os 6 valores são inequívocos, os nomes dos bits 6/7 ainda são leitura de tabela.
+O datasheet confirma o bit 5 como NOS (`Enable NOS filter → 0x90000 OR 0x20`).
+Bits 7/6/1/0 são `FILTER_SLOW_FASTB`, `PHCOMP_LOWLATB`, high-pass e de-emphasis,
+respectivamente — os mesmos bits que o driver upstream `cs43130.c` expõe como
+controles ALSA. `[EXT/HIP]` Resta saber qual preset a UI rotula como qual.
 
 `cs43198_set_dre` (Dynamic Range Enhancement):
 
@@ -189,7 +188,15 @@ else             { write 0xc0001 = 0; }
 write 0x10010 = 0;                          // lock
 ```
 
-O padrão "0x99 → altera → 0" é a sequência de desbloqueio de página do CS43198.
+O padrão "0x99 → altera → 0" é a sequência de destravamento de **0x10010 =
+pop-free power-up/down settings** (datasheet §6.5): os registradores escritos em
+`0xc0001`/`0xc0056` são de teste (bloco DXD), acessíveis só nessa janela.
+
+E o `0x20000` do init é o **Power Down Control**: o driver escreve `0xFE`
+(quase tudo desligado) e depois **limpa** bits para ligar só o necessário
+(`& 0xBF` → bit 6; `& 0xEF` → bit 4 = ASP). O datasheet lista nesse registrador
+"power down amplifier", "power down ASP", "PDN_CLKOUT" e "power on appropriate
+interface" — encaixa exatamente com a sequência observada.
 
 ## 7. Endereçamento de registrador `[FW]` + datasheet
 

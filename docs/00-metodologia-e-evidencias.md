@@ -141,6 +141,8 @@ e `ota-cert.txt`.
 | [Fórum FiiO — tópico de firmware do JM21](https://forum.fiio.com/note/showNoteContent.do?id=202412181641298410115&tid=17) | changelog e links oficiais completo × incremental |
 | [Cirrus Logic CS43198 — datasheet DS1156F2](https://statics.cirrus.com/pubs/proDatasheet/CS43198_DS1156F2.pdf) | mapa de registradores, escala de volume, filtros, NOS |
 | [bkerler/edl](https://github.com/bkerler/edl) e [bkerler/Loaders](https://github.com/bkerler/Loaders/issues/97) | viabilidade de EDL/Sahara |
+| `sound/soc/codecs/cs43130.c` (upstream Linux) | driver de referência do CS43198 (regmap 24 bits, TLV de volume, bits de filtro) |
+| Review do JM21 citando FPGA Gowin GW1NZ-1 | `[EXT]` part number e topologia analógica — não verificado por nós |
 
 O PDF do datasheet fica em `analysis/datasheets/` (fora do git, por licença) e
 o texto extraído é usado só como referência de leitura.

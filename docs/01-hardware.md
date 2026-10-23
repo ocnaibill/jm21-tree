@@ -51,14 +51,15 @@ dispositivo de primeira classe no DT e tem driver, firmware e interface de
 
 Pendências:
 
-- `[?]` **Divergência nome × `reg`**: o nome do nó diz `@32`/`@31`, mas
-  `reg = 0x33`/`0x30`. Confirmar com `i2cdetect -y <bus>` no aparelho.
+- **Resolvido:** o binding upstream usa `audio-codec@30` como exemplo; nosso DT
+  tem **0x30** e **0x33** (`reg` de `cs43198@31` e `cs43198@32`). Os nomes de nó
+  é que estão defasados.
 - `[?]` O barramento I2C é `target = <0xffffffff>` no overlay (placeholder) e
   `qcom,clk-freq-out = 400000` (400 kHz). O número do barramento só aparece na
   DTB base aplicada (`/proc/device-tree/soc@0/i2c@...`).
-- `[HIP]` Dois chips com `id` 0 e 1 indica driver parametrizado por instância —
-  a divisão L/R por chip é o modelo esperado em Dual DAC, mas o mapeamento
-  final (mono por chip × estéreo por chip) ainda não foi lido no código.
+- `[HIP]` Dois chips com `id` 0 e 1 indica driver parametrizado por instância. Em
+  `SPECIAL_MODE_2` **os dois recebem o mesmo estéreo** (ver `12` §4), então a
+  divisão não é por canal.
 
 ### Controles expostos pelo driver `cs43198.ko` `[DRV]`
 
@@ -255,6 +256,15 @@ uso típico fica na metade inferior — e o ganho padrão de boot (High) é o me
 usado pela FiiO para medir.
 
 ## 7. FPGA Gowin
+
+`[EXT]` Uma review identifica o part number como **GW1NZ-1** (família Gowin
+GW1N-Z, *zero-power*). Não confirmamos em silício, mas é consistente com
+`gowin,fpga_i2c`, com o driver `gw-fpga` e com bitstreams de 30–34 kB.
+
+`[EXT]` A mesma review descreve a topologia como "FPGA no centro, um DAC por
+saída, um SGM8262 por DAC; SE usa um amp, BAL usa os dois". Isso **não** conflita
+com nosso achado de que os dois CS43198 recebem o mesmo estéreo — conflita com a
+leitura de "um DAC por canal". Ver `14-arquitetura-kernel-fiio.md` §5.3.
 
 | Item | Valor | Evidência |
 |------|-------|-----------|
