@@ -134,9 +134,41 @@ regmap_l: 0x90002 = lvol ; regmap_r: 0x90002 = lvol    // canal A
 regmap_l: 0x90001 = rvol ; regmap_r: 0x90001 = rvol    // canal B
 ```
 
-Ou seja, **os dois chips recebem o estéreo completo e são escritos
-identicamente** (dual DAC paralelo, soma analógica). O modo mono-por-chip
-(`SPECIAL_MODE_3`, 4 DACs) existe no código, mas não é o do JM21.
+E no `cs43198_config_dac` (PCM, `SPECIAL_MODE_2`) `[FW]`:
+
+```c
+fiio_regmap_write(name, regmap_l, 0x90004, 0x00);   // sem inversão
+fiio_regmap_write(name, regmap_r, 0x90004, 0x0C);   // PCM_INV_A | PCM_INV_B
+```
+
+`0x90004` é **PCM Path Signal Control 2** (datasheet §7.5.6): bit 3 =
+`PCM_INV_A`, bit 2 = `PCM_INV_B`. Logo:
+
+> Os dois chips recebem **o mesmo estéreo**, e o chip rotulado "R" tem os dois
+> canais **invertidos**. É um **par diferencial** (bridged), não uma divisão
+> L/R por chip.
+
+Isso explica o nome `cs43198_l`/`cs43198_r` (polaridade, não canal), o
+`amp2_pwr` ligar só em `output_type >= 3` (BAL precisa dos dois amps) e o
+crosstalk de 110 dB no balanceado contra 70 dB no single-ended.
+
+O modo mono-por-chip (`SPECIAL_MODE_3`, 4 DACs) existe no código, mas não é o do
+JM21 — e é o único que chama `cs43198_set_mono_mode`.
+
+### Balanço de canal (implementado no domínio digital)
+
+`lrbalance` ∈ [0, 40], centro em 20 (0x14) `[FW]`:
+
+```c
+if (lrbalance < 21) { if (lrbalance != 20 && volumeR_DB < table[0]-20)
+                          volumeR_DB = volumeR_DB - lrbalance + 20; }
+else                { if (volumeL_DB < table[0]-20)
+                          volumeL_DB = lrbalance + volumeL_DB - 20; }
+```
+
+Como o código é atenuador (maior = mais surdo), isso dá **±10 dB em passos de
+0,5 dB**, com trava para não passar do teto da tabela. Casa exatamente com o
+"L20~R20, 0,5 dB por nível" da ficha oficial.
 
 **Resposta parcial a Q13:** o aparelho **inicia em High gain** (`pogain=2`).
 

@@ -108,6 +108,16 @@ cálculo ou de documento público e está explicitado no texto.
     referência e a leitura por bits do filtro; corrigiu nossa tabela de filtros
     e explicou `0x20000` (Power Down Control) e `0x10010` (pop-free/DXD).
     Conflito registrado sobre a topologia SE/BAL.
+24. **Conflito de topologia resolvido por código.** Os dois CS43198 recebem o
+    mesmo estéreo, mas o chip "R" é escrito com `0x90004 = 0x0C`
+    (`PCM_INV_A|PCM_INV_B`) — é um **par diferencial**, não uma divisão L/R.
+    `amp2_pwr` só liga em `output_type >= 3`, coerente com BAL usando os dois.
+25. **Ganho: quase tudo é digital.** Só há um efeito de hardware ligado ao
+    volume — `+1dB_EN` (`0x80000` bit 0) no volume máximo com `output_type 0`.
+    `OUT_FS` nunca muda; `gain_pwr_update` existe mas não é lido em nenhum
+    módulo decompilado. Ver `docs/15-conflitos-e-metodo-de-prova.md`.
+26. **FPGA é o clock master.** `fpga_set_mclk()` seleciona 22/24, 45/49 ou
+    90/98 MHz para os DACs; o SoC não fecha o clock.
 
 ---
 

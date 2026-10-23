@@ -278,6 +278,25 @@ leitura de "um DAC por canal". Ver `14-arquitetura-kernel-fiio.md` §5.3.
 | Contagem/banco atual | `persist.sys.fpga.firmware.count=2`, `...cur=0` | `[PROP]` |
 | Tamanho dos bitstreams | 33 605 e 29 843 bytes | `[FW]` |
 | Interface de áudio | nó `fiio,fpga-audio-interface-hal` | `[DT]` |
+| Geração de MCLK | `fpga_set_mclk()`: 22/24, 45/49, 90/98 MHz | `[FW]` |
+| Modos (`enum fpga_work_mode`) | `LOCAL_PLAYBACK=0`, `USB_DAC=1`, `USB_XMOS=2`, `BT_QCC=3` | `[DRV]` |
+| Energia por modo | liga/recarrega firmware em `LOCAL_PLAYBACK` e `USB_XMOS`; não em `USB_DAC`/`BT_QCC` | `[DRV]` |
+| Trilhos de energia | `fpga_pwr_en` (GPIO 3); o driver também prevê `gpio_1v2_en`/`gpio_3v3_en`/`code_1v8_en`, não declarados neste DT | `[DT]` `[DRV]` |
+
+`[FW]` **O FPGA é o clock master dos DACs.** `fpga_set_mclk()` loga
+"set dac_mclk 90/98MHz", "45/49MHz" e "22/24MHz" — o mesmo enum
+(`AUDIO_DAC_MCLK_22/45/90`) cobre as duas famílias, então a escolha entre
+44,1 kHz e 48 kHz (e seus múltiplos) acontece no FPGA, não no SoC.
+
+Caminho revisado:
+
+```
+SoC (MI2S/TDM) → FPGA (clock, roteamento, SPDIF/óptico) → I2S + MCLK → CS43198 ×2 (diferencial)
+```
+
+`[?]` Se o FPGA processa amostras ou só reclocka/roteia segue em aberto — a
+struct `fpga_config_params` não tem campo de razão de reamostragem, o que
+favorece "só roteia". Ver `15-conflitos-e-metodo-de-prova.md` §3.
 
 Leitura: o FPGA tem **dois bitstreams** (A/B, mesma lógica de atualização
 redundante do resto do sistema), é carregado por SPI (modo 3, 1 MHz) e tem
