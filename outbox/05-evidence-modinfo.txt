@@ -1,0 +1,43 @@
+Evidencia de licenca GPL - extraida do .modinfo de cada modulo
+Metodo: strings -a <modulo>.ko | grep -E '^(license|vermagic|srcversion)='
+
+== cs43198.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== dac_core_module.ko ==
+   license=GPL v2
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== anolog_board_jm21.ko ==
+   license=GPL v2
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== gw-fpga.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== fiio_primary_modules.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== fiio_underlay_modules.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== fiio_headset_jack.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== fiio_snd_soc_dummy_dai.ko ==
+   license=GPL v2
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== fiio_config.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+
+== fiio_gpio_debug_module.ko ==
+   license=GPL
+   vermagic=5.15.41-g9ded8564ff52-dirty SMP preempt mod_unload modversions aarch64
+

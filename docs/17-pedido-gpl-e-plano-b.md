@@ -13,8 +13,16 @@
 | `gw-fpga.ko` | `GPL` |
 | `fiio_underlay_modules.ko`, `fiio_headset_jack.ko`, `fiio_snd_soc_dummy_dai.ko`, `fiio_config.ko`, `fiio_gpio_debug_module.ko` | GPL (mesma árvore) |
 
-Pela GPLv2 §3, quem distribui o binário deve fornecer o código correspondente
-completo a quem o recebeu. Comprar o aparelho nos torna destinatários.
+Pela GPLv2 **§3(b)**, quem distribui o binário deve acompanhá-lo de uma oferta
+por escrito de fornecer o código correspondente — e quem recebeu o binário pode
+acionar essa oferta. Comprar o aparelho nos torna destinatários; o pedido é o
+exercício dessa oferta.
+
+> **Nota sobre o nome do módulo:** o arquivo no aparelho é
+> `anolog_board_jm21.ko` — com "o", não "a". É typo da própria FiiO, repetido no
+> device tree (`fiio,anolog_board`) e em várias mensagens de log. **Não
+> "corrigir"**: o nome citado no pedido tem de ser exatamente o que está no
+> firmware, senão eles não localizam a build.
 
 `[FW]` O repositório público da FiiO (`FiiOapp/FiiO_Kernel_OpenSource`) é
 **Linux 2.6.31.3 para Ingenic** — players antigos, não o JM21. Ou seja: o fonte
@@ -66,9 +74,10 @@ e65ec5f505e55d5bb4be26777d8881dbdee2772ae4dc293934c1d80dcbad3337  fiio_config.ko
 > `fiio_headset_jack.ko`, `fiio_snd_soc_dummy_dai.ko`, `fiio_config.ko` and
 > `fiio_gpio_debug_module.ko`.
 >
-> Under section 3 of the GNU General Public License version 2, as a recipient
-> of these binaries I am entitled to the complete corresponding source code.
-> I am therefore requesting:
+> Under **section 3(b)** of the GNU General Public License version 2, the
+> binaries were distributed to me together with a written offer to provide the
+> corresponding source code. I am hereby exercising that offer as a recipient
+> of the device. I am requesting:
 >
 > 1. The complete corresponding source code for the modules listed above (or
 >    the kernel tree from which they were built), including Kconfig/Makefile
@@ -112,9 +121,10 @@ e65ec5f505e55d5bb4be26777d8881dbdee2772ae4dc293934c1d80dcbad3337  fiio_config.ko
 
 > Hello. I own a FiiO JM21 running firmware 1.1.1. The player ships GPL-licensed
 > kernel modules (`cs43198.ko`, `dac_core_module.ko`, `anolog_board_jm21.ko`,
-> `gw-fpga.ko`, `fiio_primary_modules.ko` and others). Under GPLv2 §3 I request
-> the complete corresponding source code, the kernel `.config` and the base
-> revision (`5.15.41-android13-8-g9ded8564ff52-dirty`) plus applied patches.
+> `gw-fpga.ko`, `fiio_primary_modules.ko` and others). Under GPLv2 **§3(b)** I
+> am exercising the written offer to obtain the corresponding source and request
+> the complete source code, the kernel `.config` and the base revision
+> (`5.15.41-android13-8-g9ded8564ff52-dirty`) plus applied patches.
 > A download link is fine; I can cover media/shipping costs. Please forward to
 > your open-source compliance contact if needed. Thank you.
 

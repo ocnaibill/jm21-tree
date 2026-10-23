@@ -1,0 +1,63 @@
+To: support@fiio.com
+Subject: GPLv2 section 3(b) request - complete corresponding source code for
+         FiiO JM21 (firmware 1.1.1)
+
+Dear FiiO Support,
+
+I own a FiiO JM21 digital audio player (3 GB / 32 GB variant) running firmware
+1.1.1.
+
+The device ships several loadable kernel modules in binary form whose .modinfo
+sections declare GPL licensing:
+
+    cs43198.ko                    license=GPL
+    dac_core_module.ko            license=GPL v2
+    anolog_board_jm21.ko          license=GPL v2
+    gw-fpga.ko                    license=GPL
+    fiio_primary_modules.ko       license=GPL
+    fiio_underlay_modules.ko      license=GPL
+    fiio_headset_jack.ko          license=GPL
+    fiio_snd_soc_dummy_dai.ko     license=GPL
+    fiio_config.ko                license=GPL
+    fiio_gpio_debug_module.ko     license=GPL
+
+(Note: the filename "anolog_board_jm21.ko" is reproduced exactly as shipped in
+the firmware; it is spelled with an "o" in the device, in the device tree as
+"fiio,anolog_board", and in the module itself.)
+
+Under section 3(b) of the GNU General Public License version 2, these binaries
+were distributed to me together with a written offer to provide the complete
+corresponding source code. I hereby exercise that offer as a recipient of the
+device.
+
+I request:
+
+1. The complete corresponding source code for the modules listed above (or the
+   kernel tree from which they were built), including Kconfig/Makefile files
+   and any out-of-tree module directories.
+2. The kernel .config used for this build.
+3. The exact base revision and the patch set applied on top of it. From the
+   device banner, the base appears to be
+   5.15.41-android13-8-g9ded8564ff52 with local modifications ("-dirty").
+4. The toolchain used (the banner reports Android clang 14.0.7 and LLD 14.0.7).
+5. Any build or packaging scripts needed to reproduce these modules.
+
+For identification of the exact build, please see the attached files:
+ - 03-build-identifiers.txt : build fingerprint, kernel version, toolchain
+ - 04-modules-sha256.txt    : SHA-256 of each distributed module
+ - 05-evidence-modinfo.txt  : license and vermagic extracted from each module
+
+If the source is already published, a download link is sufficient. I am happy
+to cover reasonable costs of media and shipping if it must be sent physically,
+as permitted by GPLv2 section 3.
+
+I would appreciate a reply within 30 days. If this request cannot be fulfilled
+directly, please forward it to the person or team responsible for your
+open-source compliance.
+
+Thank you for your attention.
+
+Kind regards,
+[NOME COMPLETO]
+[ENDERECO PARA ENVIO FISICO, se aplicavel]
+[E-MAIL] | [TELEFONE, opcional]

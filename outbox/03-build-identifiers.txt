@@ -1,0 +1,48 @@
+FiiO JM21 - build identifiers
+Gerado em: 2026-10-23T23:51:47Z UTC
+Fonte: pacote completo oficial JM21-update-1.1.1.zip
+
+== META-INF/com/android/metadata ==
+ota-property-files=payload_metadata.bin:3239:130946,payload.bin:3239:1642838532,payload_properties.txt:1642841829:177,apex_info.pb:2295:0,care_map.pb:2342:850,metadata:69:698,metadata.pb:835:1412                        
+ota-required-cache=0
+ota-streaming-property-files=payload.bin:3239:1642838532,payload_properties.txt:1642841829:177,apex_info.pb:2295:0,care_map.pb:2342:850,metadata:69:698,metadata.pb:835:1412                          
+ota-type=AB
+post-build=qti/bengal_515/bengal_515:13/TKQ1.230110.001/eng.fiio.20260428.144644:user/dev-keys
+post-build-incremental=eng.fiio.20260428.144644
+post-sdk-level=33
+post-security-patch-level=2023-02-05
+post-timestamp=1777358737
+pre-device=bengal_515
+
+== payload_properties.txt ==
+FILE_HASH=kzkSRbXKAhGWdGQVgGpiVMrtYE41mb4/MEouJZfYPXE=
+FILE_SIZE=1642838532
+METADATA_HASH=zF/jTxnVkCr1xHXRa4ciZ28XY10raju9jJmhlMQJXz4=
+METADATA_SIZE=130679
+MODEL_NAME=FiiO JM21
+
+== build.prop (linhas relevantes) ==
+ro.adb.secure=1
+ro.boot.dynamic_partitions=true
+ro.build.tags=dev-keys
+ro.build.type=user
+ro.build.version.incremental=eng.fiio.20260428.144644
+ro.build.version.release=13
+ro.build.version.release_or_codename=13
+ro.build.version.release_or_preview_display=13
+ro.build.version.sdk=33
+ro.build.version.security_patch=2023-02-05
+ro.oem_unlock_supported=1
+ro.product.board=bengal
+ro.product.first_api_level=33
+ro.product.vendor.brand=qti
+ro.product.vendor.device=bengal_515
+ro.product.vendor.manufacturer=QUALCOMM
+ro.product.vendor.model=FiiO JM21
+ro.product.vendor.name=bengal_515
+ro.product.version=1.1.1
+ro.product.version.update_log=log_1.1.1.txt
+ro.vendor.build.fingerprint=qti/bengal_515/bengal_515:13/TKQ1.230110.001/fiio04281544:user/dev-keys
+
+== kernel banner ==
+Linux version 5.15.41-android13-8-g9ded8564ff52-dirty (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Tue Apr 28 08:23:10 UTC 2026
