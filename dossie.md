@@ -118,6 +118,16 @@ cálculo ou de documento público e está explicitado no texto.
     módulo decompilado. Ver `docs/15-conflitos-e-metodo-de-prova.md`.
 26. **FPGA é o clock master.** `fpga_set_mclk()` seleciona 22/24, 45/49 ou
     90/98 MHz para os DACs; o SoC não fecha o clock.
+27. **Pesquisa externa auditada item por item.** Confirmados: kernel 5.15.41,
+    layout GKI, `init_boot`, swapfile de 512 MB + zram lz4, MGLRU
+    (`CONFIG_LRU_GEN`), splash BMP em offset 16384. Refutados: partição `super`
+    no payload e partição `splash`. Sem evidência: "bootloader desbloqueado de
+    fábrica" e "SELinux permissive" (build `user`, `ro.debuggable=0`, AVB com
+    verificação ligada). Ver `docs/16-auditoria-pesquisa-externa.md`.
+28. **Kallsyms do kernel recuperado (152 139 símbolos).** Não existe nenhum
+    símbolo `snd_dac_*` nem `fiio_*` no `Image`: os 4 `EXPORT_SYMBOL_GPL` do
+    `dac_core` são **código morto** neste firmware, e o techpack de áudio da
+    Qualcomm está em módulos, não no kernel.
 
 ---
 
@@ -242,6 +252,18 @@ O "SDK" do kernel (19 cadeias, registro por nome, hub `soc:fiio_attr`) e o
 cruzamento com a pesquisa externa — o que confirmou, o que corrigiu e o que
 conflita:
 **[docs/14-arquitetura-kernel-fiio.md](docs/14-arquitetura-kernel-fiio.md)**
+
+## 14. Conflitos e método de prova
+
+As hipóteses rivais (topologia, ganho, FPGA), o que já foi decidido por código,
+o que ainda exige bancada e os critérios de aceitação:
+**[docs/15-conflitos-e-metodo-de-prova.md](docs/15-conflitos-e-metodo-de-prova.md)**
+
+## 15. Auditoria de pesquisa externa
+
+Veredito item por item das alegações de terceiros (bootloader, SELinux,
+partições, splash, swap, kernel) contra o firmware 1.1.1:
+**[docs/16-auditoria-pesquisa-externa.md](docs/16-auditoria-pesquisa-externa.md)**
 
 ---
 

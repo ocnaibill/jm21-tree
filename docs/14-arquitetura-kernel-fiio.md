@@ -104,20 +104,33 @@ API exportada (snd_dac_*_gpl)  --chain 3 (player)-->  player_notifier_cb
 — ou seja, o evento 0 do `player_notifier_cb`. O callback então chama
 `snd_dac_startup()`, que avisa a cadeia 1.
 
-### 4.2 A ponta que falta
+### 4.2 A ponta que faltava — **resolvida (negativamente)**
 
-O `dac_core` exporta **quatro** símbolos GPL:
+O `dac_core` exporta quatro símbolos GPL:
 
 ```
 snd_dac_startup_gpl  snd_dac_shutdown_gpl
 snd_dac_hw_params_gpl  snd_dac_shutdown_now_gpl
 ```
 
-`[FW]` Nenhum módulo de `vendor_dlkm` importa esses símbolos (varredura de
-`UND` em todos os 100+ `.ko`, e de strings). Conclusão provável: quem chama é
-**código embutido no kernel** (a machine driver `bengal` que a FiiO patcheou),
-invisível nas strings porque o kallsyms é comprimido. `[?]` Confirmar com
-`/proc/kallsyms` (root) no aparelho ou descomprimindo o kallsyms do `Image`.
+Três verificações independentes:
+
+1. Nenhum dos 100+ `.ko` de `vendor_dlkm` importa esses símbolos (`UND`).
+2. O `Image` do kernel foi reconstruído com `vmlinux-to-elf` (152 139 símbolos
+   recuperados do `kallsyms`) e **não contém nenhum símbolo `snd_dac_*` nem
+   `fiio_*`** — nem código FiiO, nem o techpack de áudio da Qualcomm
+   (`bengal`, `msm_pcm`, `q6afe` ausentes; só o ASoC genérico).
+3. O `fiio_snd_soc_dummy_dai.ko` importa apenas
+   `devm_snd_soc_register_component`, `snd_soc_set_runtime_hwparams`,
+   `__platform_driver_register` e `_printk` — é um componente **dummy** puro.
+
+**Conclusão:** no firmware 1.1.1 esses quatro `EXPORT_SYMBOL_GPL` são **código
+morto** (provavelmente herdados de outros modelos FiiO que compartilham o
+`dac_core`). Quem move o áudio é a pilha FiiO + FPGA, não uma chamada do kernel.
+
+O techpack de áudio da Qualcomm está em módulos (`machine_dlkm.ko`,
+`q6_dlkm.ko`, `spf_core_dlkm.ko`, `audio_pkt_dlkm.ko`), não no `Image` — o que
+explica a ausência dos símbolos `msm_pcm`/`q6afe`.
 
 ## 5. Cruzamento com a pesquisa externa
 

@@ -55,3 +55,5 @@ analysis/ghidra/
 
 # --- datasheets de terceiros (licenca) ---
 analysis/datasheets/
+analysis/fw-1.1.1/kernel.Image
+analysis/fw-1.1.1/vmlinux.elf
