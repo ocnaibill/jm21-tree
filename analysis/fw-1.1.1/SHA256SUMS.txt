@@ -1,0 +1,12 @@
+7ce7dd28432418b70c579f3e0fca26dbf8dc3f134c0deb6b300cb372b1e81b97  fw/JM21-update-1.1.1.zip
+93391245b5ca021196746415806a6254caed604e3599be3f304a2e2597d83d71  fw/JM21-update-1.1.1/payload.bin
+03bad0f3afbe483ef36015b0633a7e433ed5eae65e9d81244d6020733fca29d3  dumps/fw-1.1.1/boot.img
+1365314e11acedda9ab6f372945cdd48f8bbf6a08b9fbf54f1f7c7d25116e537  dumps/fw-1.1.1/dtbo.img
+858655e7e516224aebc441ea782c3a41c5b9ac87d0e8deb285842e8c0deedbd4  dumps/fw-1.1.1/init_boot.img
+11773988182f1cc1fdedc0330aaa3cbd1ffbf91d0ddf51d26e8d77fd747e3365  dumps/fw-1.1.1/vendor_boot.img
+f6edbdda2329d102a7deb3edc15459823947008daadcc0ec69a88579d1ab7636  dumps/fw-1.1.1/vbmeta.img
+0ee49b29574c42a9f27a92b5ae9c310f871a659e633ab2df1f6ba2e919a02746  dumps/fw-1.1.1/vendor.img
+21deb5634ae36296aeaf947c8dec63add38ed53f5f924f317e31da6677deafa4  dumps/fw-1.1.1/system.img
+ad32570b9dda2e935c35eadccce2ac3f327b9e43e09191788e8d103e26d52ccf  analysis/fw-1.1.1/vendor_dlkm/cs43198.ko
+239563f80098f265828350472d82e69b8e22eb43cbf5c624e42c97f05bbc970e  analysis/fw-1.1.1/vendor/lib64/libfiioaudio.so
+ebe7f0c282a359d4f0211ed09f3d4a46b73493b47c544fd9aceb71740bd55c84  analysis/fw-1.1.1/vendor/lib64/audio.primary.bengal.so

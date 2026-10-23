@@ -1,0 +1,51 @@
+# --- Documentos locais (nao versionar) ---
+AGENTS.md
+CLAUDE.md
+dossie.md
+
+# --- Firmware original e artefatos extraidos (grandes) ---
+fw/
+dumps/
+extracted/
+out/
+*.img
+*.bin
+*.mbn
+*.elf
+!tools/**/*.py
+!tools/**/*.sh
+
+# --- Recortes binarios de analise (reproduziveis a partir de fw/) ---
+analysis/**/*.apk
+analysis/**/*.so
+analysis/**/*.ko
+analysis/**/*.jar
+analysis/**/*.iso
+analysis/**/*.dtb
+analysis/**/base-dtb.dts
+
+# --- Projetos de ferramentas de RE ---
+*.gpr
+*.i64
+*.idb
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
+*.ghidra
+ghidra-projects/
+ida-projects/
+jadx-out/
+
+# --- Binarios de ferramentas (recompilaveis) ---
+tools/bin/
+
+# --- Cache / ambientes ---
+.venv/
+__pycache__/
+*.pyc
+.cache/
+
+# --- Estado de ferramentas do agente ---
+.commandcode/
