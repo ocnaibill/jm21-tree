@@ -133,6 +133,14 @@ cálculo ou de documento público e está explicitado no texto.
     192 kHz (`fractional_sr=1`, só 8k/16k/44,1k/48k no arquivo), o driver
     **não** varia `OUT_FS` em runtime, e a posição dos bits de `0x90000` está
     trocada (bit 2 = WBF, bit 1 = high-pass, bit 0 = de-emphasis).
+30. **Pedido GPL redigido + plano B.** Todos os módulos FiiO declaram
+    `license=GPL`/`GPL v2`; o repo público da FiiO é Linux 2.6.31 (Ingenic), não
+    o JM21. Pedido pronto para envio e plano de escalonamento/fallback em
+    `docs/17-pedido-gpl-e-plano-b.md`.
+31. **Superfície sysfs completa mapeada.** O `init.fiio.common.rc` faz `chmod
+    0666` em ~50 nós de `soc:fiio_attr` — essa é a API. Mapeamos nó → módulo →
+    papel, os gatilhos `on property:` reais e os serviços (`fiiouac`,
+    `fiio_init.sh`, `system_ctrl.sh`…). Ver `docs/18-superficie-sysfs.md`.
 
 ---
 
@@ -269,6 +277,18 @@ o que ainda exige bancada e os critérios de aceitação:
 Veredito item por item das alegações de terceiros (bootloader, SELinux,
 partições, splash, swap, kernel) contra o firmware 1.1.1:
 **[docs/16-auditoria-pesquisa-externa.md](docs/16-auditoria-pesquisa-externa.md)**
+
+## 16. Pedido GPL e plano B
+
+E-mail pronto (inglês), identificadores do build, hashes dos módulos e o plano
+de escalonamento/fallback técnico:
+**[docs/17-pedido-gpl-e-plano-b.md](docs/17-pedido-gpl-e-plano-b.md)**
+
+## 17. Superfície sysfs e gatilhos
+
+A API completa de `soc:fiio_attr`, o mapa nó → módulo → função e as
+propriedades que disparam ações:
+**[docs/18-superficie-sysfs.md](docs/18-superficie-sysfs.md)**
 
 ---
 

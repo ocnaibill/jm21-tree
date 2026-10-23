@@ -1,0 +1,241 @@
+on boot
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/gpio_debug_clear
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/gpio_debug_read
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/gpio_debug_set
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/dac_ctrl
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/dac_read_reg
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/dac_vol
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_power
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_bypass
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_hwinit
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_config
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_firmware_name
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_fw_name
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_update
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_read_code
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_input_func
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_spi_func
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_erase
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_power_ctrl
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_reload
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_update_firmware_name
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/board_debug
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/board_vol_dac
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/board_vol_nju
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/board_is_pause_by_headset
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/board_dac_dre_switch
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/board_delay_ctrl
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/config_sn
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/config_nb
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/usb_boot_switch
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/ts_gesture_enable
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/ts_screen_off
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/led_status
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/led_regation
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/led_working_style
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/led_color
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/headset_debug
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/headset_type
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/user_set_disable_chg
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/send_charge_type
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/send_tape_type
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fuel_gauge_force_temp
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/fuel_gauge_force_cap
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/tape_auto_detect
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/power_off_charge_switch
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/sw_hold_ctrl
+    chmod 0666 /sys/devices/platform/soc/soc:gpio_keys/key_hold
+    chmod 0666 /sys/devices/platform/soc/soc:gpio_keys/change_key_code
+    chmod 0666 /sys/module/phy_msm_snps_hs/drivers/platform:msm-usb-hsphy/1613000.hsphy/ctrl
+
+    chmod 0666 /mnt/vendor/persist/bdwlant.bin
+    chmod 0666 /mnt/vendor/persist/bdwlans.bin
+    chmod 0666 /mnt/vendor/persist/bdwlanu.bin
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/screen_state
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/active_wakeup
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/i2c_test_auto
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/i2c_test_get_failed_count
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/i2c_test_read
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/i2c_test_write
+
+    chmod 0666 /sys/devices/platform/soc/soc:fiio_attr/send_hold_type
+
+service mcopy_files /system/bin/handle_files.sh cp_files
+    class main
+    seclabel u:r:mcopy_files:s0
+    disabled
+    oneshot
+
+on property:fiio.handle.files=0
+    start mcopy_files
+
+service fiiouac_service /system/bin/fiiouac
+    class main
+    seclabel u:r:fiiouac_service:s0
+    disabled
+    oneshot
+
+on property:fiio.start.uac.service=1
+    start fiiouac_service
+
+on property:fiio.start.uac.service=0
+    stop fiiouac_service
+
+service huawei_hiplay_service /system/bin/huawei_hiplay
+    class main
+    seclabel u:r:huawei_hiplay_service:s0
+    disabled
+    oneshot
+
+on property:fiio.start.huawei_hiplay.service=1
+    start huawei_hiplay_service
+
+on property:fiio.start.huawei_hiplay.service=0
+    stop huawei_hiplay_service
+
+service logdumpd /system/bin/logsystem
+    class main
+    seclabel u:r:logdumpd:s0
+    disabled
+    oneshot
+
+on property:sys.logdumpd.enabled=1
+    start logdumpd
+
+on property:sys.logdumpd.enabled=0
+    stop logdumpd
+
+on property:fiio.usb.boot.mode=disable
+    write /sys/devices/platform/soc/soc:fiio_attr/usb_boot_switch "disable"
+
+on property:fiio.usb.boot.mode=enable
+    write /sys/devices/platform/soc/soc:fiio_attr/usb_boot_switch "enable"
+
+on property:fiio.vehicle.mode=enable
+    write /sys/devices/platform/soc/soc:fiio_attr/power_off_charge_switch "disable"
+
+on property:fiio.vehicle.mode=disable
+    write /sys/devices/platform/soc/soc:fiio_attr/power_off_charge_switch "enable"
+
+service output_logs /system/bin/output_logs.sh
+    class main
+    seclabel u:r:output_logs:s0
+    oneshot
+    disabled
+
+on property:fiio.output.logs=1
+    start output_logs
+
+on property:fiio.output.logs=0
+    stop output_logs
+
+# 使能dump模式
+on property:fiio.enable.dump=disable
+    write /data/vendor/port_bridge/at_miso "at+qcfg='dumpenable',0"
+
+on property:fiio.enable.dump=enable
+    write /data/vendor/port_bridge/at_miso "at+qcfg='dumpenable',1"
+
+# 触发死机以手动进入dump模式
+on property:fiio.enter.dump=enable
+    write /proc/sysrq-trigger "c"
+
+#add for update sn nb to system
+service numservice /vendor/bin/numservice.sh
+    class main
+    seclabel u:r:numservice:s0
+    oneshot
+
+on property:fiio.start.numservice=1
+    start numservice
+
+#start init
+service fiio_init_service /system/bin/fiio_init.sh
+    class main
+    seclabel u:r:fiio_init_service:s0
+    #disabled
+    oneshot
+
+on property:fiio.init.service=1
+    start fiio_init_service
+#end
+
+#start uninit
+service fiio_uninit_service /system/bin/fiio_uninit.sh
+    class main
+    seclabel u:r:fiio_uninit_service:s0
+    disabled
+    oneshot
+
+on property:fiio.do.master.clear=1
+    start fiio_uninit_service
+#end
+service fiio_drop_caches /system/bin/fiio_drop_caches.sh
+    class main
+    seclabel u:r:fiio_drop_caches:s0
+    disabled
+    oneshot
+
+on property:fiio.start.dropcaches=1
+    start fiio_drop_caches
+
+on property:fiio.config.fpga.firmware=*
+    write /sys/devices/platform/soc/soc:fiio_attr/fpga_gw_update_firmware_name ${fiio.config.fpga.firmware}
+
+on property:fiio.ssusb.speed=*
+    write /sys/devices/platform/soc/4e00000.ssusb/speed ${fiio.ssusb.speed}
+
+on property:fiio.ssusb.mode=*
+    write /sys/devices/platform/soc/4e00000.ssusb/mode ${fiio.ssusb.mode}
+
+service system_ctrl /vendor/bin/system_ctrl.sh ${fiio.sys.ctrl}
+    class main
+    seclabel u:r:system_ctrl:s0
+    disabled
+    oneshot
+
+on property:fiio.sys.ctrl=*
+    start system_ctrl
+
+service dumpsys_logs /system/bin/dumpsys_logs.sh
+    class main
+    seclabel u:r:dumpsys_logs:s0
+    oneshot
+    disabled
+
+on property:fiio.dumpsys.logs=1
+    start dumpsys_logs
+
+
+#uninstall google service
+service google_uninstall /system/bin/google_uninstall.sh
+    class main
+    seclabel u:r:google_uninstall:s0
+    disabled
+
+on property:fiio.uninstall.google=1
+    start google_uninstall
+#end
+
+#start bmgr
+service google_bmgr /system/bin/google_bmgr.sh
+    class main
+    seclabel u:r:google_bmgr:s0
+    disabled
+    oneshot
+
+on property:fiio.bmgr.google=1
+    start google_bmgr
+
+#end
+

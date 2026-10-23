@@ -153,8 +153,3 @@ sobe para fato depois de cruzar com uma destas fontes** — datasheet oficial,
 arquivo do firmware, decompilação ou medição. O que não cruzar fica marcado
 como não verificado, mesmo que pareça razoável.
 
-
-`vmlinux-to-elf` sobre `analysis/fw-1.1.1/kernel.Image` para recuperar o
-kallsyms: (a) achar os símbolos FiiO embutidos, (b) descobrir quem chama os
-quatro `snd_dac_*_gpl` exportados, (c) confirmar se existe machine driver
-patcheada no kernel.
