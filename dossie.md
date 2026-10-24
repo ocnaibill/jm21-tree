@@ -8,6 +8,14 @@
 
 ---
 
+## Placar de progresso
+
+O estado de cada camada (provado / mapeado / aberto), as perguntas abertas e os
+próximos experimentos priorizados ficam em
+**[docs/PROGRESSO.md](docs/PROGRESSO.md)**. Atualizar ao fim de cada sessão.
+
+---
+
 ## Legenda de evidência
 
 Toda afirmação neste dossiê carrega a origem. Sem marcador, o dado é derivado de
