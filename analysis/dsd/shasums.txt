@@ -1,0 +1,4 @@
+7647aa679d58900cb07addafc3fb5b627c05cd3315af94d34f86a532e2acea0e  decaud-goldberg-aria-dsd64.dsf
+d89bc0e2053204968cc816a48f4974719a43627586cec81f02f2d85bda686f9c  decaud-goldberg-var5-dsd128.dsf
+60d55bd8f503c2d07b8b4377067546bff44472149b9030c3c9bdff879636bc46  decaud-goldberg-var5-dsd256.dsf
+bd3fbb4db97c7f8f7e9f4f780da34421c5ccaaf5a6a49182c62f4371db43234e  decaud-goldberg-var5-dsd64.dsf

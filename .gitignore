@@ -59,3 +59,7 @@ analysis/fw-1.1.1/kernel.Image
 analysis/fw-1.1.1/vmlinux.elf
 
 device-baseline/
+analysis/**/*.dsf
+analysis/**/*.dff
+analysis/dsd/*.dsf
+analysis/dsd/*.dff
