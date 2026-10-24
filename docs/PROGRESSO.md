@@ -94,6 +94,12 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**FiiO Music / JNI (issue #2 fechada):** decoder é ffmpeg estático
+(`libhello-jni`), SACD/DST em `libsacd`, UAC host próprio em `libUsbAudio`;
+`XSeriesConfig` (`t1.i`) dá DSD 88200/7, 176400/8, 352800/9 com
+`decoderFormat=1` — igual ao medido. `fiioConfigALLTODSD` não existe no
+framework (reflexão morta). Ver `docs/36`.
+
 **Framework/services (issue #3 fechada):** enum completo dos codec params
 (0–22), `setMasterVolumeDac` nativo até a HAL, 64 flags `config_fiio_*` com
 valores reais (`uac_kernel=false`, `tape_mode_auto_det_sw=false`), allowlists e
