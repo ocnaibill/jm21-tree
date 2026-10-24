@@ -76,8 +76,19 @@ fastboot flash vbmeta_a bk_vbmeta_a.img
 3. Se o aparelho não entrar em fastboot, aí sim é caso de EDL — e não temos
    firehose (`docs/35`).
 
-## 4. Pendência
+## 4. Teste de restauração (feito)
 
-- **Teste de restauração real**: escrever de volta uma partição de estado
-  (candidata: `fiioconfig`, com o próprio dump) e conferir o hash na leitura.
-  É um write — só com aprovação explícita.
+Teste escolhido: **`fiioconfig`**, escrevendo de volta o próprio dump (mesmos
+bytes). Antes: partição não montada e hash da partição **igual** ao dump
+(`005b7233…`).
+
+```
+dd if=/data/local/tmp/bk_fiioconfig.img of=/dev/block/by-name/fiioconfig bs=1M
+10485760 bytes copied, 0.092 s, 108 MB/s
+sha256sum /dev/block/by-name/fiioconfig
+005b7233c2e0633615a2a95cbff012df7a09a5374aa6f1a5b396e4bdf00165d2
+```
+
+`[FATO]` Hash **idêntico antes e depois** e o SN continua legível
+(`sys.fiio.sn_num = 20070008442701`). O caminho de restauração por `dd` está
+validado numa partição de estado real, sem alterar o conteúdo.
