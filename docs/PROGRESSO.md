@@ -94,6 +94,11 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**Apps restantes (issue #7 fechada):** EQ é `AudioEffect` do AOSP (sem lib
+FiiO em `/vendor/lib/soundfx`); Cast = DLNA dentro do Music; Pod/Tape são
+skins; Roon tem plugin próprio; nenhum app fala com o DAC; nós `tape_*` não
+existem no JM21; OTA = `jm21pack.fiio.net/JM21-updateCN.zip`. Ver `docs/32`.
+
 **FPGA decodificado (issue #4 fechada):** `tools/fpga_fw_to_fs.py` converte o
 `.fw` (RLE `0xDB`, 274 frames de 160 B) para `.fs`; netlist: 803 LUT4, 337 DFF,
 52 ALU, 18 `RAM16SDP4`, `IDES10`/`IDDRC` na entrada, `ODDR`/`ELVDS_OBUF` na
