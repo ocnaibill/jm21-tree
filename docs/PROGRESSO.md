@@ -94,6 +94,12 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**FPGA decodificado (issue #4 fechada):** `tools/fpga_fw_to_fs.py` converte o
+`.fw` (RLE `0xDB`, 274 frames de 160 B) para `.fs`; netlist: 803 LUT4, 337 DFF,
+52 ALU, 18 `RAM16SDP4`, `IDES10`/`IDDRC` na entrada, `ODDR`/`ELVDS_OBUF` na
+saída, `OSCZ` `FREQ_DIV=2`, 11 pinos. É **re-clock + roteamento + clock**, sem
+DSP (zero `MULT*`/BSRAM). Ver `docs/31`.
+
 **DSD256 mapeado:** `BYPASS`, `srcRate 352800`, FPGA **`0x68`** (a tabela DSD do
 `fpga_config()` soma `0x20` a partir de 352,8 k), `0x70004 = 0x1B` — previsão
 confirmada. Escada DSD completa: 64/128/256.
