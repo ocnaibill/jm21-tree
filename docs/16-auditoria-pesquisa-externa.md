@@ -19,22 +19,31 @@
 | OTA `.zip` com `payload.bin`, A/B | **CONFIRMADO** | `[FW]` `ota-type=AB`, payload v2 |
 | URL `jm21pack.fiio.net/beta/JM21-update-<versao>.zip` | **CONFIRMADO** | `[FW]` `Content-Length` 1 642 845 150 idêntico ao arquivo local |
 
-## 2. Bootloader e SELinux — as duas afirmações mais perigosas
+## 2. Bootloader e SELinux — **vereditos corrigidos pelo aparelho**
 
-| Afirmação | Veredito | Evidência |
-|-----------|----------|-----------|
-| "Bootloader desbloqueado de fábrica" | **SEM EVIDÊNCIA / provavelmente falso** | `[FW]` `ro.build.type=user`, `ro.secure=1`, `ro.debuggable=0`, AVB `Flags=0` (verity + verificação **ligadas**). `ro.oem_unlock_supported=1` só diz que o desbloqueio é **permitido**, não que o aparelho sai desbloqueado. |
-| "SELinux permissive por padrão" | **SEM EVIDÊNCIA / provavelmente falso** | build `user` com `ro.debuggable=0`; `CONFIG_SECURITY_SELINUX_DEVELOP=y` apenas permite permissive **se** o bootloader passar `androidboot.selinux=permissive`. Não há esse parâmetro no `boot.img` (sem bootconfig embutido). Só o aparelho responde (`getenforce`). |
-| `ro.adb.secure=1` (implícito: adb autorizado) | **CONFIRMADO** | `[PROP]` |
+> **ATUALIZAÇÃO (sessão 1, 2026-10-23):** a auditoria abaixo foi feita só com o
+> firmware e errou os dois itens. O aparelho respondeu:
+>
+> - `getenforce` → **Permissive** (a afirmação externa estava **certa**)
+> - `ro.boot.verifiedbootstate=orange`, `ro.boot.flash.locked=0` → bootloader
+>   **destravado** (a afirmação externa estava **certa**)
+>
+> Motivo do erro: estado de boot e modo SELinux vêm do **bootloader/init**, não
+> do pacote OTA. A ausência no firmware não provava nada. Registro mantido para
+> não repetir o raciocínio.
 
-**Consequência prática:** o plano de root do texto ("já vem desbloqueado, então é
-só `fastboot flash init_boot`") **não pode ser executado às cegas**. Com AVB
-ligado e bootloader travado, o flash falha — ou, pior, se o unlock for feito sem
-backup, o `userdata` é apagado. A ordem correta é: confirmar
-`fastboot getvar unlocked` → só então decidir.
+| Afirmação | Veredito original | **Veredito real** | Evidência |
+|-----------|-------------------|-------------------|-----------|
+| "Bootloader desbloqueado de fábrica" | sem evidência / provavelmente falso | **CONFIRMADO** | `[FW-DEV]` `verifiedbootstate=orange`, `flash.locked=0` |
+| "SELinux permissive por padrão" | sem evidência / provavelmente falso | **CONFIRMADO** | `[FW-DEV]` `getenforce` = Permissive |
+| `ro.adb.secure=1` | confirmado | confirmado | `[PROP]` |
 
-Outro ponto: `fastboot boot <img>` **não é universal** em Qualcomm; muitos
-bootloaders recusam. Testar isso antes de contar com o "root sem gravar".
+`veritymode=enforcing` — dm-verity segue ativo apesar do bootloader destravado.
+
+**Consequência prática:** o plano de root do texto original (patch de
+`init_boot` com Magisk) é **viável** — bootloader destravado é pré-requisito e
+ele já está destravado. Mas continua sendo uma **escrita**; decisão consciente,
+com backup antes (ver `23-sessao-1-baseline.md` §14).
 
 ## 3. Partições, root e splash
 

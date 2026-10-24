@@ -93,6 +93,20 @@ Leituras importantes:
 partições lógicas. Também não vêm `userdata`, `metadata`, `misc`, `persist`,
 `fsg`, `modemst*`, `devinfo` — nada disso é entregue por OTA.
 
+### No aparelho (sessão 1) `[FW-DEV]`
+
+```
+armazenamento : eMMC (mmcblk0), 90+ partições com sufixo _a/_b
+fiioconfig    : /dev/block/mmcblk0p71   (~? MB, ver §4)
+boot_a / boot_b           : p81 / p82
+init_boot_a / init_boot_b : p85 / p86
+dtbo_a / dtbo_b           : p83 / p84
+devinfo                   : p48
+frp                       : p21
+```
+
+A variante é a `KHAJEW IDP nopmi` (`qcom,khaje-idp`), com A/B completo.
+
 ### Tipo de filesystem
 
 Todas as imagens de partição lógica são **ext4** (`file(1)` reporta

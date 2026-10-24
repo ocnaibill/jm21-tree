@@ -49,17 +49,22 @@ dispositivo de primeira classe no DT e tem driver, firmware e interface de
 
 `[DT]` overlay 40, `fragment@20`.
 
-Pendências:
+**Confirmado no aparelho (sessão 1):**
 
-- **Resolvido:** o binding upstream usa `audio-codec@30` como exemplo; nosso DT
-  tem **0x30** e **0x33** (`reg` de `cs43198@31` e `cs43198@32`). Os nomes de nó
-  é que estão defasados.
-- `[?]` O barramento I2C é `target = <0xffffffff>` no overlay (placeholder) e
-  `qcom,clk-freq-out = 400000` (400 kHz). O número do barramento só aparece na
-  DTB base aplicada (`/proc/device-tree/soc@0/i2c@...`).
-- `[HIP]` Dois chips com `id` 0 e 1 indica driver parametrizado por instância. Em
-  `SPECIAL_MODE_2` **os dois recebem o mesmo estéreo** (ver `12` §4), então a
-  divisão não é por canal.
+```
+i2c-2 (Geni-I2C):  2-0030 cs43198    2-0033 cs43198
+                   2-0036 fpga_i2c    2-0042 fsa4480
+i2c-0 (i2c_gpio):  0-0022 fusb302
+i2c-1:             1-001a sgm41513   1-0064 cw221X
+i2c-3:             3-0038 fts         3-005d gt9xx
+```
+
+Ou seja: **barramento 2**, DACs em **0x30 e 0x33**, FPGA em **0x36** — tudo que
+o overlay 40 dizia. Os nomes de nó `cs43198@31`/`@32` continuam defasados, como
+anotado.
+
+`[?]` Pendente só o modo de operação de cada chip (polaridade) — ver §5 e
+`15-conflitos-e-metodo-de-prova.md`.
 
 ### Controles expostos pelo driver `cs43198.ko` `[DRV]`
 
@@ -105,17 +110,18 @@ para a família 48 kHz (24.576 MHz) — a buscar nas tabelas do driver.
 
 ## 4. Amplificadores e energia
 
-GPIOs declarados em `fiio,anolog_board` `[DT]`:
+GPIOs declarados em `fiio,anolog_board` `[DT]`, com os **números absolutos**
+lidos no boot do aparelho `[FW-DEV]` (base do TLMM = 389):
 
-| Propriedade DT | GPIO | Função inferida |
-|----------------|------|-----------------|
-| `gpio,dac_pwr` | 79 | habilita alimentação dos DACs |
-| `gpio,dac_rst` | 2 | reset dos DACs |
-| `gpio,ang_pwr` | 75 | alimentação analógica |
-| `gpio,amp_pwr` | 85 | amp 1 |
-| `gpio,amp2_pwr` | 67 | amp 2 |
-| `gpio,sw_en` | 86 | habilita chave/relé de saída |
-| `gpio,out_sel` | 29 | seleção de saída (SE × BAL) |
+| Propriedade DT | GPIO local | Absoluto | Função inferida |
+|----------------|-----------|----------|-----------------|
+| `gpio,dac_pwr` | 79 | **468** | alimentação dos DACs |
+| `gpio,dac_rst` | 2 | **391** | reset dos DACs |
+| `gpio,ang_pwr` | 75 | **464** | alimentação analógica |
+| `gpio,amp_pwr` | 85 | **474** | amp 1 |
+| `gpio,amp2_pwr` | 67 | **456** | amp 2 |
+| `gpio,sw_en` | 86 | **475** | chave/relé de saída |
+| `gpio,out_sel` | 29 | **418** | seleção de saída (PO × SPDIF) |
 
 `[HIP]` Dois enables de amp separados (`amp_pwr`, `amp2_pwr`) são compatíveis
 com 2x SGM8262 — um por estágio/saída. Não há nó de DT para os SGM8262: eles

@@ -5,7 +5,45 @@
 > dos módulos. Os `chmod 0666` do init **são** a documentação da API: cada nó
 > listado existe para ser escrito pelo userspace.
 
-## 1. Os nós de áudio (o que interessa)
+## 2. A lista real do aparelho (sessão 1)
+
+`[FW-DEV]` `ls /sys/devices/platform/soc/soc:fiio_attr/` — **a lista que vale**:
+
+```
+active_wakeup board_dac_dre_switch board_debug board_delay_ctrl
+board_is_pause_by_headset board_output_type board_vol_dac
+cc_state charging_disable_status config_nb config_sn
+cw_batt_capacity cw_batt_id cw_batt_soh
+dac_ctrl dac_read_reg dac_vol
+disable_battery_charge_level
+fpga_bypass fpga_config fpga_debug fpga_firmware_name
+fpga_gw_erase fpga_gw_fw_name fpga_gw_input_func fpga_gw_power_ctrl
+fpga_gw_read_code fpga_gw_reload fpga_gw_spi_func fpga_gw_update
+fpga_gw_update_firmware_name fpga_gw_version fpga_hwinit fpga_power
+fuel_gauge_force_cap fuel_gauge_force_temp
+gpio_debug_clear gpio_debug_read gpio_debug_set
+headset_debug headset_type
+lcd_id0 lcd_id1 lcd_id2 lcd_id3
+led_blue led_color led_green led_red led_regation led_status led_working_style
+power_off_charge_switch screen_state send_charge_type temp_compensation
+ts_gesture_enable ts_screen_off ts_touchscreen_name
+usb_boot_switch user_set_disable_charge_level user_set_disable_chg
+```
+
+**Extras** em relação ao init (que só faz `chmod`): `board_output_type`,
+`fpga_debug`, `fpga_gw_version`, `lcd_id0..3`, `led_blue/green/red`,
+`temp_compensation`, `ts_touchscreen_name`, `cc_state`, `charging_disable_status`,
+`disable_battery_charge_level`, `user_set_disable_charge_level`, `cw_batt_*`.
+
+**Ausentes** (o init prepara, mas o JM21 não tem): `board_vol_nju`,
+`i2c_test_auto/read/write/get_failed_count`, `sw_hold_ctrl`, `send_tape_type`,
+`send_hold_type`.
+
+Valores ociosos medidos: `dac_vol=69`, `board_vol_dac=255` (mute),
+`headset_type=0`, `board_output_type=1`, `fpga_gw_version=0x0`, e
+`fpga_config` com todos os campos em zero (nada tocando).
+
+## 3. Os nós de áudio (o que interessa)
 
 | Nó em `soc:fiio_attr/` | Módulo que registra | Papel |
 |------------------------|---------------------|-------|
@@ -21,7 +59,7 @@
 | `headset_debug` | `fiio_headset_jack` | limiares/estado de detecção |
 | `i2c_test_auto`, `i2c_test_write`, `i2c_test_get_failed_count` | `fiio_primary_modules` | bancada de I2C |
 
-## 2. Os nós do FPGA
+## 4. Os nós do FPGA
 
 | Nó | Módulo | Papel |
 |----|--------|-------|
@@ -36,7 +74,7 @@
 Estes nós são a **interface de bancada do FPGA**: dá para gravar bitstream,
 reler o código de status e trocar a função de entrada sem abrir o aparelho.
 
-## 3. Nós que o init prepara mas **não existem** neste firmware
+## 5. Nós que o init prepara mas **não existem** neste firmware
 
 `[FW]` Zero ocorrências no `vendor_dlkm.img`:
 
@@ -47,7 +85,7 @@ reler o código de status e trocar a função de entrada sem abrir o aparelho.
 Ou seja: o `init.fiio.common.rc` é **compartilhado entre modelos FiiO** e faz
 `chmod` de um superconjunto. Nó inexistente = `chmod` falha silenciosamente.
 
-## 4. Propriedade → ação (os gatilhos reais)
+## 6. Propriedade → ação (os gatilhos reais)
 
 | Propriedade | Ação |
 |-------------|------|
@@ -66,7 +104,7 @@ Ou seja: o `init.fiio.common.rc` é **compartilhado entre modelos FiiO** e faz
 | `fiio.output.logs=1`, `fiio.dumpsys.logs=1` | coleta de logs |
 | `fiio.uninstall.google=1`, `fiio.bmgr.google=1` | remove/aciona serviços Google |
 
-## 5. Serviços FiiO (o que a HAL/apps podem disparar)
+## 7. Serviços FiiO (o que a HAL/apps podem disparar)
 
 `/system/bin/fiiouac` · `/system/bin/huawei_hiplay` · `/system/bin/hiplay?` ·
 `/system/bin/logsystem` · `/system/bin/output_logs.sh` ·
@@ -76,7 +114,7 @@ Ou seja: o `init.fiio.common.rc` é **compartilhado entre modelos FiiO** e faz
 `/system/bin/fiio_drop_caches.sh` · `/vendor/bin/system_ctrl.sh` ·
 `/vendor/bin/numservice.sh`
 
-## 6. USB: os dois modos e um detalhe
+## 8. USB: os dois modos e um detalhe
 
 | Config | VID:PID | Função |
 |--------|---------|--------|
@@ -88,7 +126,7 @@ igual em qualquer aparelho (aparece no `init.fiio.usb.rc`). Isso não é o seria
 real do dispositivo — é um valor de exemplo que ficou no script. Consequência:
 dois JM21 ligados ao mesmo PC como DAC USB podem colidir na enumeração.
 
-## 7. Notas de segurança (fatos, não opinião)
+## 9. Notas de segurança (fatos, não opinião)
 
 1. **Todos os nós são `0666`** — qualquer processo (mesmo app comum, se o
    SELinux permitir) pode escrever em `dac_vol`, `fpga_gw_update`,
@@ -101,7 +139,7 @@ dois JM21 ligados ao mesmo PC como DAC USB podem colidir na enumeração.
    aparelho vem daqui (e da partição `fiioconfig`).
 5. `fiio.do.master.clear` dispara `fiio_uninit.sh` — provável reset de estado.
 
-## 8. O que isso fecha
+## 10. O que isso fecha
 
 O caminho completo agora tem as duas pontas documentadas:
 
@@ -116,7 +154,7 @@ app → HAL (libfiioaudio)         [userspace, strings mapeadas]
 `[?]` Falta só identificar, dentro da `libfiioaudio.so`, **qual** desses nós
 cada ação escreve (próximo passo: RE da HAL).
 
-## 9. Dica de bancada para quando o aparelho chegar
+## 11. Dica de bancada para quando o aparelho chegar
 
 Com root, `ls /sys/devices/platform/soc/soc:fiio_attr/` deve listar praticamente
 esta tabela. A diferença entre a lista real e a do init é a assinatura exata

@@ -163,6 +163,16 @@ cálculo ou de documento público e está explicitado no texto.
     `AudioSystem.setCodecParam(type, valor)` (API oculta no `framework.jar`),
     com type 2 = PO Gain, 3 = filtro, 1 = balanço, 19 = flag de play config.
     Ver `docs/22-settings-e-controle.md`.
+36. **Sessão 1 no aparelho (read-only) — e duas correções minhas.**
+    **SELinux é Permissive** e o **bootloader está destravado**
+    (`orange`, `flash.locked=0`): a pesquisa externa estava certa e minha
+    auditoria errada. Também confirmado: I²C bus 2 com DACs em **0x30/0x33** e
+    FPGA em **0x36**; GPIOs absolutos (base TLMM 389); dois MCLKs no FPGA;
+    `board_vol_dac=255` (mute) ocioso; `dac_vol=69`. Ver
+    `docs/23-sessao-1-baseline.md`.
+37. **Limite de acesso atual:** `tinymix`/`tinyplay` existem, mas `/dev/snd` é
+    `0660 system:audio` — sem root não há leitura de kcontrols nem dump de
+    regmap. Decisão sobre root fica explícita e adiada.
 
 ---
 
@@ -335,6 +345,12 @@ que o app toca:
 Quem escreve o quê: o pacote `com.android.settings.fiio`, o serviço de controle
 remoto Scrcpy, a ponte `AudioSystem.setCodecParam` e os modos de operação:
 **[docs/22-settings-e-controle.md](docs/22-settings-e-controle.md)**
+
+## 22. Sessão 1 com o aparelho (baseline)
+
+O que o hardware confirmou, o que corrigiu da auditoria e onde o acesso para sem
+root:
+**[docs/23-sessao-1-baseline.md](docs/23-sessao-1-baseline.md)**
 
 ---
 
