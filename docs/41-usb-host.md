@@ -71,3 +71,61 @@ O app usa o **próprio driver USB** (`wzUsbAudioSetSampleRate ret: 0`), não o
 Um dongle DAC com 96/192 k (ou 384 k) e, se possível, DSD nativo. O que medir:
 `setUsbAudioSupportSampleRate` (a lista lida), `configSampleRate` por arquivo e
 se `open: support` fica `true` nas taxas altas.
+
+## 6. Segundo teste: Tempotec Sonata BHD (PCM 384 k / DSD256)
+
+Enumeração: `22e1:e208`, "TempoTec HD USB AUDIO", high-speed. O kernel reclamou
+de um altset com formato que não suporta (`unsupported format bits
+0x100000000`) — é o **DSD nativo** do dongle.
+
+**Taxas lidas pelo app:**
+
+```
+IDevice: setUsbAudioSupportSampleRate:
+  [44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000]
+```
+
+Reprodução PCM — **todas nativas** (`configSampleRate` = taxa do arquivo,
+`open: support = true`):
+
+| Arquivo | `configSampleRate` | `support` |
+|---------|--------------------|-----------|
+| 44,1 k | 44 100 | true |
+| 96 k | 96 000 | true |
+| 192 k | 192 000 | true |
+| 352,8 k | 352 800 | true |
+| 384 k | 384 000 | true |
+
+### DSD: DoP funciona, nativo é silêncio
+
+O JM21 se identifica como **DPA** (`persist.sys.fiio.config = FiiODPA`,
+`dsd.native = 256`, `pcm.sample = 768000`), então o app usa o **`DPAConfig`**
+(`t1.a`), cujo suporte DSD vem da tabela `{64,128,256,512}` × `dsd.native`.
+
+| Modo | Evidência | Resultado |
+|------|-----------|-----------|
+| **DoP** | `audioDataFormat=49`, `decoderFormat=3`, `configSampleRate=176400`; `UsbAudioTrackOpen==true`, `usb audiotrack open : 3` | **som** (confirmado de ouvido) |
+| **Nativo** | `audioDataFormat=254`, `decoderFormat=1`, `configSampleRate=88200`; `AudioTrack ... DSD_32_BIT`, *"Not linear PCM, forcing to Direct Output"*, *"AudioTrack for USB!"* | **silêncio** |
+
+`[FATO]` O caminho nativo entrega `0x1A000002` (DSD_32_BIT) à HAL, que mostra
+`srcFormat 3 / 88200`, mas **o áudio não chega ao DAC USB**.
+
+`[HIP]` O HAL/USB audio não implementa o altset DSD do dongle; o DoP funciona
+porque vai como PCM 176,4 k pelo stack USB do próprio app.
+
+### A pegadinha do estado de rota
+
+Se o app for **reiniciado (force-stop) logo depois** de um attach USB, ele perde
+o evento e cai no ramo nativo (silêncio). Sem reiniciar — deixando o app
+receber `USB_DEVICE_ATTACHED` — a rota vira `UsbAudio` e ele usa **DoP**.
+
+`[FATO]` Reproduzido três vezes: com force-stop → 254/1 (silêncio); sem
+force-stop → 49/3 (som).
+
+## 7. Conclusões do modo host
+
+1. **PCM no host vai até 384 kHz nativo** (com um DAC que anuncie).
+2. **DSD por DoP funciona**; **DSD nativo está quebrado** neste stack (HAL/USB).
+3. A **permissão USB é por app** e o UAPP conflita.
+4. O app precisa do **evento de attach** para escolher o modo certo — reiniciar
+   depois do plugue o joga no caminho nativo (silencioso).
