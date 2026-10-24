@@ -54,8 +54,12 @@ bytes do DSF (LSB-first) **invertidos bit a bit** e agrupados em palavras de
 aplay -D hw:5,0 -t raw -f DSD_U32_BE -r 88200 -c 2 dsd64_u32be.raw
 ```
 
-Aceito sem erro, ~4,6 s. `[?]` Falta a confirmação auditiva (se soou a ária, e
-não ruído) — o teste foi feito com o fone no ouvido do usuário.
+Aceito sem erro, ~4,6 s. Repetido por **10 s** com o fone no JM21: o usuário
+confirmou **"piano normal"** — ou seja, a ária do Goldberg, não ruído.
+
+`[FATO]` DSD nativo por USB está **provado de ponta a ponta**: o DSF foi
+convertido para `DSD_U32_BE` (bits invertidos, palavras big-endian), o gadget
+aceitou e o DAC reproduziu o áudio corretamente.
 
 ## 5. Controles expostos
 
