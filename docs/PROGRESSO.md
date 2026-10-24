@@ -78,9 +78,10 @@ arquivo. 384 kHz **recusado pelo app** (arquivo válido).
 **P1c feita:** `0x1000B` (SP_SRATE) medido em 5 taxas e **igual à tabela do
 driver**; FPGA confirmado em 88,2 (`0x42`).
 
-**Limite de 352,8/384 — correção:** a checagem `k() && rate>=352800 && !isUsb →
-UNSUPPORTED` vale para a **biblioteca**; por **arquivo/intent** o 384 kHz
-**tocou** (HAL `halRate 384000`, FPGA `0x88`). Issue #9 **reaberta**.
+**352,8 e 384 kHz tocam (issue #9 fechada):** HAL `halRate 352800` (3×) e
+`halRate 384000` (5×); FPGA `0x48` e `0x88` — previsões do modelo confirmadas.
+A checagem `UNSUPPORTED` não dispara neste modelo. Meu diagnóstico anterior
+("política do app a 192 k") estava errado por leitura parcial do log.
 
 **DSD64 mapeado:** HAL entrega `0x1A000002` (DSD_32BIT) a 88,2 kHz em
 `mode BYPASS`; `0x70004=0x13`, `0x20000=0x0A`, `0x70000/1=95`, FPGA `0x42`.
