@@ -94,6 +94,12 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**Ganho analógico (P2) medido:** as três curvas de volume (ganho 0/1/2) foram
+varridas com tom tocando e batem **exatamente** com as tabelas do driver
+(vol 20: 145/133/113; 30: 125/113/93; 60: 84/72/60; 100: 44/32/20).
+Registradores analógicos não mudam → o ganho é **atenuação digital** no DAC.
+Ver `docs/38`.
+
 **Modos de operação (issue #8 fechada, resultado negativo):** Pure Music
 (`system_mode_value=1`) tem os **mesmos 160 kcontrols** do modo Android. Causa:
 o módulo de kernel `mode_select` **não existe** no firmware — `dac_core` e
