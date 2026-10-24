@@ -3,8 +3,9 @@
 > Índice geral do laboratório. Cada seção resume o estado atual e aponta para o
 > documento temático em `docs/`, onde estão os detalhes, comandos e evidências.
 >
-> Estado: **fase 0 — análise offline do firmware** (JM21 ainda não conectado).
-> Firmware de referência: `JM21-update-1.1.1` (baseline versionado do dump).
+> Estado: **fase 2 — dispositivo em mãos, com root** (sessões 1 e 2 concluídas).
+> Firmware de referência: `JM21-update-1.1.1`; root via Magisk em `init_boot_a`.
+> O placar de progresso está em [docs/PROGRESSO.md](docs/PROGRESSO.md).
 
 ---
 
