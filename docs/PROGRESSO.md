@@ -94,6 +94,18 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**Framework/services (issue #3 fechada):** enum completo dos codec params
+(0–22), `setMasterVolumeDac` nativo até a HAL, 64 flags `config_fiio_*` com
+valores reais (`uac_kernel=false`, `tape_mode_auto_det_sw=false`), allowlists e
+broadcasts da FiiO, `system_mode_value`. Ver `docs/33`.
+
+**Auditoria de apps (issue #1 fechada):** 95 APKs de sistema, 12 da FiiO com
+hash, `DebugTool`/`FactoryTest`/`EcaiTestAPP` não instalados. Ver `docs/34`.
+
+**ISO do MTP e QFIL/EDL (issues #6 e #5 fechadas):** ISO existe mas os configs
+que a expõem estão comentados; não há firehose no OTA — recuperação é por
+fastboot. Ver `docs/35`.
+
 **Apps restantes (issue #7 fechada):** EQ é `AudioEffect` do AOSP (sem lib
 FiiO em `/vendor/lib/soundfx`); Cast = DLNA dentro do Music; Pod/Tape são
 skins; Roon tem plugin próprio; nenhum app fala com o DAC; nós `tape_*` não
