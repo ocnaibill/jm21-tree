@@ -68,3 +68,30 @@ o **controle fino** (params FiiO, volume master) e o **DSD nativo**.
 total do som" (o objetivo do projeto): sem o `framework.jar` da FiiO, os
 recursos que mapeamos (codec params, MQA, DSD nativo) somem. Para controle
 total, a ROM própria teria de **levar os patches da FiiO** para o framework.
+
+## 6. Super lotado (medido no `super.img` do clone)
+
+`lpdump` no clone (`device-baseline/clone-full/super.img`):
+
+| Partição lógica | Tamanho |
+|-----------------|---------|
+| `system_a` | 2133,4 MiB |
+| `vendor_dlkm_a` | 717,2 MiB |
+| `vendor_a` | 621,7 MiB |
+| `system_ext_a` | 505,1 MiB |
+| `product_a` | 233,2 MiB |
+| `odm_a` | 1,2 MiB |
+| `system_dlkm_a` | 0,4 MiB |
+| `system_a-cow` | **903,6 MiB** |
+| `product_a-cow` / `odm_a-cow` | 4,8 / 1,2 MiB |
+
+`[FATO]` `super` = **5122,6 MiB**, usado **5121,6 MiB** → **~1 MiB livre**.
+
+**Implicação:** uma GSI (~1–2 GB) **não cabe** sem liberar espaço. Opções:
+1. **Remover as COW** de Virtual A/B (`system_a-cow` 903 MB) — depende do estado
+   do snapshot (`snapshotctl`/merge); `[?]` se o aparelho permite apagar com
+   segurança.
+2. **Apagar uma partição lógica** (ex.: `product`, 233 MB) — não chega.
+3. **Redimensionar o `super`** (o GPT tem folga? `[?]`).
+
+Ou seja: a GSI exige planejamento de espaço, não é só `fastboot flash system`.
