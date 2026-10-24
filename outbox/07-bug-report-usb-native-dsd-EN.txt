@@ -1,0 +1,128 @@
+Subject: Bug report — USB DAC: native DSD playback is silent (FiiO JM21, firmware 1.1.1)
+
+Device: FiiO JM21
+Firmware: 1.1.1 (build qti/bengal_515/bengal_515:13/TKQ1.230110.001/
+          eng.fiio.20260428.144644:user/dev-keys)
+App: FiiO Music (system app, package com.fiio.music)
+USB DAC used: Tempotec Sonata BHD (VID:PID 22e1:e208, UAC2, PCM 384 kHz,
+          native DSD up to DSD256)
+
+Summary
+-------
+When the JM21 acts as USB host and the connected DAC advertises native DSD,
+FiiO Music selects the native-DSD path and plays DSD files with NO SOUND.
+The same file plays correctly when the app uses DoP (DSD over PCM).
+
+This is reproducible and user-visible: the player UI shows the DSD badge and a
+running progress bar, but the DAC outputs silence.
+
+Environment / configuration
+---------------------------
+- Device identifies as DPA:
+    persist.sys.fiio.config            = FiiODPA
+    persist.sys.fiio.config.dsd.native = 256
+    persist.sys.fiio.config.pcm.sample = 768000
+- USB DAC rates read by the app:
+    IDevice: setUsbAudioSupportSampleRate:
+      [44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000]
+- Kernel probes the DAC's DSD alternate setting but does not support it:
+    usb 1-1: 2:4 : unsupported format bits 0x100000000
+
+Steps to reproduce
+------------------
+1. Connect a USB DAC that advertises native DSD (tested: Tempotec Sonata BHD)
+   to the JM21's USB-C port (host mode, OTG).
+2. Open FiiO Music and grant the Android USB permission to FiiO Music only
+   (deny it to other USB audio apps).
+3. Play a DSD file, e.g. a DSD64 .dsf.
+4. Result: the app enters the native-DSD path and NO SOUND is produced.
+5. Compare: make the app use DoP (see below) and play the same file — sound
+   is produced correctly.
+
+How to switch between the two paths (observed behaviour)
+--------------------------------------------------------
+- If the FiiO Music process is force-stopped immediately after the USB attach
+  event, the next playback selects the native path:
+    PlayerConfig{ originSampleRate=2822400, bitDepth=32, audioDataFormat=254,
+                  configSampleRate=88200, decoderFormat=1, isDsd=true }
+    -> silence
+- If the app is NOT restarted after the attach (so it receives
+  USB_DEVICE_ATTACHED and the route becomes UsbAudio), it selects DoP:
+    PlayerConfig{ originSampleRate=2822400, bitDepth=16, audioDataFormat=49,
+                  configSampleRate=176400, decoderFormat=3, isDsd=true }
+    -> sound works
+
+Logs — failing (native DSD) path
+--------------------------------
+FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=2822400,
+  bitDepth=32, channels=2, suffix='DSF', audioDataFormat=254,
+  configSampleRate=88200, decoderFormat=1, isDsd=true, ...}
+
+AudioTrack: set(): Not linear PCM, forcing to Direct Output
+AudioTrack: set() AudioTrack for USB!
+AudioTrack: set(): check streamType 3, sampleRate 88200, format 0x1a000002,
+  mFormat 0x1a000002 AUDIO_FORMAT_DSD_32_BIT 0x1a000002
+
+fiioaudio: match_audio_hardware_params: mode BYPASS srcRate 88200 srcFormat 3
+  halFormat 3 srcCh 2 dstRate 88200 dstFormat 3 frameSize 4 halRate 88200
+
+(Written to the HAL as DSD_32_BIT, but no audio reaches the USB DAC.)
+
+Logs — working (DoP) path
+-------------------------
+FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=2822400,
+  bitDepth=16, channels=2, suffix='DSF', audioDataFormat=49,
+  configSampleRate=176400, decoderFormat=3, isDsd=true, ...}
+
+usb: UsbAudioTrackOpen==true
+usb: setObject: usb audiotrack open : 3
+
+DSD128 via DoP also works:
+  PlayerConfig{originSampleRate=5644800, bitDepth=16, audioDataFormat=49,
+  configSampleRate=352800, decoderFormat=3, isDsd=true } -> sound
+
+DSD256 is rejected over DoP (expected, 705.6 kHz > DAC's 384 kHz):
+  MediaPlayerService: Audio open failure : UNSUPPORTED,
+  path : .../decaud-goldberg-var5-dsd256.dsf
+  (The app then falls back to the previous track.)
+
+Analysis (from the app's own logs)
+----------------------------------
+- The app uses DPAConfig (persist.sys.fiio.config=FiiODPA). When the USB DAC
+  advertises native DSD capability, DPAConfig selects the native path:
+    audioDataFormat=254, decoderFormat=1, configSampleRate = rate/32
+- That path renders through a system AudioTrack in AUDIO_FORMAT_DSD_32_BIT
+  (0x1a000002) with direct output to USB.
+- The HAL accepts the stream (BYPASS, 88200, DSD_32_BIT) but the USB audio
+  output does not deliver it to the DAC, resulting in silence.
+- DoP works because it is PCM (176.4 kHz for DSD64, 352.8 kHz for DSD128)
+  sent through the app's own USB audio stack (UsbAudioTrackOpen).
+
+Expected behaviour
+------------------
+1. Native DSD on a DSD-capable USB DAC should produce audio.
+2. If the native path cannot be delivered to the USB DAC, the app should
+   fall back to DoP (or PCM) instead of playing silence.
+
+Impact
+------
+Any user playing DSD files to a native-DSD USB DAC hears nothing, with the UI
+showing normal playback. Users may conclude the DAC or the files are broken.
+
+Suggested fixes
+---------------
+- Fix the USB audio output path for DSD_32_BIT, or
+- Detect the failure and fall back to DoP automatically, or
+- Disable the native path for USB DACs until it works (default to DoP), and
+- Make the "DSD out mode" (DoP/Native) setting clearly surface this state.
+
+Workaround for users
+--------------------
+In FiiO Music's USB audio settings, set "DSD out mode" to DoP (DoP works for
+DSD64 and DSD128; DSD256 requires native DSD or a higher-rate DoP path).
+
+Attachments available on request
+--------------------------------
+- Full logcat capture with the timestamps above.
+- The test files are CC0/public-domain DSD samples; the reproduction does not
+  depend on their content.
