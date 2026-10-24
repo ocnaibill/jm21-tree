@@ -116,3 +116,53 @@ O **Plano B é viável**: um kernel compilado por nós (CAF público + config do
 aparelho) tem a **mesma ABI** dos módulos vendor. O próximo passo é bootar esse
 kernel por `fastboot boot` (imagem de boot com o nosso `Image.gz` + ramdisk/DTB)
 e carregar o stack FiiO.
+
+## 8. Boot do kernel próprio no aparelho (issue #21)
+
+Montagem: `mkbootimg --header_version 4 --kernel Image --os_version 13.0.0
+--os_patch_level 2023-02`. O `boot.img` do JM21 tem **só o kernel** (sem
+ramdisk): o ramdisk genérico vem do `init_boot` e o vendor do `vendor_boot`.
+
+```
+fastboot boot boot_ours.img
+Sending 'boot.img' (39708 KB)  OKAY
+Booting                        OKAY
+```
+
+**O sistema subiu com o nosso kernel:**
+
+```
+Linux version 5.15.41-g9ded8564ff52-dirty (ocnaibill@makise)
+clang 14.0.7 — #3 SMP PREEMPT Sat Oct 24 14:07:42 -03 2026
+```
+
+(a data de compilação é a prova: a stock é `Tue Apr 28 08:23:10 UTC 2026`.)
+
+**Stack FiiO carregado:**
+
+```
+fiio_primary_modules 45056 21   cs43198 20480 0   dac_core_module 57344 1
+anolog_board_jm21 32768 0       gw_fpga 49152 1   fpga_audio_interface 20480 0
+fpga_interface 24576 0          fiio_config 1     fiio_underlay_modules
+```
+
+**Root:** Magisk ativo (`uid=0`, contexto `u:r:magisk:s0`).
+
+**Áudio medido nesse kernel:**
+
+| Teste | HAL | DAC | FPGA |
+|-------|-----|-----|------|
+| 44,1 k | `mode MQA`, 44100 | `0x1000B = 1` | `0x02 = 0x41` |
+| 384 k | `mode ALLTO32BIT`, 384000 | `0x1000B = 8` | `0x02 = 0x88` |
+| DSD64 | `mode BYPASS`, `88200`, `srcFormat 0x1A000002` | `0x70004 = 0x13` | — |
+
+`[FATO]` **O Plano B está provado de ponta a ponta**: kernel próprio (árvore
+pública) + módulos vendor + áudio PCM/DSD funcionando.
+
+### Observações
+- O boot é **por RAM** (`fastboot boot`): nada foi gravado; um reboot volta ao
+  kernel stock do slot A.
+- A base é 5.15.**180** com a versão forçada para `5.15.41…`; os CRCs batem,
+  como medido.
+- Warnings de `resolve_btfids` no build são de configs que a árvore pública não
+  tem; não impediram nada.
