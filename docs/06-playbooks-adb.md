@@ -251,3 +251,20 @@ qualquer coisa como base.
 - [ ] Confirmado o caminho de recuperação (ver `07-riscos-e-recuperacao.md`)
 - [ ] Bateria > 50%
 - [ ] Cabo USB de dados confiável
+
+
+## Controle de reprodução sem o usuário (autonomia)
+
+O FiiO Music ignora intents de conteúdo, mas responde ao **keyevent de mídia** com
+a atividade principal em foco:
+
+```bash
+adb shell am start -n com.fiio.music/com.fiio.music.activity.SplashActivity
+adb shell input keyevent 126   # MEDIA_PLAY  (127 = pause)
+```
+
+Depois do `126`, o `MediaPlayerService` abre a última faixa e a HAL sobe o
+stream — verificável no `logcat -s fiioaudio` e no `dmesg` (`snd_dac_startup`).
+
+`tinyplay` **não** serve: o front-end (`PCM_RT_PROXY-RX-1`) exige o grafo do DSP
+que só a HAL monta — abre e escreve 0 bytes.

@@ -147,7 +147,7 @@ estado exposto para a UI (`get_mqa_ui_state`). `[?]` Se é MQA completo ou apena
 
 | Propriedade | Uso |
 |-------------|-----|
-| `fiio.use.kernel.play` | escolhe se a reprodução passa pelo DAI do kernel |
+| `fiio.use.kernel.play` | **inerte no caminho interno** (medido: 0 e 1 dão o mesmo resultado; ver `docs/08` Q9) |
 | `fiio.current.play.device` | dispositivo de reprodução corrente |
 | `fiioprocess` / `fiio_audio_debug_init` | entrada de processo/serviço |
 | `fiioeq` | EQ |

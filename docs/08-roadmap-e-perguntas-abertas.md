@@ -36,13 +36,13 @@
 | Q6 | Dual DAC: mono por chip ou paralelo | ✅ | `SPECIAL_MODE_2`, estéreo paralelo (`docs/12`) |
 | Q7 | DSD nativo sai do CS43198 ou o FPGA serializa | ✅ | **FPGA**: `fmt=3`, `reg 0x01=0x2F` medido; DAC recebe DSD pela página 7 (`docs/29`) |
 | Q8 | O FPGA reamostra? Bit-perfect | ✅ | **não reamostra** (sem DSP, `BYPASS`); taxas batem 1:1 (`docs/29`,`docs/31`) |
-| Q9 | `fiio.use.kernel.play` desvia para o dummy DAI | ⬜ | propriedade existe na HAL (`docs/19`), comportamento não testado |
+| Q9 | `fiio.use.kernel.play` desvia para o dummy DAI | ❌ | **não muda nada** no caminho interno: com `1` e `0`, HAL (`mode MQA`, 44100) e `snd_dac_startup` idênticos. Propriedade inerte aqui (provável legado/outro caminho) |
 | Q10 | Qual `mixer_paths_*` é carregado | 🟨 | placa é `bengal-idp-snd-card` → variante `idp` (os 4 arquivos existem no `vendor.img`) |
 | Q11 | Gatilho do `audio_policy_configuration_gaming.xml` | 🟨 | propriedade **`vendor.audio.gaming.enabled`** e `/data/vendor/gaming` achadas no `vendor.img`; quem a escreve não foi identificado |
 | Q12 | Faixa e passo da tabela de volume | ✅ | 121 passos, 0,5 dB; **três curvas medidas** (`docs/11`, `docs/38`) |
 | Q13 | Quantos degraus de ganho a UI expõe | ✅ | **3** (0/1/2 = baixo/médio/alto); driver tem 5 tabelas (`docs/38`) |
 | Q14 | MQA é decode completo ou só core | 🟨 | quem decodifica é o **DAC**, não o app (`docs/36`); profundidade não provada |
-| Q15 | Existe captura (mic) ativa | ⬜ | o codec tem muxes DMIC, mas não há evidência de microfone no DAP |
+| Q15 | Existe captura (mic) ativa | ✅ | **não há**: `tinycap` em pcm d=0/9/11/15/17 devolve **0 frames**; o WCD937x tem rotas DMIC no DT, mas nada conectado |
 | Q16 | O que há em `fiioconfig` | ✅ | header, trims, SN/NB, journal de wear (`docs/26`) |
 
 ### 2.3 Software
