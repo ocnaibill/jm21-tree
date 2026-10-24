@@ -1,120 +1,94 @@
 # 08 — Roadmap, portões de decisão e perguntas abertas
 
+> **Revisitado em 2026-10-24**, depois do P1 (matriz de taxas + DSD), do netlist do
+> FPGA, do diff de framework/services, da auditoria de apps, dos modos de
+> operação, do ganho analógico e do modo USB DAC. Cada item agora tem estado
+> explícito: ✅ respondida · 🟨 parcial · ⬜ aberta · ❌ refutada.
+
 ## 1. Fases
 
-### F0 — Análise offline do firmware ✅ concluída
+| Fase | Estado | O que fechou |
+|------|--------|--------------|
+| **F0** — análise offline do firmware | ✅ | OTA, 19 partições, kernel, DTBO, HAL, módulos, apps, framework |
+| **F1** — aparelho conectado, leitura | ✅ | baseline, root (Magisk), kcontrols, registradores, P1 completo |
+| **F2** — dump próprio e backup | 🟨 | OTA + `fiioconfig` dumpados; falta backup completo de `persist`/`modemst`/ambos os slots |
+| **F3** — RE da camada de usuário | ✅ | HAL (`docs/19`), FiiO Music/JNI (`docs/36`), framework/services (`docs/33`), apps (`docs/32`,`docs/34`) |
+| **F4** — RE do kernel | ✅ | `cs43198` (`docs/11`), `dac_core` (`docs/19`), `anolog_board` (`docs/12`), FPGA (`docs/30`,`docs/31`) |
+| **F5** — reconstrução | ⬜ | depende de decisão go/no-go — **não iniciada de propósito** |
 
-- OTA inventariado, 19 partições extraídas.
-- Kernel, DTBO, HAL, configs de áudio, módulos FiiO, apps e framework mapeados.
-- Ferramentas: `payload-dumper-go`, `tools/dt_dump.py`.
-- **Saída:** este dossiê.
+## 2. Perguntas — estado atual
 
-### F1 — Dispositivo conectado, somente leitura
+### 2.1 Estruturais
 
-Objetivo: reconciliar o dossiê com a realidade do aparelho, sem escrever nada.
+| # | Pergunta | Estado | Evidência |
+|---|----------|--------|-----------|
+| Q1 | Barramento I2C de `cs43198@0x30/0x33` e `fpga@0x36` | ✅ | **i2c-2** para os dois DACs e o FPGA (`docs/01` §, `docs/04`) |
+| Q2 | Qual DTB base é aplicada | ✅ | **khaje**, overlay JM21 no índice 40 (`docs/04`, `tools/dt_dump.py`) |
+| Q3 | O bootloader é desbloqueável | ✅ | já **desbloqueado**: `flash.locked=0`, `verifiedbootstate=orange` |
+| Q4 | Pacote QFIL/EDL com firehose | ❌ | **não existe** no OTA nem nas partições; recuperação por fastboot (`docs/35`) |
+| Q5 | O que o FPGA faz no caminho de dados | ✅ | **re-clock + roteamento + geração de clock**; sem DSP (`docs/31`) |
+| Q24 | A FiiO fornece firmware antigo mediante SN | ⬜ | e-mail GPL enviado; sem resposta (`docs/17`) |
 
-- Baseline de `getprop`/`dumpsys`/`procfs`/`sysfs` (`docs/06` §2).
-- Resolver: bus I2C, endereços dos DACs, DTB aplicada, `mixer_paths` carregado.
-- Confirmar: controles `DAC ...` existem em `tinymix`.
-- **Portão:** toda a §2 de perguntas abertas respondida ou explicitamente
-  bloqueada.
+### 2.2 Áudio
 
-### F2 — Dump próprio e backup
-
-- Dump de `persist`, `fiioconfig`, `modemst*`, `devinfo`, `misc`, `boot`,
-  `dtbo`, `vbmeta` (ambos os slots).
-- Comparação de hash com o OTA.
-- **Portão:** recuperação documentada e testável (`docs/07` §8 completo).
-
-### F3 — RE estática da camada de usuário
-
-- `libfiioaudio.so`, `libfiioaqm.so`, `audio.primary.bengal.so` em Ghidra.
-- `FiiOMusic.apk` + JNI em JADX.
-- Diff de `framework.jar`/`services.jar` contra AOSP-13.
-- **Portão:** contrato `FiiOAudioConfigParams` e lista `FIIO_PACKAGE_NAMES`
-  recuperados.
-
-### F4 — RE do kernel
-
-- `cs43198.ko`: mapa de registradores, `volume_table`, filtros, MCLK.
-- `dac_core_module.ko`: ioctls e máquina de estados.
-- `anolog_board_jm21.ko`: `gain_table`, sequência de energia.
-- `gw-fpga.ko`: protocolo SPI e bitstream.
-- **Portão:** modelo de dados SoC→FPGA→DAC reproduzível em diagrama.
-
-### F5 — Reconstrução
-
-- Device tree própria + árvore `msm-5.15`.
-- Kernel com os drivers FiiO (binários ou reimplementados).
-- Avaliação de LineageOS/AOSP-13 com os blobs originais.
-- **Portão:** decisão go/no-go baseada em F3/F4, não em entusiasmo.
-
-## 2. Perguntas abertas consolidadas
-
-### 2.1 Bloqueiam todo o resto
-
-| # | Pergunta | Doc |
-|---|----------|-----|
-| Q1 | Qual barramento I2C hospeda `cs43198@0x30/0x33` e `fpga@0x36`? | 01, 04 |
-| Q2 | Qual das 5 DTB base é aplicada no JM21? | 04 |
-| Q3 | O bootloader é desbloqueável? *(rollback index já lido: 0 e 2023-02-05; anti-rollback do XBL segue `[?]`)* | 07 |
-| Q4 | Existe pacote QFIL/EDL com `prog_firehose` para o khaje/JM21? *(pesquisa não achou pacote público)* | 07 |
-| Q5 | O que o FPGA faz no caminho de dados? *(BTF mostra `fpga_config_params`: I2S in/out, DSD, SPDIF/óptico — sem campo de reamostragem)* | 01, 03, 10 |
-| Q24 | A FiiO fornece firmware antigo mediante SN? Qual o procedimento real? | 07 |
-
-### 2.2 Áudio (fim técnico)
-
-| # | Pergunta | Doc |
-|---|----------|-----|
-| Q6 | ~~Dual DAC = mono por chip ou estéreo paralelo somado?~~ → **respondida**: `SPECIAL_MODE_2`, estéreo paralelo nos 2 chips | 12 |
-| Q7 | DSD nativo sai por I2S do CS43198 ou o FPGA serializa? | 03 |
-| Q8 | O FPGA reamostra? O bit-perfect vai até o DAC? | 03 |
-| Q9 | `fiio.use.kernel.play` desvia do PAL para o dummy DAI? | 03 |
-| Q10 | Qual `mixer_paths_*` é carregado e por qual regra? | 03 |
-| Q11 | Qual gatilho troca para `audio_policy_configuration_gaming.xml`? | 03 |
-| Q12 | Faixa e passo de `volume_table`, `pogain`, `gain_table` *(tabelas extraídas: 121 passos, 5 modos; unidade exata em aberto)* | 01, 03, 11 |
-| Q13 | Quantos degraus de ganho a UI expõe (5 no driver) *(boot fixa `pogain=2` = High)* | 01, 12 |
-| Q14 | MQA é decode completo ou só core? | 03 |
-| Q15 | O aparelho tem captura (mic) ativa? Qual codec? | 01 |
-| Q16 | O que há na partição `fiioconfig`? | 02, 04 |
+| # | Pergunta | Estado | Evidência |
+|---|----------|--------|-----------|
+| Q6 | Dual DAC: mono por chip ou paralelo | ✅ | `SPECIAL_MODE_2`, estéreo paralelo (`docs/12`) |
+| Q7 | DSD nativo sai do CS43198 ou o FPGA serializa | ✅ | **FPGA**: `fmt=3`, `reg 0x01=0x2F` medido; DAC recebe DSD pela página 7 (`docs/29`) |
+| Q8 | O FPGA reamostra? Bit-perfect | ✅ | **não reamostra** (sem DSP, `BYPASS`); taxas batem 1:1 (`docs/29`,`docs/31`) |
+| Q9 | `fiio.use.kernel.play` desvia para o dummy DAI | ⬜ | propriedade existe na HAL (`docs/19`), comportamento não testado |
+| Q10 | Qual `mixer_paths_*` é carregado | 🟨 | placa é `bengal-idp-snd-card` → variante `idp` (os 4 arquivos existem no `vendor.img`) |
+| Q11 | Gatilho do `audio_policy_configuration_gaming.xml` | 🟨 | propriedade **`vendor.audio.gaming.enabled`** e `/data/vendor/gaming` achadas no `vendor.img`; quem a escreve não foi identificado |
+| Q12 | Faixa e passo da tabela de volume | ✅ | 121 passos, 0,5 dB; **três curvas medidas** (`docs/11`, `docs/38`) |
+| Q13 | Quantos degraus de ganho a UI expõe | ✅ | **3** (0/1/2 = baixo/médio/alto); driver tem 5 tabelas (`docs/38`) |
+| Q14 | MQA é decode completo ou só core | 🟨 | quem decodifica é o **DAC**, não o app (`docs/36`); profundidade não provada |
+| Q15 | Existe captura (mic) ativa | ⬜ | o codec tem muxes DMIC, mas não há evidência de microfone no DAP |
+| Q16 | O que há em `fiioconfig` | ✅ | header, trims, SN/NB, journal de wear (`docs/26`) |
 
 ### 2.3 Software
 
-| # | Pergunta | Doc |
-|---|----------|-----|
-| Q17 | ~~Lista real em `FIIO_PACKAGE_NAMES`~~ → **respondida** (duas listas, em AMS e OomAdjuster) | 05 |
-| Q18 | O que `com.fiio.control` expõe (AIDL/binder)? | 05 |
-| Q19 | `libhello-jni.so` contém o decoder DSD/MQA? | 05 |
-| Q20 | Serviços expostos por `DebugTool`/`FactoryTest`/`EcaiTestAPP` | 05 |
-| Q21 | Diff exato de `framework.jar`/`services.jar` vs AOSP-13 | 05 |
-| Q22 | Conteúdo de `fiio_mtp_driver.iso` | 05 |
-| Q23 | ~~Changelog oficial (`log_1.1.1.txt`)~~ → **respondida**: histórico completo no fórum oficial, resumido em 05 §5 | 05 |
+| # | Pergunta | Estado | Evidência |
+|---|----------|--------|-----------|
+| Q17 | Lista real de `FIIO_PACKAGE_NAMES` | ✅ | duas listas (AMS e OomAdjuster), mais `com.alex.debugtool_player` (`docs/33`) |
+| Q18 | O que `com.fiio.control` expõe | ✅ | **nada**: o pacote não está instalado; só aparece em allowlists (`docs/34`) |
+| Q19 | `libhello-jni.so` tem decoder DSD/MQA | ❌ | é **ffmpeg estático**; SACD/DST fica em `libsacd.so` (`docs/36`) |
+| Q20 | Serviços de `DebugTool`/`FactoryTest`/`EcaiTestAPP` | ✅ | **não instalados** no aparelho (`docs/34`) |
+| Q21 | Diff de `framework.jar`/`services.jar` | ✅ | enum de codec params, `setMasterVolumeDac`, 64 flags, allowlists (`docs/33`) |
+| Q22 | Conteúdo de `fiio_mtp_driver.iso` | ✅ | CD de drivers; configs que o expõem estão comentados (`docs/35`) |
+| Q23 | Changelog oficial | ✅ | histórico no fórum, resumido em `docs/05` §5 |
 
-### 2.4 Já respondidas (registro)
+### 2.4 Perguntas novas (surgiram nas sessões)
 
-| Pergunta original do dossiê v1 | Resposta | Evidência |
-|--------------------------------|----------|-----------|
-| Kernel é 5.4? | **Não: 5.15.41** (`-dirty`) | `[DRV]` |
-| HAL é `audio.primary.sm6225.so`? | **Não: `audio.primary.bengal.so`** | `[FW]` |
-| Existe `mixer_paths.xml`? | **Não: 4 variantes `bengal_*/scuba*`** | `[FW]` |
-| DAC usa I2C ou SPI? | **I2C** (0x30 e 0x33), FPGA usa SPI e I2C | `[DT]` |
-| Existe `fiio-framework.jar`? | **Não**, patches em `framework.jar`/`services.jar` | `[FW]` |
-| Partições são `boot`/`vendor`/`dtbo`? | A/B com `init_boot`/`vendor_boot` + lógicas | `[FW]` |
-| Há bypass de SRC? | Existe caminho `direct_pcm`/`hifi_playback`; extensão real pendente | `[FW]` |
+| # | Pergunta | Estado | Onde |
+|---|----------|--------|------|
+| N1 | Por que o módulo de kernel **`mode_select`** não existe? Algum build o traz? | ⬜ | `docs/37` §6 |
+| N2 | Há **dois caminhos de volume** (`setMasterVolumeDac` nativo e `DAC Playback Volume`). Qual atua quando? | ⬜ | `docs/33` §2 |
+| N3 | Os 4 kcontrols ausentes (`DAC MUTE`, `MasterTrim L/R`, `Hifi Boost`, `Headset Type`) dependem do `mode_select`? | 🟨 | `docs/37` §6 |
+| N4 | `gw_fpga_firmware_jm21_2.fw` (user code `0xF2510004`) não descomprime no tamanho esperado — build parcial? | ⬜ | `docs/30`, `docs/31` §4 |
+| N5 | Os 63 bytes entre a linha `3B` e os frames: header ou bloco pós-frames? | ⬜ | `docs/30` §8 |
+| N6 | `uac_kernel_enabled=false` mas o gadget UAC funciona — o que a flag controla? | 🟨 | `docs/39` §6 |
+| N7 | Referências a pacotes ausentes (`com.fiio.control`, `com.fiio.dream`, `com.alex.debugtool_player`, `com.example.fiiotestappliction`) | ✅ | são resíduos de build compartilhado (`docs/33`,`docs/34`) |
 
-## 3. Backlog de ferramentas
+## 3. O que continua valendo como pergunta de **bancada**
 
-| Item | Por quê |
-|------|---------|
-| `tools/payload_info.py` | ler `payload.bin` sem Go (manifest protobuf) |
-| `tools/img_ls.py` | wrapper `debugfs` para listar/extrair por padrão |
-| `tools/props_diff.py` | diff de `build.prop` entre versões de firmware |
-| `tools/evidence_ledger.py` | gerar tabela de hashes/arquivos automaticamente |
-| `tools/avb_info.py` | ler `vbmeta` sem `avbtool` |
+Só o que exige instrumento (não software): potência real (Vrms) por modo de
+ganho, impedância de saída, crosstalk e a topologia física dos dois amps. O
+resto do áudio está medido por registrador.
 
-## 4. Versionamento do firmware
+## 4. Backlog de ferramentas
 
-- Baseline atual: **1.1.1**.
-- Sugestão: uma tag/release por firmware analisado, com hashes em
-  `analysis/<versão>/SHA256SUMS.txt`.
-- Nunca versionar o payload; versionar só metadados e hashes.
+| Item | Estado |
+|------|--------|
+| `tools/payload_info.py` | pendente |
+| `tools/img_ls.py` | pendente (usamos `debugfs` direto) |
+| `tools/props_diff.py` | pendente |
+| `tools/evidence_ledger.py` | pendente |
+| `tools/avb_info.py` | pendente |
+| `tools/dt_dump.py` | ✅ feito |
+| `tools/fpga_fw_to_fs.py` | ✅ feito (novo) |
+
+## 5. Versionamento do firmware
+
+- Baseline: **1.1.1** (tag `fw-1.1.1-baseline`).
+- Hashes em `analysis/<versão>/`, binários fora do git.
+- Nunca versionar payload; só metadados e hashes.
