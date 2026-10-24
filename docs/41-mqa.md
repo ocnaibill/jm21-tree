@@ -75,3 +75,39 @@ Um usuário com arquivos MQA só ouve o render completo se a análise estiver
 ligada (`analyze_mqa=true`); de fábrica ela está **desligada**, e o arquivo toca
 como FLAC 24-bit comum (sem unfold). Isso é uma escolha de produto, não uma
 limitação do hardware.
+
+## 5. O caso `ny0s79.flac`: MQA real que o app não detecta
+
+`[FATO]` O `AC.func2()` (checagem nativa do scanner) devolveu **false** para o
+segundo arquivo, mesmo com `MQAENCODER` e `MQAENCODERSAMPLERATE` válidos. Para
+separar "arquivo falso" de "checagem estrita", forcei o registro na tabela de
+cache (`OBJECTA`, campo `I=1`) e reescanei: a biblioteca passou a tratá-lo como
+"MQA", e a reprodução mostrou:
+
+| | `mmixqv` | **`ny0s79`** |
+|---|---|---|
+| App `isMqa` | true | **true** |
+| `mqa.audio.type` | 2 | **2** (MQA) |
+| `mqa.original.rate` | 44 100 | 44 100 |
+| `mqa.bit.depth` | **24** | **16** |
+| `mqa.ui.state` | 3 | **2** |
+| DAC `0x1000B` | 7 | **7** |
+| FPGA `reg 0x02` | `0x48` | **`0x48`** |
+
+`[FATO]` O **DAC reconhece o arquivo como MQA** (mesmo render em 352,8 k). Ou
+seja: o arquivo é MQA genuíno; quem foi estrito demais foi o `AC.func2()`.
+
+`[HIP]` A diferença está na profundidade: este stream renderiza em **16 bits**
+(`mqa.bit.depth=16`) com `ui.state=2`, contra 24 bits/`state=3` do outro. A
+checagem nativa parece exigir a variante de 24 bits (MQA "studio"/hi-res) e
+rejeita a variante 16 bits — o que, na prática, faz o usuário perder o render
+desses arquivos.
+
+## 6. Bug observado: registro duplicado
+
+Quando o scanner muda o mimetype para "MQA", ele **insere uma nova linha** em
+`SONG` em vez de atualizar a existente — o arquivo aparece **duas vezes** na
+biblioteca (uma "FLAC 24 bits" e uma "MQA"). Confirmado no banco depois do
+rescan do `mmixqv`.
+
+`[?]` Se a duplicata some com um rescan limpo (banco apagado) não foi testado.
