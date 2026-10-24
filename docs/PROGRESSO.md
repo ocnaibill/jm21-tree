@@ -88,6 +88,9 @@ FPGA `0x48`/`0x88`, e `0x1000B` medido em **7** e **8**. Com o 176,4 k (índice
 continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 `0x70004`.
 
+**EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
+coerente com o `BYPASS` medido.
+
 **DSD256 mapeado:** `BYPASS`, `srcRate 352800`, FPGA **`0x68`** (a tabela DSD do
 `fpga_config()` soma `0x20` a partir de 352,8 k), `0x70004 = 0x1B` — previsão
 confirmada. Escada DSD completa: 64/128/256.
