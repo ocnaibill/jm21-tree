@@ -538,6 +538,12 @@ O gadget UAC (`2972:0045`), as taxas até 384 kHz, o DSD nativo e a ausência de
 controle de volume no host:
 **[docs/39-usb-dac.md](docs/39-usb-dac.md)**
 
+## 38. MQA
+
+A detecção (`analyze_mqa`, mimetype "MQA"), o render no DAC a 352,8 kHz e o caso
+do arquivo de 16 bits que o app rejeita:
+**[docs/40-mqa.md](docs/40-mqa.md)**
+
 ---
 
 ## Inventário local (fora do git)
