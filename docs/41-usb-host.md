@@ -129,3 +129,26 @@ force-stop → 49/3 (som).
 3. A **permissão USB é por app** e o UAPP conflita.
 4. O app precisa do **evento de attach** para escolher o modo certo — reiniciar
    depois do plugue o joga no caminho nativo (silencioso).
+
+### DSD por DoP: escada completa
+
+| Arquivo | `configSampleRate` | `audioDataFormat` / `decoderFormat` | Resultado |
+|---------|--------------------|--------------------------------------|-----------|
+| DSD64 (2 822 400) | **176 400** | 49 / 3 | toca (confirmado) |
+| DSD128 (5 644 800) | **352 800** | 49 / 3 | toca |
+| DSD256 (11 289 600) | — | — | **`Audio open failure : UNSUPPORTED`** |
+
+`[FATO]` O DSD256 é recusado porque o DoP exigiria **705,6 k** (11 289 600/16),
+acima dos 384 k do Sonata; o caminho nativo, que aceitaria, é o que está mudo.
+Depois da falha, o app **volta para a faixa anterior**.
+
+### Workaround para o bug do DSD nativo
+
+O app tem a opção **"DSD out mode"** na tela de USB audio
+(`ExclusiveUsbFragment`), com o aviso: *"Please choose DSD mode according to the
+USB DAC, and note that not all DACs support DoP/Native DSD."* Escolher **DoP**
+evita o caminho nativo (silencioso) sem depender do truque de não reiniciar o
+app.
+
+`[?]` A chave de preferência gravada por esse diálogo não foi recuperada (a
+classe `d2` não saiu no JADX), então o ajuste tem de ser feito pela interface.
