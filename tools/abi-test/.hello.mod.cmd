@@ -1,0 +1,1 @@
+cmd_/home/ocnaibill/repos/jm21-tree/tools/abi-test/hello.mod := printf '%s\n'   hello.o | awk '!x[$$0]++ { print("/home/ocnaibill/repos/jm21-tree/tools/abi-test/"$$0) }' > /home/ocnaibill/repos/jm21-tree/tools/abi-test/hello.mod

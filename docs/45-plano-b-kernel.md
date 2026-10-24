@@ -72,3 +72,47 @@ reimplementação clean-room (Plano C, `docs`/issue #20).
 - Build com LTO full: ~20 GB e horas de CPU.
 
 Por isso o passo 2 pode ser feito já, mas o build completo deve ser agendado.
+
+## 7. Resultado (medido)
+
+### Build
+- Árvore pública 5.15.180 com o `.config` do aparelho, **LTO thin** (o full
+  estourava os 15 GB de RAM com `-j16`), `-j8`.
+- Vermagic: o `setlocalversion` acrescentava `+`; a correção é compilar com a
+  variável **`LOCALVERSION=`** definida (vazia), o que desliga o `+`. Resultado:
+  `5.15.41-g9ded8564ff52-dirty` — **idêntico ao aparelho**.
+
+### Teste 1 — módulo trivial no kernel da FiiO
+```
+insmod hello.ko   -> rc=0
+dmesg: jm21abi: loaded
+lsmod: hello  16384  0
+rmmod hello       -> jm21abi: unloaded
+```
+`[FATO]` O kernel da FiiO aceitou um módulo compilado na árvore pública →
+**vermagic e CRCs de modversions batem**. (Só o BTF do módulo falhou: `-22`,
+opcional.)
+
+### Teste 2 — CRCs exigidos pelos módulos da FiiO
+`tools/abi-check.py` compara a seção `__versions` de cada `.ko` com o nosso
+`Module.symvers` (15 233 símbolos):
+
+| Módulo | Símbolos | CRC errado | Faltando |
+|--------|----------|------------|----------|
+| `fiio_primary_modules.ko` | 47 | **0** | **0** |
+| `anolog_board_jm21.ko` | 25 | **0** | 10 |
+| `cs43198.ko` | 18 | **0** | 6 |
+| `dac_core_module.ko` | 39 | **0** | 13 |
+| `gw-fpga.ko` | 55 | **0** | 11 |
+| `fpga_audio_interface.ko` | 15 | **0** | 9 |
+
+`[FATO]` **Nenhum CRC divergente.** Os símbolos faltantes são os exports da
+própria FiiO (`fiio_device_*`, `fiio_regmap_*`, `fpga_*`, `report_playing_info`,
+`dac_set_gpio_value*`), fornecidos pelo `fiio_primary_modules.ko` — que é
+**100 % compatível** e é o primeiro a carregar.
+
+### Conclusão
+O **Plano B é viável**: um kernel compilado por nós (CAF público + config do
+aparelho) tem a **mesma ABI** dos módulos vendor. O próximo passo é bootar esse
+kernel por `fastboot boot` (imagem de boot com o nosso `Image.gz` + ramdisk/DTB)
+e carregar o stack FiiO.

@@ -1,0 +1,1 @@
+cmd_/home/ocnaibill/repos/jm21-tree/tools/abi-test/Module.symvers := sed 's/\.ko$$/.lto\.o/' /home/ocnaibill/repos/jm21-tree/tools/abi-test/modules.order | scripts/mod/modpost -m  -E -o /home/ocnaibill/repos/jm21-tree/tools/abi-test/Module.symvers -e -i Module.symvers   -n -T -

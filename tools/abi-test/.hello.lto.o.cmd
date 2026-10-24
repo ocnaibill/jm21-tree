@@ -1,0 +1,1 @@
+cmd_/home/ocnaibill/repos/jm21-tree/tools/abi-test/hello.lto.o := ld.lld -EL  -maarch64elf -z norelro -mllvm -import-instr-limit=5 -z noexecstack   -r -o /home/ocnaibill/repos/jm21-tree/tools/abi-test/hello.lto.o  --whole-archive /home/ocnaibill/repos/jm21-tree/tools/abi-test/hello.o
