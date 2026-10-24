@@ -61,9 +61,9 @@
 
 | # | Pergunta | Estado | Onde |
 |---|----------|--------|------|
-| N1 | Por que o módulo de kernel **`mode_select`** não existe? Algum build o traz? | ⬜ | `docs/37` §6 |
+| N1 | Por que o módulo de kernel **`mode_select`** não existe? Algum build o traz? | ✅ | **não é embarcado** no 1.1.1 (nem no `/vendor_dlkm` do aparelho, nem na imagem); `dac_core`/`anolog_board` falham ao obtê-lo e `system_work_mode` fica 0. Não há firmware posterior (manifesto do servidor) |
 | N2 | Há **dois caminhos de volume** (`setMasterVolumeDac` nativo e `DAC Playback Volume`). Qual atua quando? | ✅ | **um efeito, duas portas**: só `0x90001/2` muda; escrita direta no kcontrol é ignorada — o framework é autoritativo (`docs/33` §2) |
-| N3 | Os 4 kcontrols ausentes (`DAC MUTE`, `MasterTrim L/R`, `Hifi Boost`, `Headset Type`) dependem do `mode_select`? | 🟨 | `docs/37` §6 |
+| N3 | Os 4 kcontrols ausentes (`DAC MUTE`, `MasterTrim L/R`, `Hifi Boost`, `Headset Type`) dependem do `mode_select`? | ✅ | **não existem neste build/modelo**: ausentes em Android, em Pure Music e após reiniciar a HAL. A dependência do `mode_select` segue como hipótese (N1) |
 | N4 | `gw_fpga_firmware_jm21_2.fw` (user code `0xF2510004`) não descomprime no tamanho esperado — build parcial? | ✅ | **outro design**, não delta: duas chaves RLE, 23 pinos, `I3C_IOBUF` (`docs/31` §4) |
 | N5 | Os 63 bytes entre a linha `3B` e os frames: header ou bloco pós-frames? | ✅ | **nem um nem outro**: são fluxo comprimido; com a chave `0xDB` os dados começam no offset 68 e dão 274×160 exatos (`docs/30` §8) |
 | N6 | `uac_kernel_enabled=false` mas o gadget UAC funciona — o que a flag controla? | 🟨 | gadget é `uac2.0` do kernel (configfs); sem FFS de UAC e sem binário de userspace. A flag deve descrever o **offload QMI** (`snd_usb_audio_qmi`), não o gadget (`docs/39` §6) |
