@@ -189,6 +189,13 @@ cálculo ou de documento público e está explicitado no texto.
     registros versionados com magic `0xcac1`/`0xcac3`. **Os MasterTrim existem**
     — como calibração persistida, não como kcontrol; isso explica o `-22` da
     HAL, que procura tudo no mixer. Ver `docs/26-fiioconfig.md`.
+40. **Topologia provada nos dois chips, e rotas inertes.** Com root, o
+    `dac_ctrl` aceita `read_all_regs` (85 registradores lidos **nos dois**
+    CS43198): `0x90004` = **0x00 no L e 0x0C no R** (INV_A+INV_B) e volumes
+    `0x5D` iguais nos dois → par diferencial confirmado em registrador. O chip é
+    `DEVID 0x431980` / `REV_ID 0xA1`. Os comandos `route_po/lo/ba/balo` são
+    **inertes** (só casam no `strcmp`, sem ação) — rota real vem da detecção de
+    jack. Ver `docs/27-dac-ctrl-e-topologia.md`.
 
 ---
 
@@ -379,6 +386,12 @@ a estrutura inicial da `fiioconfig`:
 Layout da partição de configuração (SN, NB, trim dos DACs, checksum do touch,
 firmware do FPGA) e o que os "controles fantasma" realmente são:
 **[docs/26-fiioconfig.md](docs/26-fiioconfig.md)**
+
+## 25. `dac_ctrl` e a topologia provada
+
+A linguagem de debug do `dac_ctrl`, a leitura nos dois chips, o dump completo de
+registradores e a prova do par diferencial:
+**[docs/27-dac-ctrl-e-topologia.md](docs/27-dac-ctrl-e-topologia.md)**
 
 ---
 
