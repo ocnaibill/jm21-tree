@@ -115,3 +115,34 @@ de saída (22/24 MHz), e o comportamento medido no áudio.
 `fpga_debug` (sysfs) só aceita `hdmi_code_fmt_0..3` — não é um acesso genérico
 a registrador. `fpga_gw_read_code` devolve o user code. Não há, portanto, como
 varrer o mapa de registradores do design sem um hook novo.
+
+## 8. Geometria do arquivo (medida)
+
+| Campo | Valor |
+|-------|-------|
+| Header | **129 bytes** (inclui 20× `FF`, `A5C3`, ID, compress keys, SPI address, `3B` com a contagem) |
+| Frames | **274** (`0x0112`, bate com `db.height = 274` do chipdb do Apicula) |
+| Bytes por frame | **122** (976 bits) |
+| Dados | **33 428** = 274 × 122 |
+| Footer | 48 bytes (termina em `34 73 0A 00 00 00 <user code>`) |
+| Total | 129 + 33 428 + 48 = **33 605** ✓ |
+
+`[?]` A linha `3B 80 01 12` (contagem de frames) está no offset **0x40**, e não no
+fim do header — sobram **63 bytes** entre ela e o começo dos frames. Pelo
+formato do Apicula, o `3B` encerra o header. Ou o header real tem 66 bytes e os
+63 bytes são um bloco extra **depois** dos frames (BSRAM/init), ou o layout da
+FiiO difere do `.fs` do programmer. As duas leituras fecham a conta
+(66 + 33 428 + 63 + 48 = 33 605), e essa é a única ambiguidade que resta para
+escrever o conversor.
+
+## 9. O que já se sabe do design sem decodificar
+
+- O FPGA **gera os clocks** dos DACs: `fpga_set_mclk … 22/24 MHz`.
+- Converte/repassa **I²S → DAC** e **DSD/DoP → DAC** (regs `0x01`/`0x02`).
+- Tem **entrada e saída SPDIF** (`fpga_config_spdif_rx/tx`, `spdif_rx_bypass`,
+  `spdif_tx_enable`, `xmos_spdif_rx`).
+- Tem caminho de **HDMI** (`fpga_config_hdmi_code_fmt`).
+- Liga/desliga por modo (`fpga_ctrl_power_by_mode`), com `fpga_bypass` no sysfs.
+- Não faz volume (o volume vai por I²C ao DAC) nem EQ.
+
+Ou seja: é um **roteador de áudio + gerador de clock**, não um DSP.
