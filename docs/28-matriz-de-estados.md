@@ -29,18 +29,21 @@
    **bitmask de estágios de processamento ativos**, não "o arquivo é MQA".
    `[HIP]` forte, agora com 4 amostras consistentes.
 
-## 3. O 384 kHz: recusado pelo app
+## 3. O 384 kHz: **toca** (correção)
 
-`ffprobe` confirma que o arquivo é válido (FLAC, 384 000 Hz, 24-bit, estéreo).
-O FiiO Music responde *"we can't play this file"* já na abertura — é **política
-do player**, não do hardware (o HAL nunca chegou a configurar o stream).
+> Esta seção dizia "recusado pelo app". Estava **errado** — ver §15.
 
-A ficha oficial promete 384 kHz na decodificação local; portanto:
-- `[?]` ou o limite real do player é 352,8 kHz;
-- `[?]` ou há exigência de formato (16-bit? WAV?) para 384 kHz.
+`ffprobe` confirma que o arquivo é válido (FLAC, 384 000 Hz, 24-bit, estéreo) e
+o **navegador de arquivos do próprio FiiO Music** toca 352,8 k e 384 k:
 
-Teste proposto (issue): gerar 352,8 kHz e 384 kHz em 16 e 32 bits e ver quais
-abrem.
+```
+05:04:39.371  HAL: mode ALLTO32BIT srcRate 352800 ... halRate 352800
+05:04:41.65x  HAL: srcRate 384000 ... halRate 384000
+FPGA reg 0x02: 0x48 (352,8 k) e 0x88 (384 k)
+```
+
+A recusa (*"we can't play this file"*) acontece no caminho **Files → intent**,
+não no navegador do app. Ver a distinção completa em §15.
 
 ## 4. O que a rodada **não** capturou (e por quê)
 
@@ -186,12 +189,12 @@ filtro, power) foram reconfirmados na rodada 3.
 
 ---
 
-# O limite de 352,8/384 kHz é **política do app** (achado no código)
+# 352,8/384 kHz: **tocam** — a checagem do código não dispara
 
-> Descoberto no `MediaPlayerService` do FiiO Music decompilado, depois do teste
-> com o VLC.
+> Esta seção nasceu de um diagnóstico errado (li só o fim do `logcat`) e foi
+> reescrita com a evidência completa.
 
-## 15. A regra exata
+## 15. A regra existe, mas não é aplicada aqui
 
 `com/fiio/music/service/MediaPlayerService.java` (~linha 2567):
 
@@ -212,18 +215,25 @@ E a flag `k()`:
 | `com.fiio.product.b.k()` | `true` só para M6 / M7 / M7K / M9 |
 | `com.fiio.product.device.b.k()` | **`true` fixo** (classe do JM21) |
 
-Ou seja: no JM21 a combinação **"352,8/384 kHz + saída interna (3,5/4,4 mm)"**
-é marcada como **UNSUPPORTED de propósito**. Com saída **USB**, a mesma taxa é
-permitida — e `IDevice.setUsbAudioSupportSampleRate()` existe justamente para
-listar as taxas suportadas por USB (bitmask; 64 = 352,8 k, 128 = 384 k).
+Pela leitura do código, isso **deveria** bloquear 352,8/384 na saída interna.
+Na prática **não bloqueou**: o navegador de arquivos do app tocou as duas, com
+a HAL em `ALLTO32BIT` e o FPGA em `0x48`/`0x88`, e `0x1000B = 7`/`8`.
 
-Isso resolve a issue #9: **não é o hardware nem o arquivo** — é o player que
-recusa. A ficha oficial ("384 kHz na decodificação local") não bate com o
-código do próprio app para a saída interna.
+| Caminho | 352,8 k | 384 k |
+|---------|---------|-------|
+| Navegador do app (`TabFileItemBrowserActivity`) | **toca** | **toca** |
+| Files → intent para o FiiO Music | *"we can't play this file"* | idem |
 
-`[?]` Continua em aberto se o **DAC/FPGA** aceitariam 352,8/384 — a previsão
-pelo modelo é `0x1000B = 7/8` e FPGA `0x02 = 0x48/0x88`. Para provar, só por
-USB (UAC), com um host que envie essas taxas.
+`[HYP]` Ou `k()` da classe do JM21 retorna `false`, ou o caminho do navegador
+não passa por essa checagem, ou a checagem é de outra versão do app. O que
+importa: **o hardware aceita e o app toca**; a recusa observada é do caminho
+de intent.
+
+`IDevice.setUsbAudioSupportSampleRate()` (bitmask; 64 = 352,8 k, 128 = 384 k)
+continua sendo a lista de taxas **por USB** — não é um limite do DAC interno.
+
+**Issue #9**: fechada, com a conclusão de que **não há limite de 192 kHz** no
+hardware nem no app.
 
 ## 16. Teste com o VLC (inconclusivo, e por quê)
 

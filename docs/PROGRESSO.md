@@ -78,10 +78,14 @@ arquivo. 384 kHz **recusado pelo app** (arquivo válido).
 **P1c feita:** `0x1000B` (SP_SRATE) medido em 5 taxas e **igual à tabela do
 driver**; FPGA confirmado em 88,2 (`0x42`).
 
-**352,8 e 384 kHz tocam (issue #9 fechada):** HAL `halRate 352800` (3×) e
-`halRate 384000` (5×); FPGA `0x48` e `0x88` — previsões do modelo confirmadas.
-A checagem `UNSUPPORTED` não dispara neste modelo. Meu diagnóstico anterior
-("política do app a 192 k") estava errado por leitura parcial do log.
+**352,8 e 384 kHz tocam (issue #9 fechada):** HAL `halRate 352800`/`384000`,
+FPGA `0x48`/`0x88`, e `0x1000B` medido em **7** e **8**. Com o 176,4 k (índice
+**5**, FPGA `0x44`), a tabela `SP_SRATE` do cs43198 está **medida em todos os
+índices** (1–8), sem valor derivado. A recusa só existe no caminho de intent.
+
+**DSD128 mapeado:** `BYPASS`, `0x1A000002`, `srcRate 176400`, FPGA `0x44`.
+`0x1000B` no DSD parece **resíduo** da taxa PCM anterior (não é reescrito) —
+teste decisivo pendente (384 k → DSD128).
 
 **DSD64 mapeado:** HAL entrega `0x1A000002` (DSD_32BIT) a 88,2 kHz em
 `mode BYPASS`; `0x70004=0x13`, `0x20000=0x0A`, `0x70000/1=95`, FPGA `0x42`.
