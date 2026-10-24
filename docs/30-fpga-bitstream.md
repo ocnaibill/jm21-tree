@@ -83,3 +83,35 @@ sob demanda** (quando o caminho de áudio precisa dele) e desligado fora disso.
 3. Quem escolhe o arquivo: `fiioconfig` (campo de nome vazio) ou o default do
    driver? O `_2.fw` nunca é carregado neste firmware?
 4. O `fpga_bypass` (sysfs) faz o quê — desvia o FPGA no caminho de áudio?
+
+## 7. Tentativa de decodificar (Apicula) — bloqueio conhecido
+
+Instalei o **Apicula** (projeto aberto de engenharia reversa Gowin) num venv. Ele
+**suporta o GW1NZ-1** (`GW1NZ-1.msgpack.xz` presente).
+
+```
+python -m apycula.gowin_unpack gw_fpga_firmware_jm21.fw -d GW1NZ-1
+→ UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff
+```
+
+**Causa:** o Apicula lê o formato **texto** (`.fs`, do programmer da Gowin:
+cada linha é um frame em ASCII binário, com CRC16-ARC por frame). O arquivo da
+FiiO é **binário** — comandos + frames crus, sem as linhas nem os CRCs.
+
+O conteúdo bate: no offset 0x20 aparecem `0x10` e `0x51`, que o `bslib.py` usa
+para detectar header/compressão; e o ID `0x0100681B` está em 0x1C.
+
+**Caminho para destravar:** escrever um conversor `.fw → .fs`
+(comando `0x3B` dá a contagem de frames; cada frame é payload + 8 bytes de
+CRC/pad no formato texto). O validador é o próprio `bslib.read_bitstream`, que
+confere o CRC16 de cada frame — se o conversor estiver certo, ele lê o design.
+
+Enquanto isso não é feito, o que já sabemos do FPGA vem de fora do bitstream:
+registradores SPI (0x01 modo, 0x02 taxa, 0x13 user code, 0x41 status), clocks
+de saída (22/24 MHz), e o comportamento medido no áudio.
+
+### Sem caminho de leitura genérica de registradores
+
+`fpga_debug` (sysfs) só aceita `hdmi_code_fmt_0..3` — não é um acesso genérico
+a registrador. `fpga_gw_read_code` devolve o user code. Não há, portanto, como
+varrer o mapa de registradores do design sem um hook novo.
