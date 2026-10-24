@@ -67,3 +67,6 @@ analysis/fpga/*.fw
 analysis/fpga/*.ko
 analysis/fpga/*.fs
 analysis/fpga/*.v
+analysis/framework/*.jar
+analysis/framework/*.apk
+analysis/framework/*.so
