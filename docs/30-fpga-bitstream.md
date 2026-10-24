@@ -127,13 +127,11 @@ varrer o mapa de registradores do design sem um hook novo.
 | Footer | 48 bytes (termina em `34 73 0A 00 00 00 <user code>`) |
 | Total | 129 + 33 428 + 48 = **33 605** ✓ |
 
-`[?]` A linha `3B 80 01 12` (contagem de frames) está no offset **0x40**, e não no
-fim do header — sobram **63 bytes** entre ela e o começo dos frames. Pelo
-formato do Apicula, o `3B` encerra o header. Ou o header real tem 66 bytes e os
-63 bytes são um bloco extra **depois** dos frames (BSRAM/init), ou o layout da
-FiiO difere do `.fs` do programmer. As duas leituras fecham a conta
-(66 + 33 428 + 63 + 48 = 33 605), e essa é a única ambiguidade que resta para
-escrever o conversor.
+**Resolvido:** os 63 bytes não são header nem bloco extra — são **parte do
+fluxo comprimido**. Com o modelo de compressão (chave `0xDB` → 8 zeros), os
+dados começam imediatamente após a linha `3B` (offset 68) e descomprimem para
+`274 × 160 = 43 840` bytes exatos (o excedente de 7 bytes é padding de
+alinhamento). A conta que "fechava" com frames de 122 bytes era coincidência.
 
 ## 9. O que já se sabe do design sem decodificar
 

@@ -64,8 +64,8 @@
 | N1 | Por que o módulo de kernel **`mode_select`** não existe? Algum build o traz? | ⬜ | `docs/37` §6 |
 | N2 | Há **dois caminhos de volume** (`setMasterVolumeDac` nativo e `DAC Playback Volume`). Qual atua quando? | ✅ | **um efeito, duas portas**: só `0x90001/2` muda; escrita direta no kcontrol é ignorada — o framework é autoritativo (`docs/33` §2) |
 | N3 | Os 4 kcontrols ausentes (`DAC MUTE`, `MasterTrim L/R`, `Hifi Boost`, `Headset Type`) dependem do `mode_select`? | 🟨 | `docs/37` §6 |
-| N4 | `gw_fpga_firmware_jm21_2.fw` (user code `0xF2510004`) não descomprime no tamanho esperado — build parcial? | ⬜ | `docs/30`, `docs/31` §4 |
-| N5 | Os 63 bytes entre a linha `3B` e os frames: header ou bloco pós-frames? | ⬜ | `docs/30` §8 |
+| N4 | `gw_fpga_firmware_jm21_2.fw` (user code `0xF2510004`) não descomprime no tamanho esperado — build parcial? | ✅ | **outro design**, não delta: duas chaves RLE, 23 pinos, `I3C_IOBUF` (`docs/31` §4) |
+| N5 | Os 63 bytes entre a linha `3B` e os frames: header ou bloco pós-frames? | ✅ | **nem um nem outro**: são fluxo comprimido; com a chave `0xDB` os dados começam no offset 68 e dão 274×160 exatos (`docs/30` §8) |
 | N6 | `uac_kernel_enabled=false` mas o gadget UAC funciona — o que a flag controla? | 🟨 | `docs/39` §6 |
 | N7 | Referências a pacotes ausentes (`com.fiio.control`, `com.fiio.dream`, `com.alex.debugtool_player`, `com.example.fiiotestappliction`) | ✅ | são resíduos de build compartilhado (`docs/33`,`docs/34`) |
 

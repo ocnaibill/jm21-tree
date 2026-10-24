@@ -68,7 +68,27 @@ Topo: **11 pinos** (7 entradas, 2 saídas, 2 bidirecionais). Os nomes
 Isso fecha a pergunta da issue #4: o FPGA **re-clocka e roteia** o áudio, e
 gera os clocks; não processa o sinal.
 
-## 4. Pendências
+## 4. O segundo bitstream (`_2.fw`, user code `0xF2510004`)
+
+Também decodifica com o conversor — mas com **duas** chaves de compressão
+(`0x97` → 8 zeros, `0xD9` → 4 zeros). O resultado é **outro design**:
+
+| | v3 (carregado) | v4 (`_2.fw`) |
+|---|---|---|
+| Pinos no topo | **11** | **23** |
+| `LUT4` | 803 | 734 |
+| `DFFSE` | 337 | 265 |
+| `ALU` | 52 | 62 |
+| `RAM16SDP4` | 18 | 12 |
+| `IOBUF` | 2 | **10** |
+| `IVIDEO` | 2 | **9** |
+| `I3C_IOBUF` | — | **9** |
+| Serializador/DDR | `IDES10`, `IDDRC`, `ODDR`, `ELVDS_OBUF` | ausentes |
+
+`[HIP]` O v4 é um design para **outra variante de placa** (interface I3C e muito
+mais I/O), não uma atualização do v3. É por isso que o aparelho carrega o v3.
+
+## 5. Pendências
 
 - `gw_fpga_firmware_jm21_2.fw` (user code `0xF2510004`) **não** descomprime para
   o tamanho esperado: chave `0x97`, saída 39 623 B contra 43 840 B. Ou é um

@@ -45,12 +45,16 @@ def convert(fw_path: str, out_path: str, frames: int = 274, frame_size: int = 16
 
     raw = d[len(header) : iusr - 18]
 
-    # dados comprimidos: a chave vem da linha 0x51 (ba[5]); 0xdb -> 8 zeros
-    key = header[45]
+    # dados comprimidos: ate tres chaves na linha 0x51 (ba[5..7] -> 8/4/2 zeros)
+    keys = {}
+    for off, run in ((5, 8), (6, 4), (7, 2)):
+        k = header[40 + off]
+        if k:
+            keys[k] = run
     data = bytearray()
     for b in raw:
-        if b == key:
-            data += b"\x00" * 8
+        if b in keys:
+            data += b"\x00" * keys[b]
         else:
             data.append(b)
     need = frames * frame_size
@@ -102,8 +106,8 @@ def convert(fw_path: str, out_path: str, frames: int = 274, frame_size: int = 16
             f.write(bits(chunk) + "\n")
 
     print(f"{out_path}: header {len(header)} B, {frames} frames de {frame_size} B "
-          f"(bruto {len(raw)} B, chave 0x{key:02x}, descomprimido {len(data)} B), "
-          f"footer {len(footer)} B")
+          f"(bruto {len(raw)} B, chaves {[hex(k) for k in keys]}, "
+          f"descomprimido {len(data)} B), footer {len(footer)} B")
 
 
 if __name__ == "__main__":
