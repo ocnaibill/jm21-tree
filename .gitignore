@@ -73,3 +73,10 @@ analysis/framework/*.so
 analysis/fiiomusic-libs/
 analysis/kernel/*.txt
 analysis/kernel/tree/
+tools/abi-test/*.ko
+tools/abi-test/*.o
+tools/abi-test/*.mod
+tools/abi-test/*.mod.c
+tools/abi-test/.*.cmd
+tools/abi-test/modules.order
+tools/abi-test/Module.symvers
