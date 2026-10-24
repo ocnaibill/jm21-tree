@@ -141,6 +141,11 @@ cálculo ou de documento público e está explicitado no texto.
     0666` em ~50 nós de `soc:fiio_attr` — essa é a API. Mapeamos nó → módulo →
     papel, os gatilhos `on property:` reais e os serviços (`fiiouac`,
     `fiio_init.sh`, `system_ctrl.sh`…). Ver `docs/18-superficie-sysfs.md`.
+32. **HAL decompilada e caminho fechado.** A `libfiioaudio.so` **não** usa sysfs:
+    fala por kcontrols ALSA. Recuperamos a tabela de `fiio_adev_set_codec_param`
+    (12 nomes, dos quais só 7 existem no JM21) e o fio completo do volume:
+    `AudioService` → mixer `DAC Playback Volume` → `dac_core` → tabela →
+    `cs43198` (I2C). Ver `docs/19-hal-de-audio.md`.
 
 ---
 

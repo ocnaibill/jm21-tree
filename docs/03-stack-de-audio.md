@@ -197,18 +197,20 @@ Arquitetura: `dac_core` é o **orquestrador**; cada função é um módulo
 Isso explica o tamanho da pilha FiiO e facilita o RE: dá para analisar por
 função em vez de tudo de uma vez.
 
-`[FW]` **A interface é sysfs, não um `/dev`.** O `framework.jar` referencia
-`/sys/devices/platform/soc/soc:fiio_attr/cw_batt_capacity`, e o DT declara o nó
-`fiio,fiio_attr`, implementado em `fiio_attr.c` (dentro de
-`fiio_underlay_modules.ko`). No aparelho:
+`[FW]` **A interface é sysfs, não um `/dev`** — mas atenção ao escopo: quem usa
+`/sys/devices/platform/soc/soc:fiio_attr/...` são **apps e scripts**
+(`init.fiio.common.rc`), não a HAL. A `libfiioaudio.so` fala com o kernel por
+**kcontrols ALSA** (`DAC Playback Volume`, `DAC PO Gain`, `Audio Format`…); ver
+`19-hal-de-audio.md` §1. O DT declara o nó `fiio,fiio_attr`, implementado em
+`fiio_attr.c` (dentro de `fiio_underlay_modules.ko`). No aparelho:
 
 ```bash
 adb shell ls /sys/devices/platform/soc/soc:fiio_attr/
 adb shell cat /sys/devices/platform/soc/soc:fiio_attr/* 2>/dev/null
 ```
 
-A lista de atributos expostos é a superfície de controle que o userspace usa —
-e é o que a `libfiioaudio.so` deve escrever quando muda ganho, filtro ou modo.
+A lista de atributos expostos é a superfície de controle que apps/scripts usam —
+ganho, filtro e modo também aparecem lá, mas o caminho de áudio da HAL é ALSA.
 
 ## 5. Política de áudio
 
