@@ -41,7 +41,7 @@
 | Q11 | Gatilho do `audio_policy_configuration_gaming.xml` | 🟨 | propriedade **`vendor.audio.gaming.enabled`** e `/data/vendor/gaming` achadas no `vendor.img`; quem a escreve não foi identificado |
 | Q12 | Faixa e passo da tabela de volume | ✅ | 121 passos, 0,5 dB; **três curvas medidas** (`docs/11`, `docs/38`) |
 | Q13 | Quantos degraus de ganho a UI expõe | ✅ | **3** (0/1/2 = baixo/médio/alto); driver tem 5 tabelas (`docs/38`) |
-| Q14 | MQA é decode completo ou só core | 🟨 | quem decodifica é o **DAC**, não o app (`docs/36`); profundidade não provada |
+| Q14 | MQA é decode completo ou só core | ✅ | MQA reconfigura o DAC para **352,8 k** (`0x1000B=7`, FPGA `0x48`) com o transporte em 44,1 k → **render no hardware (core+render)**. Antes, o scanner só analisa MQA se `analyze_mqa=true` (padrão false). Ver `docs/41` |
 | Q15 | Existe captura (mic) ativa | ✅ | **não há**: `tinycap` em pcm d=0/9/11/15/17 devolve **0 frames**; o WCD937x tem rotas DMIC no DT, mas nada conectado |
 | Q16 | O que há em `fiioconfig` | ✅ | header, trims, SN/NB, journal de wear (`docs/26`) |
 
