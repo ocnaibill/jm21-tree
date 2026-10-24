@@ -94,6 +94,11 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**Plano B provado (issues #19 e #21):** kernel compilado numa árvore pública
+(5.15.180 + config do aparelho + vermagic forçado) **bootou no JM21** por
+`fastboot boot`, carregou **todos** os módulos FiiO e tocou áudio (44,1 k, 384 k
+e DSD64). ABI compatível: zero CRC divergente. Ver `docs/45`.
+
 **Ganho analógico (P2) medido:** as três curvas de volume (ganho 0/1/2) foram
 varridas com tom tocando e batem **exatamente** com as tabelas do driver
 (vol 20: 145/133/113; 30: 125/113/93; 60: 84/72/60; 100: 44/32/20).
