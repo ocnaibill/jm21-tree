@@ -1,0 +1,65 @@
+=== FiiO JM21 — logcat extract: native DSD (silent) vs DoP (works) ===
+Date: 2026-10-24T15:52:29Z (host)
+
+--- device ---
+FiiO JM21
+qti/bengal_515/bengal_515:13/TKQ1.230110.001/eng.fiio.20260428.144644:user/dev-keys
+FiiODPA
+256
+768000
+
+--- USB DAC ---
+Bus 001 Device 002: ID 22e1:e208  
+[13392.765798] [T29012] usb 1-1: New USB device found, idVendor=22e1, idProduct=e208, bcdDevice= 0.05
+[13392.765848] [T29012] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[13392.765864] [T29012] usb 1-1: Product: TempoTec HD USB AUDIO
+[13392.765875] [T29012] usb 1-1: Manufacturer: TEMPOTEC
+[13392.808005] [T29012] usb 1-1: 2:4 : unsupported format bits 0x100000000
+
+--- app: rates read from the DAC ---
+10-24 12:44:06.732  1044  2075 I IDevice : setUsbAudioSupportSampleRate: [44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000]
+
+--- native path (silent) and DoP path (works) ---
+10-24 12:44:17.579  1044  1247 I FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=2822400, bitDepth=16, channels=2, suffix='DSF', audioDataFormat=49, configSampleRate=176400, tracnChannel=12, decoderFormat=3, isDsd=true, isDst=false, needSrc=false, isMQA=false, needSystemNativeMqa=false, song=Song{song_name='Aria (DSD64)', song_file_path='/sdcard/Music/testtones/decaud-goldberg-aria-dsd64.dsf', song_file_name='decaud-goldberg-aria-dsd64.dsf', song_track=1}, songPath='/sdcard/Music/testtones/decaud-goldberg-aria-dsd64.dsf', config=com.example.root.checkappmusic.config.DPAConfig@17d2997}
+10-24 12:44:17.579  1044  1247 E usb     : UsbAudioTrackOpen==true
+10-24 12:44:17.588  1044  1247 I usb     : setObject: usb audiotrack open : 3
+10-24 12:47:20.968  1044  1247 I FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=5644800, bitDepth=16, channels=2, suffix='DSF', audioDataFormat=49, configSampleRate=352800, tracnChannel=12, decoderFormat=3, isDsd=true, isDst=false, needSrc=false, isMQA=false, needSystemNativeMqa=false, song=Song{song_name='Variatio 5 a 1 ovvero 2 Clav. (DSD128)', song_file_path='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', song_file_name='decaud-goldberg-var5-dsd128.dsf', song_track=2}, songPath='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', config=com.example.root.checkappmusic.config.DPAConfig@b320233}
+10-24 12:47:20.970  1044  1247 E usb     : UsbAudioTrackOpen==true
+10-24 12:47:20.981  1044  1247 I usb     : setObject: usb audiotrack open : 3
+10-24 12:47:45.921  1044  1247 E MediaPlayerService: Audio open failure : UNSUPPORTED, path : /sdcard/Music/testtones/decaud-goldberg-var5-dsd256.dsf
+10-24 12:47:45.965  1044  1247 I FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=5644800, bitDepth=16, channels=2, suffix='DSF', audioDataFormat=49, configSampleRate=352800, tracnChannel=12, decoderFormat=3, isDsd=true, isDst=false, needSrc=false, isMQA=false, needSystemNativeMqa=false, song=Song{song_name='Variatio 5 a 1 ovvero 2 Clav. (DSD128)', song_file_path='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', song_file_name='decaud-goldberg-var5-dsd128.dsf', song_track=2}, songPath='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', config=com.example.root.checkappmusic.config.DPAConfig@fa0f2b6}
+10-24 12:50:45.193  1044  1247 I FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=5644800, bitDepth=16, channels=2, suffix='DSF', audioDataFormat=49, configSampleRate=352800, tracnChannel=12, decoderFormat=3, isDsd=true, isDst=false, needSrc=false, isMQA=false, needSystemNativeMqa=false, song=Song{song_name='Variatio 5 a 1 ovvero 2 Clav. (DSD128)', song_file_path='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', song_file_name='decaud-goldberg-var5-dsd128.dsf', song_track=2}, songPath='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', config=com.example.root.checkappmusic.config.DPAConfig@8a89c34}
+10-24 12:52:19.552  1044  1247 I FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=5644800, bitDepth=16, channels=2, suffix='DSF', audioDataFormat=49, configSampleRate=352800, tracnChannel=12, decoderFormat=3, isDsd=true, isDst=false, needSrc=false, isMQA=false, needSystemNativeMqa=false, song=Song{song_name='Variatio 5 a 1 ovvero 2 Clav. (DSD128)', song_file_path='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', song_file_name='decaud-goldberg-var5-dsd128.dsf', song_track=2}, songPath='/sdcard/Music/testtones/decaud-goldberg-var5-dsd128.dsf', config=com.example.root.checkappmusic.config.DPAConfig@6ace277}
+
+--- HAL view of the native DSD stream ---
+10-24 12:42:27.186  1065  1267 D fiioaudio: match_audio_hardware_params: mode BYPASS srcRate 88200 srcFormat 436207618 halFormat 436207618 srcCh 2 dstRate 88200 dstFormat 436207618 frameSize 4 halRate 88200
+
+--- native path evidence (audioDataFormat=254, DSD_32_BIT via AudioTrack) ---
+10-24 12:44:17.593  1044  1247 I FiioMediaPlayer: openDsd: mode >> USBDOP:0
+10-24 12:44:17.593  1044  1247 I FiioMediaPlayer: open Hanlde - 1 open Mode : USBDOP
+10-24 12:47:20.986  1044  1247 I FiioMediaPlayer: openDsd: mode >> USBDOP:0
+10-24 12:47:20.986  1044  1247 I FiioMediaPlayer: open Hanlde - 1 open Mode : USBDOP
+10-24 12:47:45.967  1044  1247 I FiioMediaPlayer: openDsd: mode >> USBDOP:0
+10-24 12:47:45.967  1044  1247 I FiioMediaPlayer: open Hanlde - 1 open Mode : USBDOP
+10-24 12:50:45.197  1044  1247 I FiioMediaPlayer: openDsd: mode >> USBDOP:0
+10-24 12:50:45.197  1044  1247 I FiioMediaPlayer: open Hanlde - 1 open Mode : USBDOP
+10-24 12:52:19.555  1044  1247 I FiioMediaPlayer: openDsd: mode >> USBDOP:0
+10-24 12:52:19.555  1044  1247 I FiioMediaPlayer: open Hanlde - 1 open Mode : USBDOP
+
+--- timeline summary ---
+12:42:26  native DSD (254/1, 88200)  -> SILENCE
+12:44:17  DoP DSD64 (49/3, 176400)    -> SOUND
+12:47:20  DoP DSD128 (49/3, 352800)   -> SOUND
+12:47:45  DSD256                      -> UNSUPPORTED (DoP would need 705600)
+
+--- native path lines (captured earlier in the same session; logcat buffer has rotated since) ---
+10-24 12:42:26.943  1044  1247 I FiioMediaPlayer: setDataSource: PlayerConfig{originSampleRate=2822400, bitDepth=32, channels=2, suffix='DSF', audioDataFormat=254, configSampleRate=88200, tracnChannel=12, decoderFormat=1, isDsd=true, isDst=false, isMQA=false, needSystemNativeMqa=false, ... config=com.example.root.checkappmusic.config.DPAConfig@...}
+10-24 12:39:17.982 30008 30100 D AudioTrack: set(): Not linear PCM, forcing to Direct Output
+10-24 12:39:17.983 30008 30100 D AudioTrack: set() AudioTrack for USB!
+10-24 12:39:17.986 30008 30100 D AudioTrack: set(): check streamType 3, sampleRate 88200, format 0x1a000002, ... mFormat 0x1a000002 AUDIO_FORMAT_DSD_32_BIT 0x1a000002
+10-24 12:39:18.042 30008 30100 I FiioMediaPlayer: openDsd: mode >> DSD660:0
+10-24 12:39:18.042 30008 30100 I FiioMediaPlayer: open Hanlde - 1 open Mode : DSD660
+
+Note: in the failing case the app logs "open Mode : DSD660" (native) and the
+HAL shows BYPASS/88200/DSD, but no audio reaches the USB DAC. In the working
+case it logs "open Mode : USBDOP" and audio is heard.
