@@ -88,6 +88,9 @@ FPGA `0x48`/`0x88`, e `0x1000B` medido em **7** e **8**. Com o 176,4 k (índice
 continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 `0x70004`.
 
+**DoP validado:** `reg 0x01 = 0x4E` na saída SPDIF, depois volta a `0x2F`
+(DSD nativo) — confere com as duas tabelas do `fpga_config()`.
+
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
