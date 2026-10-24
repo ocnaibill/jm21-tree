@@ -88,6 +88,10 @@ FPGA `0x48`/`0x88`, e `0x1000B` medido em **7** e **8**. Com o 176,4 k (índice
 continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 `0x70004`.
 
+**DSD256 mapeado:** `BYPASS`, `srcRate 352800`, FPGA **`0x68`** (a tabela DSD do
+`fpga_config()` soma `0x20` a partir de 352,8 k), `0x70004 = 0x1B` — previsão
+confirmada. Escada DSD completa: 64/128/256.
+
 **DSD64 mapeado:** HAL entrega `0x1A000002` (DSD_32BIT) a 88,2 kHz em
 `mode BYPASS`; `0x70004=0x13`, `0x20000=0x0A`, `0x70000/1=95`, FPGA `0x42`.
 Ver `docs/29-dsd-e-384k.md`.
