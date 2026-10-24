@@ -112,3 +112,14 @@ Referências: `userdata` = 23 681 416 704 B; `super` = 5 371 461 632 B;
 `[!]` Imagens tiradas a quente (sistema rodando): firmware e partições pequenas
 são exatas; `super`/`userdata` podem exigir `fsck` na restauração. É a
 salvaguarda para atacar a #11 (recovery), não a substitui.
+
+### Verificação do clone (2026-10-24)
+
+```
+sha256sum -c device-baseline/clone-full/SHA256SUMS
+...
+94/94  SUCESSO
+```
+
+`[FATO]` Todas as **94 partições** do `clone-full` conferem com os hashes do
+manifesto (nenhuma falha). O backup está íntegro no disco.
