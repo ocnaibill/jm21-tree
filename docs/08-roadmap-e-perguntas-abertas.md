@@ -66,7 +66,7 @@
 | N3 | Os 4 kcontrols ausentes (`DAC MUTE`, `MasterTrim L/R`, `Hifi Boost`, `Headset Type`) dependem do `mode_select`? | 🟨 | `docs/37` §6 |
 | N4 | `gw_fpga_firmware_jm21_2.fw` (user code `0xF2510004`) não descomprime no tamanho esperado — build parcial? | ✅ | **outro design**, não delta: duas chaves RLE, 23 pinos, `I3C_IOBUF` (`docs/31` §4) |
 | N5 | Os 63 bytes entre a linha `3B` e os frames: header ou bloco pós-frames? | ✅ | **nem um nem outro**: são fluxo comprimido; com a chave `0xDB` os dados começam no offset 68 e dão 274×160 exatos (`docs/30` §8) |
-| N6 | `uac_kernel_enabled=false` mas o gadget UAC funciona — o que a flag controla? | 🟨 | `docs/39` §6 |
+| N6 | `uac_kernel_enabled=false` mas o gadget UAC funciona — o que a flag controla? | 🟨 | gadget é `uac2.0` do kernel (configfs); sem FFS de UAC e sem binário de userspace. A flag deve descrever o **offload QMI** (`snd_usb_audio_qmi`), não o gadget (`docs/39` §6) |
 | N7 | Referências a pacotes ausentes (`com.fiio.control`, `com.fiio.dream`, `com.alex.debugtool_player`, `com.example.fiiotestappliction`) | ✅ | são resíduos de build compartilhado (`docs/33`,`docs/34`) |
 
 ## 3. O que continua valendo como pergunta de **bancada**

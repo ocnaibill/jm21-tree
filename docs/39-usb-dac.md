@@ -72,10 +72,15 @@ continua sendo o do aparelho (DAC), não o do host.
 A flag `config_fiio_uac_kernel_enabled` está **`false`** (docs/33 §4), mas o
 gadget UAC funciona. Portanto:
 
-`[HYP]` A flag não descreve "existe gadget UAC". Ela deve controlar outra coisa
-— provavelmente se o caminho de áudio do UAC é tratado pelo driver do SoC
-(`snd_usb_audio_qmi`, que existe no `lsmod`) ou por um serviço de usuário. O
-gadget em si (`f_uac2`/configfs) está ativo de qualquer forma.
+O gadget é o **`uac2.0` do kernel via configfs** (o `init.fiio.usb.rc` escreve
+`/config/usb_gadget/g1/functions/uac2.0`). Não há implementação em userspace: os
+pontos de FunctionFS montados são só `adb`, `mtp`, `ptp` e `diag` — **não existe
+`/dev/usb-ffs/uac`**, nem binário de UAC em `/vendor/bin`.
+
+`[HYP]` Mais provável: a flag descreve o **offload QMI** de áudio USB
+(`snd_usb_audio_qmi` está carregado), não o gadget. Com a flag em `false`, o
+caminho de áudio usa o ALSA normal em vez do offload — mas isso não foi medido
+isoladamente.
 
 ## 7. Iara / PipeWire
 
