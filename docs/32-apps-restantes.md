@@ -132,11 +132,27 @@ http://jm21pack.fiio.net/JM21-updateCN.zip  (ou updateEN.zip)
 http://jm21pack.fiio.net/inc/patchCN.txt    (incremental)
 ```
 
-`[CORREÇÃO]` O relatório externo dizia
-`http://jm21pack.fiio.net/beta/JM21-update-<ver>.zip`. O código **não** monta
-esse caminho: o pacote é `JM21-updateCN.zip` / `updateEN.zip`, e o caminho
-`/beta/patch*.txt` é o **canal beta/incremental**. O `Conts.java` ainda contém
-URLs de **M11 Plus, M11S, M15S, M17, R7, R9, M23** — herança compartilhada.
+`[CORREÇÃO — segunda tentativa]` Eu havia dito que o caminho do pacote era
+`JM21-updateCN.zip` (montado por `getCNUpdatePackagePath`). **O servidor
+desmente:** o fluxo real começa no manifesto
+
+```
+http://jm21pack.fiio.net/beta/patchCN.txt   (e /inc/patchCN.txt)
+```
+
+que aponta para
+
+```
+PatchUrl="http://jm21pack.fiio.net/beta/JM21-update-1.1.1.zip"
+```
+
+ou seja, **exatamente o padrão do relatório externo**
+(`/beta/JM21-update-<ver>.zip`). `JM21-updateCN.zip` dá **404**. As funções
+`get*UpdatePackagePath()` do `Conts.java` são um caminho legado/alternativo que
+não é servido para este modelo.
+
+Consequência prática: **a versão mais nova é a 1.1.1** (a nossa) — não há
+firmware posterior onde o módulo `mode_select` pudesse existir.
 
 Detalhe de modelo: para JM21 o updater usa **barra de progresso em duas
 metades** (50 % + 50 %), tratamento específico de `isJM21 && SDK==33`.
