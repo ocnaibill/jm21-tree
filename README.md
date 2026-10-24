@@ -81,6 +81,7 @@ Perguntas em aberto e o placar:
 | 46 | [Recovery/TWRP](docs/46-recovery-twrp.md) |
 | 47 | [GSI / ROM própria](docs/47-gsi-analise.md) |
 | 48 | [Rockbox / Linux mínimo](docs/48-rockbox-e-linux.md) |
+| 49 | [Roteiro da sessão 3 (adb)](docs/49-sessao-3-checklist.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.

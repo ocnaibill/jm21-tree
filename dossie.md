@@ -592,6 +592,12 @@ RaaA × Linux mínimo × Android enxuto; o que o ALSA exige (techpack, ADSP, DTB
 UCM, touch) e a recomendação de ordem:
 **[docs/48-rockbox-e-linux.md](docs/48-rockbox-e-linux.md)**
 
+## 47. Roteiro da sessão 3
+
+Checklist de comandos para quando o aparelho estiver disponível (térmica/USB,
+recovery, GSI, áudio, `jm21ctl`, rollback):
+**[docs/49-sessao-3-checklist.md](docs/49-sessao-3-checklist.md)**
+
 ---
 
 ## Inventário local (fora do git)
