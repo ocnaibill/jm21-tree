@@ -92,3 +92,23 @@ sha256sum /dev/block/by-name/fiioconfig
 `[FATO]` Hash **idêntico antes e depois** e o SN continua legível
 (`sys.fiio.sn_num = 20070008442701`). O caminho de restauração por `dd` está
 validado numa partição de estado real, sem alterar o conteúdo.
+
+## 6. Clone completo (2026-10-24)
+
+Além do backup seletivo, foi feito um **clone integral** com
+`tools/full-clone.sh` (streaming `adb exec-out dd`, sem ocupar `/data`):
+
+| Conjunto | Conteúdo | Tamanho |
+|----------|----------|---------|
+| `device-baseline/clone-full/` | **94 partições** + `mmcblk0` (disco inteiro, 31,26 GB) + `userdata` | **~52 GB** |
+| `device-baseline/clone/` | as mesmas 92 partições, **sem** `userdata` e sem `mmcblk0` (hardlinks) | 6,8 GB (sem espaço extra) |
+
+Cada partição tem tamanho conferido (`blockdev --getsize64`) e SHA-256 em
+`MANIFEST.txt` + `SHA256SUMS`.
+
+Referências: `userdata` = 23 681 416 704 B; `super` = 5 371 461 632 B;
+`mmcblk0` = 31 268 536 320 B.
+
+`[!]` Imagens tiradas a quente (sistema rodando): firmware e partições pequenas
+são exatas; `super`/`userdata` podem exigir `fsck` na restauração. É a
+salvaguarda para atacar a #11 (recovery), não a substitui.

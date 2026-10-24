@@ -10,7 +10,7 @@
 
 set -u
 OUT="${1:-device-baseline/clone}"
-SKIP="${SKIP:-userdata}"
+SKIP="${SKIP-userdata}"
 SERIAL="${SERIAL:-}"
 
 ADB=(adb)
