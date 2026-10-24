@@ -84,8 +84,9 @@ FPGA `0x48`/`0x88`, e `0x1000B` medido em **7** e **8**. Com o 176,4 k (índice
 índices** (1–8), sem valor derivado. A recusa só existe no caminho de intent.
 
 **DSD128 mapeado:** `BYPASS`, `0x1A000002`, `srcRate 176400`, FPGA `0x44`.
-`0x1000B` no DSD parece **resíduo** da taxa PCM anterior (não é reescrito) —
-teste decisivo pendente (384 k → DSD128).
+`0x1000B` no DSD **não é escrito**: teste decisivo (384 k → DSD128) mostrou que
+continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
+`0x70004`.
 
 **DSD64 mapeado:** HAL entrega `0x1A000002` (DSD_32BIT) a 88,2 kHz em
 `mode BYPASS`; `0x70004=0x13`, `0x20000=0x0A`, `0x70000/1=95`, FPGA `0x42`.
