@@ -151,6 +151,11 @@ cálculo ou de documento público e está explicitado no texto.
     formato para `0x1a000002` (DSD_U16_LE) e usa 1,25 MB de estado; o caminho
     DSD nativo só empacota bits (TBL NEON 8→16, reordenação 16→32); MQA vem de
     `libfiioaqm.so` via `aqm_*`. Ver `docs/20-dsd-mqa.md`.
+34. **App FiiOMusic decompilado.** Três JNI (`fiioa`, `fiioac`, `fiiocd` — esta
+    última é leitura de **CD**), player no pacote `com.example.root.checkappmusic`,
+    processamento só em 44,1/48/88,2/96 kHz e nunca em MQA, MQA com
+    `decodeType` 1/2 escolhido pelo app. O player **não** escreve as
+    propriedades de DSD — falta achar o dono. Ver `docs/21-fiiomusic-app.md`.
 
 ---
 
@@ -311,6 +316,12 @@ volume ponta a ponta e a distinção kcontrol × sysfs:
 A decisão de modo (`match_audio_process_mode`), o ALL TO DSD, o empacotamento
 DSD nativo e o MQA via `libfiioaqm.so`:
 **[docs/20-dsd-mqa.md](docs/20-dsd-mqa.md)**
+
+## 20. App FiiOMusic
+
+JNI (áudio, EQ/CD), `FiioAudioTrack`, buffers por taxa, MQA e as propriedades
+que o app toca:
+**[docs/21-fiiomusic-app.md](docs/21-fiiomusic-app.md)**
 
 ---
 
