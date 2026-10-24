@@ -156,6 +156,13 @@ cálculo ou de documento público e está explicitado no texto.
     processamento só em 44,1/48/88,2/96 kHz e nunca em MQA, MQA com
     `decodeType` 1/2 escolhido pelo app. O player **não** escreve as
     propriedades de DSD — falta achar o dono. Ver `docs/21-fiiomusic-app.md`.
+35. **Dono das propriedades encontrado.** `Settings` (`com.android.settings.fiio.audio`)
+    é o painel real e escreve `persist.sys.all.to.dsd` e
+    `persist.sys.audio.output.select`; `Scrcpy` (`com.android.fiio.scrcpy`) é
+    **serviço de controle remoto** e injeta os mesmos ajustes. A ponte é
+    `AudioSystem.setCodecParam(type, valor)` (API oculta no `framework.jar`),
+    com type 2 = PO Gain, 3 = filtro, 1 = balanço, 19 = flag de play config.
+    Ver `docs/22-settings-e-controle.md`.
 
 ---
 
@@ -322,6 +329,12 @@ DSD nativo e o MQA via `libfiioaqm.so`:
 JNI (áudio, EQ/CD), `FiioAudioTrack`, buffers por taxa, MQA e as propriedades
 que o app toca:
 **[docs/21-fiiomusic-app.md](docs/21-fiiomusic-app.md)**
+
+## 21. Settings, Scrcpy e o plano de controle
+
+Quem escreve o quê: o pacote `com.android.settings.fiio`, o serviço de controle
+remoto Scrcpy, a ponte `AudioSystem.setCodecParam` e os modos de operação:
+**[docs/22-settings-e-controle.md](docs/22-settings-e-controle.md)**
 
 ---
 
