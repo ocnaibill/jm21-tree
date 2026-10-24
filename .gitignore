@@ -63,3 +63,5 @@ analysis/**/*.dsf
 analysis/**/*.dff
 analysis/dsd/*.dsf
 analysis/dsd/*.dff
+analysis/fpga/*.fw
+analysis/fpga/*.ko
