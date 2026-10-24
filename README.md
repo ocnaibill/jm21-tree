@@ -77,6 +77,8 @@ Perguntas em aberto e o placar:
 | 42 | [Backup completo (F2)](docs/42-backup-completo.md) |
 | 43 | [`jm21ctl` (controle userspace)](docs/43-jm21ctl.md) |
 | 44 | [Atualização pós-root](docs/44-atualizacao-pos-root.md) |
+| 45 | [Plano B: kernel próprio](docs/45-plano-b-kernel.md) |
+| 46 | [Recovery/TWRP](docs/46-recovery-twrp.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.

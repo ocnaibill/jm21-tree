@@ -568,6 +568,18 @@ O fluxo real do updater (`UpdateEngine.applyPayload`), o pacote verificado por
 hash, o procedimento de re-root depois do reboot e o rollback seguro:
 **[docs/44-atualizacao-pos-root.md](docs/44-atualizacao-pos-root.md)**
 
+## 43. Plano B: kernel próprio
+
+Árvore pública + config do aparelho + vermagic forçado: o kernel bootou no
+JM21, carregou o stack FiiO e tocou áudio (PCM até 384 k e DSD64):
+**[docs/45-plano-b-kernel.md](docs/45-plano-b-kernel.md)**
+
+## 44. Recovery/TWRP
+
+O recovery stock (ramdisk sem kernel), a primeira tentativa com o nosso kernel,
+as hipóteses, o teste de controle pronto e o que um recovery próprio precisa:
+**[docs/46-recovery-twrp.md](docs/46-recovery-twrp.md)**
+
 ---
 
 ## Inventário local (fora do git)
