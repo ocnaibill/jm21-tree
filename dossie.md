@@ -182,6 +182,13 @@ cálculo ou de documento público e está explicitado no texto.
     `0x90000 = 0x42` (filtro 2), `0x20000 = 0xAE` (power-up), `0x80000 = 0x30`
     (+1dB off). **`fiioconfig`**: 10 MB, só 48 KB usados, SN em `0x1800`,
     marcadores `0xcac1`/`0xcac3`. Ver `docs/25-sessao-2-root.md`.
+39. **`fiioconfig` decodificada (o último desconhecido).** Partição de 10 MB
+    (`mmcblk0p71`), só 48 KB usados. Campos mapeados pelo `fiio_config.ko`:
+    trim L/R dos DACs em `0xC00`/`0xC04`, checksum do touch CST812T em `0x1000`,
+    nome do firmware do FPGA em `0x1400`, **SN em `0x1800`**, **NB em `0x1C00`;
+    registros versionados com magic `0xcac1`/`0xcac3`. **Os MasterTrim existem**
+    — como calibração persistida, não como kcontrol; isso explica o `-22` da
+    HAL, que procura tudo no mixer. Ver `docs/26-fiioconfig.md`.
 
 ---
 
@@ -366,6 +373,12 @@ root:
 Magisk em `init_boot`, kcontrols reais, registradores do CS43198 lidos ao vivo e
 a estrutura inicial da `fiioconfig`:
 **[docs/25-sessao-2-root.md](docs/25-sessao-2-root.md)**
+
+## 24. `fiioconfig`
+
+Layout da partição de configuração (SN, NB, trim dos DACs, checksum do touch,
+firmware do FPGA) e o que os "controles fantasma" realmente são:
+**[docs/26-fiioconfig.md](docs/26-fiioconfig.md)**
 
 ---
 
