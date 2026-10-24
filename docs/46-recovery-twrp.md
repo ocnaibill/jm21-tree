@@ -79,3 +79,35 @@ falhar, o problema é o **método** (`fastboot boot` com ramdisk).
 - `fastboot boot` = RAM, nada gravado; se falhar, reiniciar.
 - `fastboot flash recovery_a` = write; recuperável com as imagens do OTA
   (`docs/42`).
+
+## 8. O que realmente aconteceu no boot (medido depois)
+
+O aparelho voltou ao Android **rodando o nosso kernel** (`ocnaibill@makise #3`,
+`ro.boot.bootreason=bootloader`). Ou seja: o bootloader aceitou a imagem,
+carregou o nosso kernel e bootou o **sistema** — usando o ramdisk do
+**`init_boot`** e **ignorando o ramdisk do recovery** que estava no `boot.img`.
+
+`[FATO]` Neste aparelho (GKI, header v4), `fastboot boot` com um `boot.img` que
+tem ramdisk **não** troca para recovery: o ramdisk usado é o do `init_boot`.
+
+### Consequências para a #11
+Para rodar um recovery, restam dois caminhos (ambos exigem o aparelho em mãos):
+1. **`fastboot flash recovery_a`** + `adb reboot recovery` (write; recuperável
+   com as imagens do OTA).
+2. Trocar temporariamente o **`init_boot`** pelo ramdisk de recovery
+   (`fastboot flash init_boot_a`) — mais invasivo; o backup tem o `init_boot`
+   stock e o patcheado (`docs/42`).
+
+## 9. WARN observado no nosso kernel (benigno)
+
+```
+WARNING: CPU: … at kernel/workqueue.c:3102 __flush_work
+Call trace:
+  __flush_work → __cancel_work_timer → cancel_work_sync
+  qseecom_suspend+0x100/0x130 [qseecom_dlkm]
+  platform_pm_suspend → … → pm_suspend → state_store
+```
+
+`[FATO]` O aviso vem do driver vendor `qseecom_dlkm`, no caminho de **suspend**,
+e não impede o suspend/resume. É independente do áudio e do Plano B; fica
+registrado como ruído esperado do stack Qualcomm com o nosso kernel.
