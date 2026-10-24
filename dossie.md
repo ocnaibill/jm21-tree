@@ -544,6 +544,12 @@ A detecção (`analyze_mqa`, mimetype "MQA"), o render no DAC a 352,8 kHz e o ca
 do arquivo de 16 bits que o app rejeita:
 **[docs/40-mqa.md](docs/40-mqa.md)**
 
+## 39. Modo host USB
+
+O JM21 como host UAC: enumeração, a permissão por app (e o conflito com o UAPP),
+a negociação de taxa com o DAC externo:
+**[docs/41-usb-host.md](docs/41-usb-host.md)**
+
 ---
 
 ## Inventário local (fora do git)

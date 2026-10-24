@@ -1,0 +1,73 @@
+# 41 — Modo host USB: o JM21 tocando para um DAC externo
+
+> Teste com a **fifine AM8 Pro** (interface UAC, VID/PID `3142:01a8`) ligada na
+> porta USB-C do JM21 por adaptador OTG. `adb` por **Wi-Fi** durante o teste
+> (o USB fica ocupado).
+
+## 1. O JM21 é host
+
+```
+lsusb (no aparelho): Bus 001 Device 002: ID 3142:01a8
+dmesg: usb 1-1: Product: fifine AM8 Pro / Manufacturer: MV-SILICON
+       usb 1-1: [2] FU [PCM Playback Volume] ch = 2
+       usb 1-1: [5] FU [Mic Capture Volume]  ch = 1
+       hid-generic ... USB HID v2.01
+```
+
+O `snd-usb-audio` (no kernel, não como módulo) parseou as Feature Units. **Não
+aparece card ALSA** em `/proc/asound/cards` — o caminho é o USB audio do
+Android/QMI (`snd_usb_audio_qmi`) exposto como `usb_headset`.
+
+O `AudioService` mostra `Devices: usb_headset(4000000)` e
+`fiio.current.play.device = USB`.
+
+## 2. A pegadinha: permissão por app
+
+Na primeira tentativa **não saiu som**: o Android abriu o diálogo de permissão
+para **dois** apps (FiiO Music e **USB Audio Player PRO**, que estava instalado
+e se auto-abre no evento de USB). Sem a permissão concedida ao FiiO Music, o app
+não abre o dispositivo. Concedendo **só** ao FiiO Music (e negando ao UAPP), o
+som saiu.
+
+`[FATO]` A permissão USB do Android é **por aplicativo**; o UAPP compete pelo
+mesmo dispositivo.
+
+## 3. Taxas: o limite é do DAC, não do JM21
+
+Log do app:
+
+```
+IDevice: setUsbAudioSupportSampleRate: [44100, 48000]
+```
+
+Ou seja, o **AM8 anuncia só 44,1 e 48 kHz**. Comportamento por arquivo:
+
+| Arquivo | `originSampleRate` | `configSampleRate` | `isUseUsbOutput` | `open: support` |
+|---------|--------------------|--------------------|------------------|-----------------|
+| 44,1 k | 44 100 | 44 100 | true | **true** |
+| 96 k | 96 000 | **48 000** | true | **false** |
+| 192 k | 192 000 | **48 000** | true | **false** |
+| 384 k | 384 000 | **48 000** | true | **false** |
+
+`support = false` significa que o app **não abre o dispositivo na taxa nativa**
+e reamostra para a maior taxa suportada (48 k). No 44,1 k, a HAL registrou
+`srcRate 44100 / PCM 24-bit` e o USB recebeu a taxa nativa.
+
+O app usa o **próprio driver USB** (`wzUsbAudioSetSampleRate ret: 0`), não o
+`usb_headset` do Android. MQA por USB é recusado
+(`setupMqa: usbAudio unsupport sampleRate`), porque exige 88,2/96 k.
+
+## 4. Conclusões
+
+1. **O JM21 é host UAC** e toca para um DAC externo — caminho validado.
+2. **A taxa é negociada com o dispositivo**: com o AM8, teto de 48 k; arquivos
+   maiores são reamostrados (não é limitação do JM21).
+3. **A permissão USB por app** é obrigatória e o UAPP conflita.
+4. Para testar 96/192/384 k (e DSD nativo) no host, é preciso um **DAC que
+   anuncie essas taxas** — o AM8 não serve para isso.
+
+## 5. Próximo teste
+
+Um dongle DAC com 96/192 k (ou 384 k) e, se possível, DSD nativo. O que medir:
+`setUsbAudioSupportSampleRate` (a lista lida), `configSampleRate` por arquivo e
+se `open: support` fica `true` nas taxas altas.

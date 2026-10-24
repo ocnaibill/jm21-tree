@@ -73,6 +73,7 @@ Perguntas em aberto e o placar:
 | 38 | [Ganho analógico](docs/38-ganho-analogico.md) |
 | 39 | [Modo USB DAC](docs/39-usb-dac.md) |
 | 40 | [MQA: detecção e render](docs/40-mqa.md) |
+| 41 | [Modo host USB](docs/41-usb-host.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.
