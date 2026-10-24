@@ -94,6 +94,12 @@ continuou **8** durante o DSD128. Em DSD, a taxa vive no FPGA (`0x02`) e no
 **EQ em DSD/MQA:** bloqueado pelo próprio app (mensagem no `resources.arsc`),
 coerente com o `BYPASS` medido.
 
+**Modos de operação (issue #8 fechada, resultado negativo):** Pure Music
+(`system_mode_value=1`) tem os **mesmos 160 kcontrols** do modo Android. Causa:
+o módulo de kernel `mode_select` **não existe** no firmware — `dac_core` e
+`anolog_board` logam "get mode_select module failed!" e `system_work_mode` fica
+0 sempre. Ver `docs/37`.
+
 **FiiO Music / JNI (issue #2 fechada):** decoder é ffmpeg estático
 (`libhello-jni`), SACD/DST em `libsacd`, UAC host próprio em `libUsbAudio`;
 `XSeriesConfig` (`t1.i`) dá DSD 88200/7, 176400/8, 352800/9 com
