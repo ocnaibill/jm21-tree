@@ -173,6 +173,15 @@ cálculo ou de documento público e está explicitado no texto.
 37. **Limite de acesso atual:** `tinymix`/`tinyplay` existem, mas `/dev/snd` é
     `0660 system:audio` — sem root não há leitura de kcontrols nem dump de
     regmap. Decisão sobre root fica explícita e adiada.
+38. **Root feito, com segurança.** Magisk em `init_boot_a` (slot `a`, bootloader
+    já destravado), verificado por hash: o slot A é a imagem patchada; o slot B
+    está em build anterior. **Kcontrols reais: 8** (Playback Volume 30, LR
+    Balance 20, PO Gain 2 = High, Filter 2, POLO 3…), e os 4 "fantasma"
+    realmente não existem. **Registradores vivos** (`dac_read_reg`): tocando a
+    44,1 kHz/vol 30 → `0x90002 = 0x90001 = 93` (tabela `h[30]`),
+    `0x90000 = 0x42` (filtro 2), `0x20000 = 0xAE` (power-up), `0x80000 = 0x30`
+    (+1dB off). **`fiioconfig`**: 10 MB, só 48 KB usados, SN em `0x1800`,
+    marcadores `0xcac1`/`0xcac3`. Ver `docs/25-sessao-2-root.md`.
 
 ---
 
@@ -351,6 +360,12 @@ remoto Scrcpy, a ponte `AudioSystem.setCodecParam` e os modos de operação:
 O que o hardware confirmou, o que corrigiu da auditoria e onde o acesso para sem
 root:
 **[docs/23-sessao-1-baseline.md](docs/23-sessao-1-baseline.md)**
+
+## 23. Sessão 2: root e hardware real
+
+Magisk em `init_boot`, kcontrols reais, registradores do CS43198 lidos ao vivo e
+a estrutura inicial da `fiioconfig`:
+**[docs/25-sessao-2-root.md](docs/25-sessao-2-root.md)**
 
 ---
 
