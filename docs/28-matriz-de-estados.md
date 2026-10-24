@@ -129,3 +129,57 @@ Em um dos eventos o aviso de "superusuário concedido" do Magisk não apareceu.
 Isso **não afetou** a captura: o snapshot de 48 kHz está completo (21
 registradores lidos). O aviso só é exibido quando a concessão expira; com
 "lembrar por 10 minutos" ele fica silencioso.
+
+---
+
+# Rodada 3 (P1c): o código de taxa, dos dois lados
+
+> Captura mínima (`tools/rate-register-capture.sh`): para cada stream, espera
+> 1,5 s e lê **apenas** `0x1000B` (SP_SRATE). Bruto:
+> `device-baseline/rate-20261023-230757.txt`.
+
+## 11. Resultado
+
+| Taxa | `0x1000B` (DAC) | FPGA `reg 0x02` | Modo |
+|------|-----------------|-----------------|------|
+| 88 200 | **3** | `0x42` | MQA |
+| 44 100 | **1** | `0x41` | MQA |
+| 48 000 | **2** | `0x81` | MQA |
+| 96 000 | **4** | `0x82` | MQA |
+| 192 000 | **6** | `0x84` | ALLTO32BIT |
+| 352 800 | recusado pelo app | — | — |
+| 384 000 | recusado pelo app | — | — |
+
+## 12. Confirmação cruzada: decompilado × hardware
+
+A tabela que extraímos de `cs43198_config_dac` (índice de taxa → registrador
+ASP) era:
+
+```
+0 = 32000   1 = 44100   2 = 48000   3 = 88200   4 = 96000
+5 = 176400  6 = 192000  7 = 352800  8 = 384000
+```
+
+Os cinco pontos medidos batem **exatamente** (1, 2, 3, 4, 6). É a validação
+completa do mapa de taxa do driver no silício.
+
+Do lado do FPGA, a codificação também é consistente: **bit 6 = família 44,1**,
+**bit 7 = família 48**, bits baixos = multiplicador da taxa base. Previsões
+(ainda não medidas, porque o app recusa): 176,4 → `0x44`, 352,8 → `0x48`,
+384 → `0x88`.
+
+## 13. Nota de método (de novo)
+
+A leitura em sequência rápida de vários registradores durante a reprodução
+devolve valores **atrasados** (o store do sysfs ainda não propagou). A solução
+adotada: **um registrador por vez, com 1,5 s de estabilização**. A matriz das
+rodadas 1–2 sofreu com isso em parte dos blocos; os campos estáveis (volume,
+filtro, power) foram reconfirmados na rodada 3.
+
+## 14. O que isso fecha
+
+- **Q27 (clock por família)**: respondida. O FPGA recebe um código de taxa por
+  I²C a cada stream; o DAC recebe o índice em `0x1000B`.
+- **Q26 (DSD nativo)**: ainda aberto — precisamos de um arquivo DSD.
+- **Q5 (o que o FPGA faz)**: agora sabemos que ele é **reconfigurado por taxa**;
+  resta saber se processa amostras ou só divide clock.

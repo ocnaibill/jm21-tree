@@ -60,7 +60,7 @@
 | Q24 | FiiO libera fonte GPL? | aguardar ticket; plano B em `17` | externo |
 | Q25 | Modos alternativos expõem mais controles? | issue #8 | baixo |
 | Q26 | DSD nativo: quais registradores? | `read_all_regs` tocando DSD | baixo |
-| Q27 | Relação clock ↔ família de taxa (44,1 × 48)? | `fpga_config` em 48/96/192 | baixo |
+| Q27 | ~~Relação clock ↔ família de taxa~~ | **respondida**: `0x1000B` = índice do driver; FPGA reg 0x02 = família + multiplicador | ✅ |
 | Q28 | MQA é decode completo? | faixa MQA + log/`read_all_regs` | baixo |
 
 ## 4. Próximos experimentos (priorizados)
@@ -75,8 +75,9 @@ arquivo. 384 kHz **recusado pelo app** (arquivo válido).
 **P1b feita:** os registradores ASP são fixos; a taxa vai para o **FPGA**
 (`reg 0x02`: 0x41 / 0x81 / 0x82 / 0x84 = família + multiplicador).
 
-**Falta (P1c):** ler `0x1000B` (SP_SRATE) por taxa e testar 88,2/352,8 para
-validar a codificação; e o limite de 384 kHz do player (issue #9).
+**P1c feita:** `0x1000B` (SP_SRATE) medido em 5 taxas e **igual à tabela do
+driver**; FPGA confirmado em 88,2 (`0x42`). 352,8 e 384 são recusados pelo app
+(issue #9) — falta saber se o hardware aceita, via outro player.
 
 ### (original) P1 — escopo
 
