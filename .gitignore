@@ -70,3 +70,4 @@ analysis/fpga/*.v
 analysis/framework/*.jar
 analysis/framework/*.apk
 analysis/framework/*.so
+analysis/fiiomusic-libs/
