@@ -72,9 +72,26 @@ fiio_adev_set_master_volume_dac
 if (mStreamType == 3 && (device & 2) != 0) AudioSystem.setMasterVolumeDac(index);
 ```
 
-`[FATO]` Existe, portanto, **um segundo caminho de volume** — o "master DAC" —
-paralelo ao `DAC Playback Volume` da HAL que já mapeamos. Qual deles atua em
-cada modo é a pergunta que fica.
+`[FATO]` Existe um **segundo ponto de entrada** de volume — o "master DAC" —,
+mas a medição (abaixo) mostra que ele **não é um caminho independente**.
+
+### Medição dos dois caminhos (N2, resolvida)
+
+Com um tom de 48 kHz tocando e leitura de `0x90001`/`0x90002` a cada passo:
+
+1. **Volume pelo keyevent** (`input keyevent 24/25` → AudioService → HAL):
+   cada passo muda **só** `0x90001/2`, seguindo a tabela `h[]`
+   (ex.: 84 → 83 em um passo = `h[36]` → `h[37]`). Nenhum outro registrador
+   mudou (`0x90000`, `0x80000/1/2`, `0x20000`, `0x70000`, `0x1000B` ficaram
+   idênticos).
+2. **Escrita direta no kcontrol** (`tinymix "DAC Playback Volume" 40`) com o
+   stream ativo: **ignorada** — o registro continuou em 83. O framework
+   reaplica o seu valor; a HAL não aceita volume "por fora".
+
+`[FATO]` Conclusão: há **um** efeito (o volume do DAC em `0x90001/2`), com
+**duas portas de entrada** (AudioService/`setMasterVolumeDac` e o kcontrol), e
+o **framework é autoritativo** — a porta da HAL só funciona quando é ele quem
+manda. Sem stream ativo, o registro nem é reescrito.
 
 ## 3. A HAL tem EQ próprio (não usado pelo app)
 
