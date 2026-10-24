@@ -22,7 +22,7 @@
 | Device tree (GPIO, I²C, jack) | ✅ | — |
 | Drivers FiiO (`dac_core`, `anolog_board`) | ✅ | consumidor de `gain_pwr_update` |
 | Driver do DAC (`cs43198`) | ✅ | faixa/uso do trim calibrado |
-| FPGA (driver, I²C, MCLK) | 🟨 | **o que o bitstream faz**; semântica do `fpga_config` em cache |
+| FPGA (driver, I²C, MCLK) | 🟨 | **o que o bitstream faz**; `fpga_config` confirmado como cache |
 | HAL (`libfiioaudio`, `libfiioaqm`) | ✅ | MQA completo × core; label `MQA` com `isMQA:false` |
 | Apps (`FiiOMusic`, `Settings`, `Scrcpy`) | ✅ | inventário dos demais apps (issue #7) |
 | Plano de controle (kcontrols/props/sysfs) | ✅ | modos alternativos (issue #8) |
@@ -50,7 +50,7 @@
 
 | # | Pergunta | Como fechar | Custo |
 |---|----------|-------------|-------|
-| Q5 | O que o FPGA faz? Só reclock/roteia? | bitstream + matriz de estados | médio (issue #4) |
+| Q5 | O que o FPGA faz? Só reclock/roteia? | bitstream + dmesg por taxa (P1b) | médio (issue #4) |
 | Q6 | Ganho analógico existe além do digital? | `read_all_regs` em cada `PO Gain` + medição | baixo + bancada |
 | Q9 | `fiio.use.kernel.play` muda o caminho? | alternar e observar `fpga_config`/regs | baixo |
 | Q12 | `+1dB_EN` liga em 120? | volume 120 e ler `0x80000` | baixo (cuidado) |
@@ -65,7 +65,18 @@
 
 ## 4. Próximos experimentos (priorizados)
 
-### P1 — Matriz de estados DAC/FPGA (só dispositivo, sem bancada)
+### P1 — Matriz de estados DAC/FPGA — ✅ rodada 1 feita (`docs/28`)
+
+**Feito:** 44,1 / 48 / 96 / 192 kHz capturados. Confirmado: zero reamostragem
+(`srcRate = halRate`), DAC idêntico entre taxas, `fpga_config` é cache, e o
+rótulo de modo é um bitmask de estágios (`MQA`, `ALLTO32BIT`) — não descreve o
+arquivo. 384 kHz **recusado pelo app** (arquivo válido).
+
+**Falta (P1b):** registradores que variam com a taxa (`0x40010–0x40019`,
+`0x10006`, `0x5000A/B`, `0x70000/1`), dmesg do FPGA por timestamp, e testar
+352,8 k / 384 k em 16 e 32 bits.
+
+### (original) P1 — escopo
 
 Para cada condição, capturar: `read_all_regs`, `fpga_config`, `fpga_gw_version`,
 `board_vol_dac`, `dac_vol`, `dmesg` e a linha `match_audio_hardware_params`.

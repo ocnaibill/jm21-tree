@@ -205,6 +205,12 @@ cálculo ou de documento público e está explicitado no texto.
     `DEVID 0x431980` / `REV_ID 0xA1`. Os comandos `route_po/lo/ba/balo` são
     **inertes** (só casam no `strcmp`, sem ação) — rota real vem da detecção de
     jack. Ver `docs/27-dac-ctrl-e-topologia.md`.
+41. **Matriz taxa × DAC (rodada 1).** 44,1/48/96/192 kHz sem reamostragem
+    (`srcRate = dstRate = halRate`), registradores do DAC idênticos entre taxas,
+    `fpga_config` confirmado como cache (fica zero mesmo com o FPGA ativo) e o
+    rótulo de modo é **bitmask de estágios** (`MQA`, `ALLTO32BIT`), não o tipo
+    do arquivo. 384 kHz é recusado pelo app (arquivo válido) — issue aberta.
+    Ver `docs/28-matriz-de-estados.md`.
 
 ---
 
@@ -401,6 +407,12 @@ firmware do FPGA) e o que os "controles fantasma" realmente são:
 A linguagem de debug do `dac_ctrl`, a leitura nos dois chips, o dump completo de
 registradores e a prova do par diferencial:
 **[docs/27-dac-ctrl-e-topologia.md](docs/27-dac-ctrl-e-topologia.md)**
+
+## 26. Matriz de estados (taxa × DAC/FPGA)
+
+O que muda (e o que não muda) de 44,1 a 192 kHz, o rótulo de modo como bitmask
+e o limite de 384 kHz do player:
+**[docs/28-matriz-de-estados.md](docs/28-matriz-de-estados.md)**
 
 ---
 
