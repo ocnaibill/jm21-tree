@@ -76,6 +76,7 @@ Perguntas em aberto e o placar:
 | 41 | [Modo host USB](docs/41-usb-host.md) |
 | 42 | [Backup completo (F2)](docs/42-backup-completo.md) |
 | 43 | [`jm21ctl` (controle userspace)](docs/43-jm21ctl.md) |
+| 44 | [Atualização pós-root](docs/44-atualizacao-pos-root.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.

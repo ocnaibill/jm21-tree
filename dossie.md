@@ -562,6 +562,12 @@ Ferramenta de linha de comando sobre as interfaces já mapeadas (kcontrols,
 `dac_ctrl`, `dac_read_reg`), sem módulo de kernel:
 **[docs/43-jm21ctl.md](docs/43-jm21ctl.md)**
 
+## 42. Atualização pós-root (Virtual A/B)
+
+O fluxo real do updater (`UpdateEngine.applyPayload`), o pacote verificado por
+hash, o procedimento de re-root depois do reboot e o rollback seguro:
+**[docs/44-atualizacao-pos-root.md](docs/44-atualizacao-pos-root.md)**
+
 ---
 
 ## Inventário local (fora do git)
