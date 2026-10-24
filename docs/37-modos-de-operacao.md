@@ -103,3 +103,48 @@ rodar `tinymix -D 0` (ou o coletor de kcontrols) e comparar com o baseline. O
 baseline de 44,1 k já está em `docs/19`.
 
 **Não testar** 5, 7, 8, 9: as flags dizem que não existem neste modelo.
+
+## 6. Resultado medido — Pure Music **não** muda os kcontrols
+
+Teste em 2026-10-24, com o aparelho no modo Android e depois em Pure Music:
+
+| Estado | `system_mode_value` | Controles ALSA | Controles FiiO |
+|--------|---------------------|----------------|----------------|
+| Android | 0 | **160** | 6 |
+| Pure Music | **1** | **160** | 6 |
+
+`diff` das duas listas: **vazio**. Os quatro controles ausentes (`DAC MUTE`,
+`MasterTrim L/R`, `Hifi Boost Mode`, `Audio Headset Type`) continuam ausentes.
+
+### A causa raiz apareceu no kernel
+
+`dmesg`, no boot:
+
+```
+[dac_core]:      get mode_select module failed!
+[anolog_board]:  get mode_select module failed!
+```
+
+E nas mensagens de `snd_dac_startup`:
+
+```
+new_output_type: single po, ..., system_mode_old: 0, system_work_mode: 0
+```
+
+`system_work_mode` fica **0 sempre**. O motivo: os dois módulos procuram um
+módulo `mode_select` que **não existe** no aparelho — não está em
+`/vendor_dlkm/lib/modules/`, não está em `modules.load` e nunca aparece no
+`dmesg` de carga. `dac_core` e `anolog_board_jm21` têm o enum
+(`SYSTEM_MODE_MTP`, `SYSTEM_MODE_SOC_BT`, `SYSTEM_MODE_SOC_UAC`,
+`SYSTEM_MODE_BT_UPDATE`, `fpga_work_mode`…), mas sem o módulo provedor o valor
+nunca chega.
+
+`[FATO]` Portanto: **não é o modo do app que controla os kcontrols** — é um
+módulo de kernel que a FiiO não embarca neste firmware. Trocar para BT sink,
+AirPlay ou USB DAC não vai expor os controles que faltam; o HAL registra o
+mesmo conjunto na inicialização.
+
+`[HYP]` Os quatro controles ausentes dependem desse caminho (`mode_select` →
+`system_work_mode`) para serem registrados. Sem o módulo, o HAL não os cria —
+o que explica por que os nomes aparecem só em `libfiioaudio.so`, e em nenhum
+`.ko`.
