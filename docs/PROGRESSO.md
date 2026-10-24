@@ -72,9 +72,11 @@
 rótulo de modo é um bitmask de estágios (`MQA`, `ALLTO32BIT`) — não descreve o
 arquivo. 384 kHz **recusado pelo app** (arquivo válido).
 
-**Falta (P1b):** registradores que variam com a taxa (`0x40010–0x40019`,
-`0x10006`, `0x5000A/B`, `0x70000/1`), dmesg do FPGA por timestamp, e testar
-352,8 k / 384 k em 16 e 32 bits.
+**P1b feita:** os registradores ASP são fixos; a taxa vai para o **FPGA**
+(`reg 0x02`: 0x41 / 0x81 / 0x82 / 0x84 = família + multiplicador).
+
+**Falta (P1c):** ler `0x1000B` (SP_SRATE) por taxa e testar 88,2/352,8 para
+validar a codificação; e o limite de 384 kHz do player (issue #9).
 
 ### (original) P1 — escopo
 

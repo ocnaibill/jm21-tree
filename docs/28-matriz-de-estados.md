@@ -72,3 +72,60 @@ A primeira versão do monitor lia o registrador **imediatamente** após escrever
 devolvia o valor anterior (deslocamento de um). Corrigido com atraso de 200 ms
 entre escrita e leitura. Registro mantido porque é o tipo de erro que contamina
 uma matriz inteira sem dar sinal.
+
+---
+
+# Rodada 2 (P1b): clock e registradores de taxa
+
+> Captura automática em 2026-10-23 22:56 (monitor revisado), 3,5 mm, volume 30,
+> FLAC 24-bit. Bruto: `device-baseline/matrix-20261023-225639.txt`.
+
+## 7. Resultado
+
+| Arquivo | `srcRate` | `halRate` | Modo | `0x40010–0x40019` | `0x10006` | FPGA reg `0x02` |
+|---------|-----------|-----------|------|-------------------|-----------|-----------------|
+| 44,1 kHz | 44100 | 44100 | MQA | idênticos | 0 | **`0x41`** |
+| 48 kHz | 48000 | 48000 | MQA | idênticos | 0 | **`0x81`** |
+| 96 kHz | 96000 | 96000 | MQA | idênticos | 0 | **`0x82`** |
+| 192 kHz | 192000 | 192000 | ALLTO32BIT | idênticos | 0 | **`0x84`** |
+
+Valores fixos lidos: `0x40010..19 = 1,0,8,0,31,0,63,0,12,10`; `0x5000A/B = 7/15`;
+`0x70000/1 = 120`; `0x20052 = 4`.
+
+## 8. O achado: o FPGA recebe a taxa por I²C
+
+`[FW-DEV]` A cada configuração de stream, o driver escreve **um** registrador do
+FPGA (`fpga_i2c_write, reg = 0x02`) com um código que muda por taxa, cercado por
+`fpga_fill_clk enable=1` → escrita → `enable=0`:
+
+| Taxa | `reg 0x02` | Binário |
+|------|-----------|---------|
+| 44,1 kHz | `0x41` | `0100 0001` |
+| 48 kHz | `0x81` | `1000 0001` |
+| 96 kHz | `0x82` | `1000 0010` |
+| 192 kHz | `0x84` | `1000 0100` |
+
+`[HIP]` Leitura do campo: **bit 6 (0x40) = família 44,1**; **bit 7 (0x80) =
+família 48**; **bits baixos = multiplicador** (1 = base, 2 = ×2, 4 = ×4).
+Previsão: 88,2 → `0x42`, 176,4 → `0x44`, 352,8 → `0x48`, 384 → `0x88`.
+Testar 88,2 e 352,8 confirma o modelo.
+
+Isso responde parte de Q5/Q27: o FPGA **é reconfigurado por taxa**, com um código
+de família + multiplicador — consistente com ele gerando/redividindo o clock dos
+DACs.
+
+## 9. O que ainda falta para fechar o mapa de taxa
+
+1. **`0x1000B` (SP_SRATE)** — o registrador onde o `config_dac` grava o índice
+   de taxa. Não entrou no snapshot. É o lado DAC da mesma informação.
+2. `0x1000C` (SP_BITSIZE), se aplicável.
+3. Testar **88,2 kHz** e **352,8 kHz** para validar a codificação do FPGA.
+
+Rodada 3: ler `0x1000B` enquanto toca cada taxa (uma leitura só, rápida).
+
+## 10. Nota sobre o root durante a captura
+
+Em um dos eventos o aviso de "superusuário concedido" do Magisk não apareceu.
+Isso **não afetou** a captura: o snapshot de 48 kHz está completo (21
+registradores lidos). O aviso só é exibido quando a concessão expira; com
+"lembrar por 10 minutos" ele fica silencioso.
