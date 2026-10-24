@@ -79,6 +79,8 @@ Perguntas em aberto e o placar:
 | 44 | [Atualização pós-root](docs/44-atualizacao-pos-root.md) |
 | 45 | [Plano B: kernel próprio](docs/45-plano-b-kernel.md) |
 | 46 | [Recovery/TWRP](docs/46-recovery-twrp.md) |
+| 47 | [GSI / ROM própria](docs/47-gsi-analise.md) |
+| 48 | [Rockbox / Linux mínimo](docs/48-rockbox-e-linux.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.

@@ -580,6 +580,18 @@ O recovery stock (ramdisk sem kernel), a primeira tentativa com o nosso kernel,
 as hipóteses, o teste de controle pronto e o que um recovery próprio precisa:
 **[docs/46-recovery-twrp.md](docs/46-recovery-twrp.md)**
 
+## 45. GSI / ROM própria
+
+O que a GSI substitui, o que o JM21 perde (codec params, DSD, volume master,
+allowlists) e o que preserva (HAL do vendor, política, kernel, módulos):
+**[docs/47-gsi-analise.md](docs/47-gsi-analise.md)**
+
+## 46. Rockbox / Linux mínimo
+
+RaaA × Linux mínimo × Android enxuto; o que o ALSA exige (techpack, ADSP, DTB,
+UCM, touch) e a recomendação de ordem:
+**[docs/48-rockbox-e-linux.md](docs/48-rockbox-e-linux.md)**
+
 ---
 
 ## Inventário local (fora do git)
