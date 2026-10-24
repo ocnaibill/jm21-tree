@@ -74,6 +74,7 @@ Perguntas em aberto e o placar:
 | 39 | [Modo USB DAC](docs/39-usb-dac.md) |
 | 40 | [MQA: detecção e render](docs/40-mqa.md) |
 | 41 | [Modo host USB](docs/41-usb-host.md) |
+| 42 | [Backup completo (F2)](docs/42-backup-completo.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.

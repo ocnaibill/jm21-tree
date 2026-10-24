@@ -550,6 +550,12 @@ O JM21 como host UAC: enumeração, a permissão por app (e o conflito com o UAP
 a negociação de taxa com o DAC externo:
 **[docs/41-usb-host.md](docs/41-usb-host.md)**
 
+## 40. Backup completo (F2)
+
+21 partições de estado único + cadeia de boot dos dois slots, com hashes,
+verificação contra o OTA e procedimento de restauração:
+**[docs/42-backup-completo.md](docs/42-backup-completo.md)**
+
 ---
 
 ## Inventário local (fora do git)
