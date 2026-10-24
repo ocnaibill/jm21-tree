@@ -8,7 +8,8 @@
 
 | Pacote | App | sharedUserId | SHA-256 (prefixo) |
 |--------|-----|--------------|--------------------|
-| `com.fiio.music` | FiiO Music (+ DLNA/Cast) | — | (ver docs/21) |
+| `com.fiio.music` | FiiO Music (+ DLNA) | — | (ver docs/21) |
+| `com.fiio.scrcpy` | **FiiO Cast** (projeção de tela) | — | (FiiOCast.apk) |
 | `com.fiio.fiioeq` | Equalizer | — | `d845849b…` |
 | `com.android.fiioroon` | FiiO Roon | — | (Roon.apk do OTA) |
 | `com.fiio.ipod` | Pod Mode | **android.uid.system** | `4071fd9b…` |
@@ -37,11 +38,33 @@ DAP da FiiO, mas explica por que elas escrevem em sysfs e fazem reboot.
 - Limitações já medidas: EQ **bloqueado em DSD/MQA** (mensagem do app) e em
   **DLNA transmitting**.
 
-## 3. FiiO Cast — **não existe como app**
+## 3. FiiO Cast (`com.fiio.scrcpy`) — **existe, e não é DLNA**
 
-Não há pacote de Cast no aparelho. O "FiiO Cast" é o **DLNA/UPnP dentro do FiiO
-Music**: strings `DLNA receiving`, `DLNA transmitting`, `DLNA-Empf`, e o aviso
-de EQ indisponível durante transmissão DLNA.
+> Correção: a primeira versão desta seção dizia que Cast era o DLNA do FiiO
+> Music. O APK está em `/system/app/FiiOCast/FiiOCast.apk` e o pacote é
+> `com.fiio.scrcpy`.
+
+`[FATO]` É um app de **projeção de tela + controle remoto**, não de DLNA:
+
+| Componente | Papel |
+|------------|-------|
+| `SelectionActivity` | escolha do modo |
+| `RemoteActivity` | controle remoto |
+| `ScreenSyncService` | captura/espelha a tela |
+| `UDPBroadcastService` | descoberta/anúncio por **UDP** |
+| `MediaMetaDataService` | metadados da faixa para o controle |
+| `BootCompleteReceiver` | sobe no boot |
+| `journeyapps.barcodescanner.CaptureActivity` | pareamento por **QR code** |
+
+Permissões: `ACCESS_SURFACE_FLINGER` (captura de tela), `RECORD_AUDIO`,
+`CAMERA`, `INTERNAL_SYSTEM_WINDOW`, `SYSTEM_ALERT_WINDOW`, `UDP`/Wi-Fi.
+
+Texto do app: *"Project the screen of the device to a mobile phone, and allow
+the phone to remotely view and control the device"*.
+
+O **DLNA** é outra coisa: está dentro do **FiiO Music** (`DLNA receiving`,
+`DLNA transmitting`, `DLNA-Empf`), com o aviso de EQ indisponível durante a
+transmissão.
 
 ## 4. FiiO Roon (`com.android.fiioroon`)
 
@@ -144,7 +167,8 @@ pelo framework.
    e sysfs de plataforma.
 2. **EQ é software** (AudioEffect do AOSP). Não há efeito no FPGA nem no DAC
    para EQ.
-3. **Cast, Pod e Tape não são features de áudio**: Cast é DLNA dentro do Music;
+3. **Cast, Pod e Tape não são features de áudio**: Cast é **projeção de tela +
+   controle remoto** (app próprio, `com.fiio.scrcpy`); o DLNA está no Music;
    Pod e Tape são skins.
 4. Vários apps são **compartilhados entre modelos** e escrevem em nós que o
    JM21 não tem — o mesmo padrão dos controles fantasma da HAL.
