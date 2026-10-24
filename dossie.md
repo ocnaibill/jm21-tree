@@ -3,9 +3,12 @@
 > Índice geral do laboratório. Cada seção resume o estado atual e aponta para o
 > documento temático em `docs/`, onde estão os detalhes, comandos e evidências.
 >
-> Estado: **fase 2 — dispositivo em mãos, com root** (sessões 1 e 2 concluídas).
-> Firmware de referência: `JM21-update-1.1.1`; root via Magisk em `init_boot_a`.
-> O placar de progresso está em [docs/PROGRESSO.md](docs/PROGRESSO.md).
+> Estado: **fase 4 concluída** — firmware, dispositivo (com root), HAL, kernel,
+> framework e apps mapeados; **P1 (matriz de taxas e DSD) completo**; as 8 issues
+> do repositório fechadas. Firmware de referência: `JM21-update-1.1.1`; root via
+> Magisk em `init_boot_a`.
+> O placar está em [docs/PROGRESSO.md](docs/PROGRESSO.md) e o estado de cada
+> pergunta em [docs/08](docs/08-roadmap-e-perguntas-abertas.md).
 
 ---
 
@@ -34,7 +37,7 @@ cálculo ou de documento público e está explicitado no texto.
 
 ---
 
-## Resumo executivo (o que mudou em relação à primeira versão)
+## Resumo executivo (histórico de descobertas)
 
 1. **O firmware está em mãos e foi extraído.** `fw/JM21-update-1.1.1.zip`
    (1 642 845 150 bytes) contém um OTA **A/B** com `payload.bin` de
@@ -212,6 +215,59 @@ cálculo ou de documento público e está explicitado no texto.
     do arquivo. 384 kHz é recusado pelo app (arquivo válido) — issue aberta.
     Ver `docs/28-matriz-de-estados.md`.
 
+### Sessões 3+ — o que foi provado depois
+
+42. **Tabela de taxas do DAC completa e medida.** `0x1000B` = 1 (44,1 k), 2 (48 k),
+    3 (88,2 k), 4 (96 k), **5 (176,4 k)**, 6 (192 k), **7 (352,8 k)**,
+    **8 (384 k)** — todos lidos no silício, sem valor derivado. O FPGA acompanha
+    (`0x41`, `0x81`, `0x42`, `0x82`, `0x44`, `0x84`, `0x48`, `0x88`).
+43. **352,8 k e 384 k tocam** — e isso **corrigiu um erro meu**: eu havia
+    concluído que o app bloqueava, lendo só o fim do `logcat`. O navegador do
+    próprio FiiO Music toca as duas; a recusa existe só no caminho
+    `Files → intent`. Ver `docs/29`.
+44. **DSD nativo de ponta a ponta.** DSD64/128/256 entram na HAL como
+    `0x1A000002` (`DSD_32_BIT`) em `mode BYPASS`, a 88 200 / 176 400 / 352 800 Hz;
+    o DAC recebe pela página 7 (`0x70004 = 0x13` ou `0x1B`, `0x20000 = 0x0A`) e o
+    FPGA usa a tabela **de DSD** (`0x42`, `0x44`, **`0x68`**). O `0x1000B` **não**
+    é escrito no DSD (teste decisivo: 384 k → DSD128). Ver `docs/29`.
+45. **EQ é bloqueado em DSD/MQA pelo app** (string no `resources.arsc`) — é a
+    contrapartida de UI do `BYPASS` medido.
+46. **DoP validado:** na saída SPDIF o FPGA recebe `reg 0x01 = 0x4E`; no DSD
+    nativo, `0x2F`. São as duas entradas de `fpga_config()`.
+47. **FPGA identificado por leitura do próprio chip:** ID `0x0100681B`
+    (**GW1NZ-1**), user code `0xF2510003`. Dois bitstreams em `/vendor/firmware`
+    (v3 carregado; `_2.fw` com user code `0xF2510004`). Carga por SPI
+    (GW Slave Serial), `fpga_pwr_en` GPIO 392, `cs` 406. Ver `docs/30`.
+48. **Netlist do FPGA extraído.** Escrevi o conversor `.fw → .fs`
+    (`tools/fpga_fw_to_fs.py`): RLE com chave `0xDB`, **274 frames de 160 B**,
+    CRC16-ARC. Design: 803 `LUT4`, 337 `DFF`, 52 `ALU`, 18 `RAM16SDP4`,
+    `IDES10`/`IDDRC` na entrada, `ODDR`/`ELVDS_OBUF` na saída, `OSCZ`
+    `FREQ_DIV=2`; **zero DSP**. É re-clock + roteamento + clock. Ver `docs/31`.
+49. **Apps:** FiiO Cast é app próprio (`com.fiio.scrcpy`, projeção de tela por
+    UDP + QR), Pod e Tape são skins de UI, o EQ usa `AudioEffect` do AOSP e
+    **nenhum app escreve no DAC**. Ver `docs/32` e `docs/34`.
+50. **Framework/services:** enum completo dos codec params (0–22),
+    `AudioSystem.setMasterVolumeDac` nativo até a HAL, 64 flags `config_fiio_*`
+    com valores reais (`uac_kernel=false`, `tape_mode_auto_det_sw=false`),
+    allowlists de pacotes, broadcasts `fiio.*` e o modo em
+    `Settings.System["system_mode_value"]`. Ver `docs/33`.
+51. **Modos de operação:** 0 Android, 1 Pure Music, 2 AirPlay, 3 USB DAC,
+    4 BT sink, 5 SPDIF RX, 6 Roon, 7 OPT IN, 8/9 HDMI. Pure Music tem
+    **exatamente os mesmos 160 kcontrols**; a causa é o módulo de kernel
+    **`mode_select` ausente** (`system_work_mode` fica 0). Ver `docs/37`.
+52. **Ganho analógico medido:** as três curvas (0/1/2) batem **exatamente** com
+    as tabelas do driver; registradores analógicos não mudam → é **atenuação
+    digital** no DAC. Ver `docs/38`.
+53. **USB DAC:** gadget `2972:0045`, `S32_LE` até **384 kHz** e **DSD nativo**
+    (`DSD_U32_BE`); 352,8/384 reproduzidos e DSD64 confirmado de ouvido. Sem
+    Feature Unit de volume. Ver `docs/39`.
+54. **ISO do MTP:** CD de drivers (setup USB DAC 4.47.0 de 2018 + Android File
+    Transfer); os configs que o expõem estão comentados no `init.fiio.usb.rc`.
+55. **EDL:** não há `prog_firehose` no OTA nem nas partições; recuperação é por
+    `fastboot` (bootloader destravado). Ver `docs/35`.
+56. **Roadmap revisado:** 21 das 24 perguntas originais fechadas; 3 abertas
+    (Q9, Q15, Q24) e 7 novas (N1–N7). Ver `docs/08`.
+
 ---
 
 ## 1. Hardware — resumo
@@ -277,13 +333,17 @@ Ferramenta própria: `tools/dt_dump.py`. Análise:
 
 Aplicativos FiiO em `/system/app`: `FiiOMusic` (117 MB), `FiiOTape` (133 MB),
 `FiiOEq`, `FiiOCast`, `FiiOIpod`, `FiiOMarket`, `FiiOUpdate`, `AboutFiio` `[FW]`.
+**12 apps** com hash em `docs/34`; 5 rodam como `android.uid.system`; `DebugTool`,
+`FactoryTest` e `EcaiTestAPP` estão pré-instalados mas **não** rodam.
 
 Não existe `fiio-framework.jar`: as modificações estão **dentro** de
-`framework.jar` (38 MB) e `services.jar` (17 MB), o que exige diff contra a
-AOSP/qssi-13 `[FW]` `[HIP]`.
+`framework.jar` (38 MB) e `services.jar` (17 MB) — mapeadas em `docs/33`
+(enum de codec params, `setMasterVolumeDac`, 64 flags, allowlists, broadcasts).
 
-JNI e bibliotecas nativas do player, permissões e alvos de decompilação:
-**[docs/05-framework-e-apps.md](docs/05-framework-e-apps.md)**.
+O que cada app faz (e não faz), incluindo Cast/Pod/Tape:
+**[docs/32-apps-restantes.md](docs/32-apps-restantes.md)**.
+JNI e bibliotecas nativas do player: **[docs/36-fiiomusic-jni.md](docs/36-fiiomusic-jni.md)**.
+Base antiga: **[docs/05-framework-e-apps.md](docs/05-framework-e-apps.md)**.
 
 ## 6. Playbooks
 
@@ -410,9 +470,73 @@ registradores e a prova do par diferencial:
 
 ## 26. Matriz de estados (taxa × DAC/FPGA)
 
-O que muda (e o que não muda) de 44,1 a 192 kHz, o rótulo de modo como bitmask
-e o limite de 384 kHz do player:
+O que muda (e o que não muda) de 44,1 a **384 kHz**, o rótulo de modo como
+bitmask e a distinção `Files → intent` × navegador do app:
 **[docs/28-matriz-de-estados.md](docs/28-matriz-de-estados.md)**
+
+## 27. DSD e 352,8/384 kHz
+
+As três taxas DSD, o `BYPASS`, os registradores da página 7, o DoP e a tabela de
+taxas completa:
+**[docs/29-dsd-e-384k.md](docs/29-dsd-e-384k.md)**
+
+## 28. FPGA: bitstream
+
+GW1NZ-1, os dois bitstreams, user codes, carga por SPI e o protocolo de
+configuração:
+**[docs/30-fpga-bitstream.md](docs/30-fpga-bitstream.md)**
+
+## 29. FPGA: netlist
+
+O conversor `.fw → .fs`, o inventário de células e a leitura do design
+(re-clock/roteamento/clock, sem DSP):
+**[docs/31-fpga-netlist.md](docs/31-fpga-netlist.md)**
+
+## 30. Apps restantes
+
+Equalizer, Cast, Roon, Pod, Tape, Market, Technical Support e o que cada um faz
+(ou não faz):
+**[docs/32-apps-restantes.md](docs/32-apps-restantes.md)**
+
+## 31. Framework e services
+
+Enum de codec params, `setMasterVolumeDac`, as 64 flags `config_fiio_*`, as
+allowlists e os broadcasts:
+**[docs/33-framework-services.md](docs/33-framework-services.md)**
+
+## 32. Auditoria dos apps de sistema
+
+Os 95 APKs de sistema, os 12 da FiiO com hash e os apps de fábrica que não estão
+instalados:
+**[docs/34-auditoria-apps.md](docs/34-auditoria-apps.md)**
+
+## 33. ISO do MTP e EDL
+
+O CD de drivers do MTP e a ausência de pacote QFIL/firehose:
+**[docs/35-mtp-iso-e-edl.md](docs/35-mtp-iso-e-edl.md)**
+
+## 34. FiiO Music: JNI e DSD/MQA
+
+O grafo app → JNI → HAL, as bibliotecas nativas e a tabela DSD do
+`XSeriesConfig`:
+**[docs/36-fiiomusic-jni.md](docs/36-fiiomusic-jni.md)**
+
+## 35. Modos de operação
+
+O mapa `system_mode_value`, a mecânica de troca e o resultado medido (Pure Music
+não muda kcontrols):
+**[docs/37-modos-de-operacao.md](docs/37-modos-de-operacao.md)**
+
+## 36. Ganho analógico
+
+As três curvas de volume medidas no silício e a prova de que o ganho é digital:
+**[docs/38-ganho-analogico.md](docs/38-ganho-analogico.md)**
+
+## 37. Modo USB DAC
+
+O gadget UAC (`2972:0045`), as taxas até 384 kHz, o DSD nativo e a ausência de
+controle de volume no host:
+**[docs/39-usb-dac.md](docs/39-usb-dac.md)**
 
 ---
 
@@ -424,12 +548,24 @@ e o limite de 384 kHz do player:
 | `fw/JM21-update-1.1.1/` | payload extraído + metadados | 1,6 GB |
 | `dumps/fw-1.1.1/` | 19 imagens de partição | ~4,9 GB |
 | `analysis/fw-1.1.1/` | recortes pequenos: configs, `.so`, `.ko`, DTS, props | ~130 MB |
+| `analysis/fpga/` | bitstreams e `.ko` do FPGA | ~2 MB |
+| `analysis/framework/` | `framework.jar`, `services.jar`, `framework-res.apk`, ISO, libs | ~150 MB |
+| `analysis/apps-device/` | APKs puxados do aparelho | ~200 MB |
+| `analysis/dsd/` | amostras DSD (CC0) | ~610 MB |
+| `analysis/decompiled/` | saída do JADX (não versionada) | ~2 GB |
 | `tools/bin/payload-dumper-go` | binário recompilável | 12 MB |
 | `tools/dt_dump.py` | parser FDT/DTBO próprio (sem dependências) | — |
+| `tools/fpga_fw_to_fs.py` | conversor de bitstream Gowin (`.fw → .fs`) | — |
+| `tools/collect-baseline.sh` | coletor de baseline (read-only e com root) | — |
+| `tools/rate-register-capture.sh` | monitor de taxa (`0x1000B` + HAL + FPGA) | — |
 
 ## Restrições do laboratório
 
-- O JM21 **não está conectado**; nada aqui depende do aparelho.
-- Nada de escrita no dispositivo nesta fase. Somente leitura offline.
-- `fw/`, `dumps/` e binários grandes não entram no git (ver `.gitignore`).
+- O JM21 **esteve conectado** em todas as sessões 1–4; hoje pode estar
+  desconectado. Nada no repositório depende dele.
+- **Escrita no dispositivo:** só root (Magisk em `init_boot_a`) e ajustes de
+  áudio/configuração. Nenhuma partição além do `init_boot_a` foi gravada.
+- Nada de EDL/QFIL: não há pacote (`docs/35`); recuperação por `fastboot`.
+- `fw/`, `dumps/`, `analysis/` e binários grandes não entram no git
+  (ver `.gitignore`).
 - Sem co-autoria em commits; autor é o usuário do git.
