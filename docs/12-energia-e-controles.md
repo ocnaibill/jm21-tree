@@ -316,3 +316,31 @@ São coeficientes de filtro por canal — usado só nos modos MONO/SPECIAL_1/SPE
 | Escala dB exata do volume | `cs43198_set_volume_db` já lida: é código puro; a escala vem da UI/libfiioaudio |
 | `cs43198_set_sample_rate` | decompilado — pendente de análise |
 | Caminho óptico × coaxial | DT + `fpga_config_params.opt_tx` |
+
+---
+
+## Térmica e carga (medido em 2026-10-24)
+
+### Temperatura: duas fontes, uma errada
+
+| Fonte | Valor | Interpretação |
+|-------|-------|---------------|
+| `/sys/class/power_supply/battery/temp` | **-61** | -6,1 °C — **inválido** |
+| `/sys/class/power_supply/cw221X-bat/temp` | **375** | 37,5 °C — plausível |
+
+O `battery` é o que o Android usa (`dumpsys battery`) e o que o
+`com.fiio.devicevendor` lê para pausar o áudio aos 56 °C. Como ele reporta
+-6,1 °C, **o pause térmico de áudio nunca dispara**. O `battery` parece vir do
+`power_board_jm21` (`compensated_battery_temperature`).
+
+`[?]` Por que o valor é -61 (sentinela? compensação errada?) — abrir o
+`power_board_jm21` no Ghidra.
+
+### Carga: PD só em 5 V
+
+`fusb302`: *"PD connected as UFP, fetching 5V"* e *"PD connected as DFP,
+supporting 5V"* — o aparelho **pede apenas 5 V** no PD. Carregadores "turbo"
+(9/12 V) não são aproveitados; no máximo 5 V × corrente do carregador.
+
+`sgm4154x`: proteção **JEITA em software** (`enable_sw_jeita`, t0..t4, CV/CC por
+faixa) — é essa a proteção térmica real da carga, independente do Android.
