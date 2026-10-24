@@ -75,6 +75,7 @@ Perguntas em aberto e o placar:
 | 40 | [MQA: detecção e render](docs/40-mqa.md) |
 | 41 | [Modo host USB](docs/41-usb-host.md) |
 | 42 | [Backup completo (F2)](docs/42-backup-completo.md) |
+| 43 | [`jm21ctl` (controle userspace)](docs/43-jm21ctl.md) |
 
 O índice narrativo completo (histórico de descobertas, item por item) está em
 **[dossie.md](dossie.md)**.
@@ -87,6 +88,7 @@ O índice narrativo completo (histórico de descobertas, item por item) está em
 | `tools/fpga_fw_to_fs.py` | converte o bitstream Gowin da FiiO (`.fw`) para o formato do Apicula |
 | `tools/collect-baseline.sh` | coleta de baseline (read-only e com root) |
 | `tools/rate-register-capture.sh` | monitor de taxa (`0x1000B` + HAL + FPGA) |
+| `tools/jm21ctl.sh` | controle por userspace: volume, ganho, filtro, registradores |
 | `tools/udev/51-android-jm21.rules` | regras udev para `18d1`, `05c6`, `2972` |
 
 ## Convenções

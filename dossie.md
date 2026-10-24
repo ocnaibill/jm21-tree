@@ -556,6 +556,12 @@ a negociação de taxa com o DAC externo:
 verificação contra o OTA e procedimento de restauração:
 **[docs/42-backup-completo.md](docs/42-backup-completo.md)**
 
+## 41. `jm21ctl` — controle por userspace
+
+Ferramenta de linha de comando sobre as interfaces já mapeadas (kcontrols,
+`dac_ctrl`, `dac_read_reg`), sem módulo de kernel:
+**[docs/43-jm21ctl.md](docs/43-jm21ctl.md)**
+
 ---
 
 ## Inventário local (fora do git)
