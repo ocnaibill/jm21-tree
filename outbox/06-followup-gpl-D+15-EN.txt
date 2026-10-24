@@ -1,0 +1,45 @@
+Subject: Follow-up — GPLv2 §3(b) source request, FiiO JM21, firmware 1.1.1
+
+Dear FiiO Support / Legal,
+
+On [DATE OF FIRST EMAIL] I sent a request under GNU GPL version 2, section
+3(b), for the complete corresponding source code of the GPL-licensed kernel
+modules distributed in the FiiO JM21 firmware 1.1.1.
+
+I have not received an acknowledgement or a ticket number. I am resending the
+request below and would appreciate a ticket ID so I can track it.
+
+Requested material (complete corresponding source, including build scripts and
+configuration, for the exact binaries shipped in firmware 1.1.1):
+
+  - cs43198.ko                     license: GPL
+  - dac_core_module.ko             license: GPL
+  - anolog_board_jm21.ko           license: GPL
+  - fiio_primary_modules.ko        license: GPL
+  - fiio_underlay_modules.ko       license: GPL
+  - fiio_config.ko                 license: GPL
+  - gw-fpga.ko                     license: GPL
+  - fpga_audio_interface.ko        license: GPL
+  - fpga_interface.ko              license: GPL
+  - the kernel tree used to build the 5.15.41 image (GPLv2)
+
+Section 3(b) permits distribution of the corresponding source "on a medium
+customarily used for software interchange", and section 3(a)/(c) alternatives
+apply only if the offer is made in a specific way. The modules above are
+distributed to end users inside the device, so the corresponding source must be
+made available.
+
+Build identifiers for reference:
+  Build fingerprint: qti/bengal_515/bengal_515:13/TKQ1.230110.001/
+                     eng.fiio.20260428.144644:user/dev-keys
+  Kernel:            5.15.41-g9ded8564ff52-dirty
+  Firmware:          1.1.1 (package JM21-update-1.1.1.zip)
+
+Please confirm receipt and provide either the source or a written statement of
+where it is published. If I do not receive a response within 15 days, I will
+follow up with your distributor and with the Software Freedom Conservancy.
+
+Regards,
+[NAME]
+[EMAIL]
+[COUNTRY]
