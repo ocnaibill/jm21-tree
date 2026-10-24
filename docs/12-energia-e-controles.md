@@ -344,3 +344,39 @@ supporting 5V"* — o aparelho **pede apenas 5 V** no PD. Carregadores "turbo"
 
 `sgm4154x`: proteção **JEITA em software** (`enable_sw_jeita`, t0..t4, CV/CC por
 faixa) — é essa a proteção térmica real da carga, independente do Android.
+
+### Causa raiz do `battery/temp = -61`
+
+O `battery` é registrado pelo **`fiio-charger-manager.ko`**
+(`soc:fiio_charge_manager`). No `get_property`:
+
+```c
+val->intval = -0x3d;                 // -61 (sentinela), antes do switch
+case POWER_SUPPLY_PROP_TEMP:
+    if (force_temp_en == false)
+        fcm_get_battery_temperature(fcm, &val->intval);   // pode falhar sem escrever
+    else
+        val->intval = force_temp;
+```
+
+E `fcm_get_battery_temperature`:
+
+```c
+if (desc->measure_battery_temp == false) { ret = -0x13; }   // não lê nada!
+else if (tzd_batt) { thermal_zone_get_temp(...); *temp /= 100; }
+else { fuel gauge (prop 0x33) ... }                          // cw221X-bat
+```
+
+`[FATO]` O DT do JM21 **não tem** `measure_battery_temp` (nem `temp_compensation`/
+`force_temp`). O driver assume `false` e **nunca lê a temperatura** — o
+`battery/temp` fica no sentinela **-61**.
+
+Consequências:
+- o Android (`dumpsys battery`) e o `com.fiio.devicevendor` veem **-6,1 °C** →
+  o pause térmico de 56 °C **nunca dispara**;
+- a temperatura real existe em `cw221X-bat/temp` (37,5 °C) e na zona térmica
+  `cw221X-bat`, mas não é usada por esse caminho.
+
+`[HIP]` É uma omissão do DT (ou desligamento proposital do pause térmico de
+áudio). Os limiares de carga seguem ativos no `sgm4154x` (JEITA) e no próprio
+FCM (tabela `fcm-battery-temp-*` no DT, em décimos de °C: 20/45/47/60).
