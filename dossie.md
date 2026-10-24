@@ -146,6 +146,11 @@ cálculo ou de documento público e está explicitado no texto.
     (12 nomes, dos quais só 7 existem no JM21) e o fio completo do volume:
     `AudioService` → mixer `DAC Playback Volume` → `dac_core` → tabela →
     `cs43198` (I2C). Ver `docs/19-hal-de-audio.md`.
+33. **DSD, DoP, D2P e MQA mapeados.** `match_audio_process_mode` decide o modo a
+    partir de 7 propriedades e do dispositivo de saída; ALL TO DSD troca o
+    formato para `0x1a000002` (DSD_U16_LE) e usa 1,25 MB de estado; o caminho
+    DSD nativo só empacota bits (TBL NEON 8→16, reordenação 16→32); MQA vem de
+    `libfiioaqm.so` via `aqm_*`. Ver `docs/20-dsd-mqa.md`.
 
 ---
 
@@ -294,6 +299,18 @@ de escalonamento/fallback técnico:
 A API completa de `soc:fiio_attr`, o mapa nó → módulo → função e as
 propriedades que disparam ações:
 **[docs/18-superficie-sysfs.md](docs/18-superficie-sysfs.md)**
+
+## 18. HAL de áudio (`libfiioaudio.so`)
+
+A API real (`fiio_adev_set_codec_param`), a tabela de controles, o caminho do
+volume ponta a ponta e a distinção kcontrol × sysfs:
+**[docs/19-hal-de-audio.md](docs/19-hal-de-audio.md)**
+
+## 19. DSD, DoP, D2P e MQA
+
+A decisão de modo (`match_audio_process_mode`), o ALL TO DSD, o empacotamento
+DSD nativo e o MQA via `libfiioaqm.so`:
+**[docs/20-dsd-mqa.md](docs/20-dsd-mqa.md)**
 
 ---
 
