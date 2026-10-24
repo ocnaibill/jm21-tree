@@ -76,8 +76,11 @@ arquivo. 384 kHz **recusado pelo app** (arquivo válido).
 (`reg 0x02`: 0x41 / 0x81 / 0x82 / 0x84 = família + multiplicador).
 
 **P1c feita:** `0x1000B` (SP_SRATE) medido em 5 taxas e **igual à tabela do
-driver**; FPGA confirmado em 88,2 (`0x42`). 352,8 e 384 são recusados pelo app
-(issue #9) — falta saber se o hardware aceita, via outro player.
+driver**; FPGA confirmado em 88,2 (`0x42`).
+
+**Limite de 352,8/384 resolvido (issue #9 fechada):** é **política do app**
+(`k() && rate>=352800 && !isUsb → UNSUPPORTED`). Só falta provar o hardware via
+USB/UAC — VLC foi inconclusivo porque reamostra na saída dele.
 
 ### (original) P1 — escopo
 

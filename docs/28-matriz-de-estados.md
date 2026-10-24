@@ -183,3 +183,56 @@ filtro, power) foram reconfirmados na rodada 3.
 - **Q26 (DSD nativo)**: ainda aberto — precisamos de um arquivo DSD.
 - **Q5 (o que o FPGA faz)**: agora sabemos que ele é **reconfigurado por taxa**;
   resta saber se processa amostras ou só divide clock.
+
+---
+
+# O limite de 352,8/384 kHz é **política do app** (achado no código)
+
+> Descoberto no `MediaPlayerService` do FiiO Music decompilado, depois do teste
+> com o VLC.
+
+## 15. A regra exata
+
+`com/fiio/music/service/MediaPlayerService.java` (~linha 2567):
+
+```java
+if (songF != null
+    && com.fiio.product.b.d().k()                       // capacidade do modelo
+    && (rate == 352800 || rate == 384000)
+    && !com.fiio.product.b.d().c().p())                 // NÃO é saída USB
+{
+    this.f5493d = ErrorCode.UNSUPPORTED;
+}
+```
+
+E a flag `k()`:
+
+| Implementação | Retorno |
+|---------------|---------|
+| `com.fiio.product.b.k()` | `true` só para M6 / M7 / M7K / M9 |
+| `com.fiio.product.device.b.k()` | **`true` fixo** (classe do JM21) |
+
+Ou seja: no JM21 a combinação **"352,8/384 kHz + saída interna (3,5/4,4 mm)"**
+é marcada como **UNSUPPORTED de propósito**. Com saída **USB**, a mesma taxa é
+permitida — e `IDevice.setUsbAudioSupportSampleRate()` existe justamente para
+listar as taxas suportadas por USB (bitmask; 64 = 352,8 k, 128 = 384 k).
+
+Isso resolve a issue #9: **não é o hardware nem o arquivo** — é o player que
+recusa. A ficha oficial ("384 kHz na decodificação local") não bate com o
+código do próprio app para a saída interna.
+
+`[?]` Continua em aberto se o **DAC/FPGA** aceitariam 352,8/384 — a previsão
+pelo modelo é `0x1000B = 7/8` e FPGA `0x02 = 0x48/0x88`. Para provar, só por
+USB (UAC), com um host que envie essas taxas.
+
+## 16. Teste com o VLC (inconclusivo, e por quê)
+
+- APK oficial 3.7.1 arm64, hash conferido com o `.sha256` do VideoLAN.
+- VLC **abriu** o `tone_352800_24.flac` (não recusou), mas entregou o áudio à
+  HAL a **44 100 Hz / PCM16** — ou seja, reamostrou na saída dele.
+- Portanto **não serve** para provar o limite do hardware: o gargalo passou a
+  ser o VLC, não o JM21.
+- VLC desinstalado ao fim do teste.
+
+Lição: para testar o limite do hardware, o caminho é **USB (UAC)** ou um player
+que force a taxa nativa — não um player que negocia a taxa de saída.
