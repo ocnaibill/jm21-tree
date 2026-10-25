@@ -438,3 +438,26 @@ Proximo passo: rodar o kati sem suprimir stderr (`get_build_var` puro) e ver o
 erro real; suspeitas: `_read-ap-file`/`node_fns.mk` do `build/make` 14.1
 esperando formato diferente, ou `PRODUCT_MAKEFILES` precisando da forma
 `<produto>:<caminho>`.
+
+## 19.5 Impasse de combinacao do build system (fim desta rodada)
+
+Testadas duas configuracoes, ambas bloqueadas:
+
+| config | resultado |
+|---|---|
+| `build/make` TWRP (14.1) + `build/soong` TWRP (android-14) + blueprint/Go r17 | da erros **reais**, mas o `build/make` 14.1 depende de modulos que o soong android-14 deles nao tem: `soong-aidl-library`, `soong-testing-*_proto` |
+| `build/make` TWRP (14.1) + `build/soong` **AOSP r50** + blueprint/Go r50 | `soong_ui --dumpvar-mode` sai com **rc=1 e silencio total** (nem `out/verbose.log.gz` e criado); `lunch` so diz "Don't have a product spec" |
+
+Ou seja: o `build/make` do TWRP 14 exige um soong mais novo que o fork deles,
+mas o soong do AOSP r50 nao conversa com o `build/make` 14.1 deles.
+
+Observacao util descoberta no caminho: o erro "Don't have a product spec" pode
+ser simplesmente **release errado** — o `build/release` do r50 so declara
+`ap2a` (nao `ap1a`), e o `lunch` correto e `twrp_jm21-ap2a-eng`.
+
+Proximos caminhos possiveis:
+1. AOSP 14 r50 **completo** (sem overlay de build do TWRP) + so
+   `bootable/recovery` + `vendor/twrp`: perde-se os hooks de make do TWRP, mas
+   elimina a incompatibilidade.
+2. Voltar ao `twrp-12.1` (conhecido bom) e aceitar que `/data` nao abre.
+3. Pedir a receita na comunidade do TWRP (Zulip) para o branch 14.
