@@ -598,6 +598,12 @@ Checklist de comandos para quando o aparelho estiver disponível (térmica/USB,
 recovery, GSI, áudio, `jm21ctl`, rollback):
 **[docs/49-sessao-3-checklist.md](docs/49-sessao-3-checklist.md)**
 
+## 48. Recovery de bolso (etapa A)
+
+Imagem de recovery utilizável (shell root) + `tools/recovery-tool.sh`
+(backup/restore/flash) + `tools/build-recovery.sh` (reproduzível):
+**[docs/50-recovery-de-bolso.md](docs/50-recovery-de-bolso.md)**
+
 ---
 
 ## Inventário local (fora do git)
