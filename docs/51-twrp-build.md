@@ -461,3 +461,19 @@ Proximos caminhos possiveis:
    elimina a incompatibilidade.
 2. Voltar ao `twrp-12.1` (conhecido bom) e aceitar que `/data` nao abre.
 3. Pedir a receita na comunidade do TWRP (Zulip) para o branch 14.
+
+### 19.6 Terceira tentativa: build/make + build/soong ambos AOSP r50
+
+Mantendo do TWRP so `bootable/recovery` e `vendor/twrp`:
+
+`build/make` AOSP r50 + `build/soong` AOSP r50 + blueprint/Go r50.
+
+Resultado: `lunch twrp_jm21-ap2a-eng` continua **rc=1** com o produto vazio e
+sem mensagem de erro. Ou seja: mesmo com o build system do AOSP inteiro e
+consistente, o produto nao e registrado — o que desloca a suspeita para a
+interacao do `vendor/twrp` (hook de `TW_` vars no `soong_config.mk`) com o
+`build/make` do AOSP, que nao tem esse hook.
+
+Conclusao da rodada: o branch `android-14`/`android-14.1` do TWRP nao e
+montavel apenas com os repos publicos + um device tree externo, do jeito que o
+`twrp-12.1` era. Vale pedir a receita no Zulip do TWRP antes de insistir.
