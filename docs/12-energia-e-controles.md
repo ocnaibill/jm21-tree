@@ -399,3 +399,39 @@ térmica do carregador (`sgm41513-charger`) **não foi registrada**, a leitura d
 **errada**: o DT é o mesmo e no stock funciona. Falta descobrir por que o módulo
 `sgm4154x_charger` não registra a zona térmica no nosso kernel (provável
 dependência de `thermal_of`/DTB ou config de build). `[?]`
+
+## JEITA: por que a carga "para sozinha" no turbo
+
+`[FATO]` Medido no plugue do turbo (`dmesg`):
+
+```
+fusb302 0-0022: CC connected in CC1 as UFP
+[charger-manager]: reduce the target charge current: 0 bat_temp: 380
+[charger-manager]: fcm_bat_temp_state_update ichrg_limit = 3000000 ichrg_current = 2340000
+```
+
+O carregador entra como **fonte** (UFP) e o FCM aplica **3 A** de limite de
+carga / **2,3 A** de entrada; a 38 °C a redução é **0** (faixa normal).
+
+`[FATO]` O `sgm4154x` tem **JEITA por software** (`enable_sw_jeita` no DT):
+
+| Faixa | Corrente de carga |
+|-------|-------------------|
+| acima de t4 (**50 °C**) | **0** (para) |
+| t3 (45 °C) → t4 | 1,0 A |
+| t2 → t3 | 1,25 A |
+| abaixo de t0 | 0 |
+
+Com histerese: só retoma abaixo de **48 °C** (`temp_t4_thres_minus_x_degree`).
+
+**Explicação do sintoma:** deixado horas no turbo, o aparelho aquece (carga +
+tela/áudio), atinge 50 °C, a corrente vai a **0** e a carga **não completa**;
+esfriando abaixo de 48 °C, retoma devagar. É proteção, não defeito — e é o
+motivo de o turbo "não render" o que se espera.
+
+`[HIP]` O limite de entrada fixo em **2,3 A** pelo FCM pode ser agressivo para
+portas de PC (0,5–0,9 A): a porta pode entrar em proteção → possível ligação
+com o "USB some" da #22. `[?]`
+
+Monitor em curso no aparelho (30 s) para pegar o corte:
+`/data/local/tmp/thermal-monitor.log`.
