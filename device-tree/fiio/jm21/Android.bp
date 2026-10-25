@@ -1,222 +1,87 @@
-// Stubs para o manifest minimo do TWRP: os modulos abaixo sao referenciados
-// pelo tree (VTS fuzzers / Connectivity tests) mas nao existem aqui.
-cc_defaults {
-    name: "vts_proto_fuzzer_default",
-}
+// ---------------------------------------------------------------------------
+// Lacunas do upstream do TWRP (forks mais antigos que o AOSP 12.1).
+//
+// O manifest do TWRP troca alguns projetos pelos forks do LineageOS/TeamWin
+// (ex.: hardware/interfaces do LineageOS 19.1). O AOSP 12.1 retido referencia
+// módulos que esses forks NAO tem, e o soong quebra no parse mesmo sem buildar
+// esses módulos (sao testes/HAL que nao vao para a imagem de recovery).
+//
+// Cada stub abaixo e uma dessas lacunas. Sao vazios de proposito: existem so
+// para o parse resolver. Nao ha desabilitacao de modulos nem edicao de arvore.
+// ---------------------------------------------------------------------------
 
-java_defaults {
-    name: "libnetworkstackutilsjni_deps",
-}
-
-java_defaults {
-    name: "cts_defaults",
-}
-
+// hardware/interfaces (fork LineageOS 19.1): falta o default usado pelos
+// neuralnetworks_utils_hal_*.
 cc_defaults {
     name: "neuralnetworks_utils_defaults",
 }
 
+// Lacuna upstream: referenciado por android_test.
 java_defaults {
-    name: "cts_support_defaults",
+    name: "libnetworkstackutilsjni_deps",
 }
 
-java_defaults {
-    name: "mts-target-sdk-version-current",
-}
-
+// Lacuna upstream: referenciado por java_test_host (stub so para o parse).
 java_library_host {
     name: "compatibility-host-util",
 }
 
+// Lacuna upstream: referenciado por java_test_host (stub so para o parse).
 java_library_host {
     name: "tradefed",
 }
 
-java_library_host {
-    name: "cts-tradefed",
-}
-
-filegroup {
-    name: "droiddoc-templates-sdk",
-    srcs: [],
-}
-
-java_library_host {
-    name: "junit",
-}
-
-java_library_host {
-    name: "junit-host",
-}
-
-java_library_host {
-    name: "doclava",
-}
-
-java_library_host {
-    name: "jsilver",
-}
-
-java_library_host {
-    name: "guava",
-}
-
-java_library_host {
-    name: "jna-prebuilt",
-}
-
-java_library_host {
-    name: "apache-bcel",
-}
-
-java_library_host {
-    name: "compatibility-tradefed",
-}
-
-java_library_host {
-    name: "cts-host-utils",
-}
-
-java_library_host {
-    name: "hamcrest-library",
-}
-
+// Lacuna upstream: referenciado por java_test_host (stub so para o parse).
 java_library_host {
     name: "platform-test-annotations-host",
 }
 
+// Lacuna upstream: referenciado por java_library_host (stub so para o parse).
 java_library_host {
-    name: "pyfakefs",
+    name: "compatibility-tradefed",
 }
 
+// Lacuna upstream: referenciado por tradefed_binary_host (stub so para o parse).
 java_library_host {
-    name: "cts-install-lib-host",
+    name: "tradefed-test-framework",
 }
 
+// Lacuna upstream: referenciado por tradefed_binary_host (stub so para o parse).
 java_library_host {
-    name: "kotlin-stdlib",
+    name: "loganalysis",
 }
 
+// Lacuna upstream: referenciado por java_library_host (stub so para o parse).
 java_library_host {
-    name: "kotlin-stdlib-jdk7",
+    name: "easymock",
 }
 
+// Lacuna upstream: referenciado por java_library_host (stub so para o parse).
 java_library_host {
-    name: "kotlin-stdlib-jdk8",
+    name: "CtsDeqpRunnerTests",
 }
 
-java_library_host {
-    name: "kotlin-test",
-}
-
-java_library_host {
-    name: "net-host-tests-utils",
-}
-
-java_library_host {
-    name: "py-parse_type",
-}
-
-java_library_host {
-    name: "py-ply",
-}
-
-java_library_host {
-    name: "dexlib2-no-guava-no-cli",
-}
-
-java_library_host {
-    name: "kotlin-reflect",
-}
-
-java_library_host {
-    name: "metalava-gradle-plugin-deps",
-}
-
-java_library_host {
-    name: "metalava-tools-common-m2-deps",
-}
-
-java_library_host {
-    name: "modules-utils-build-testing",
-}
-
-java_library_host {
-    name: "testng",
-}
-
-java_library_host {
-    name: "truth-prebuilt",
-}
-
-java_library_host {
+// Lacuna upstream: referenciado por python_test_host (stub so para o parse).
+cc_library {
     name: "vts_vndk_utils",
 }
 
+// Lacuna upstream: referenciado por java_library_static (stub so para o parse).
 java_library_host {
-    name: "org-netbeans-api-visual",
+    name: "objenesis",
 }
 
+// Lacuna upstream: referenciado por java_library (stub so para o parse).
 java_library_host {
-    name: "org-openide-util",
+    name: "jcommander",
 }
 
+// Lacuna upstream: referenciado por java_library (stub so para o parse).
 java_library_host {
-    name: "//external/auto:auto_service_annotations",
+    name: "snakeyaml",
 }
 
+// Lacuna upstream: referenciado por java_library (stub so para o parse).
 java_library_host {
-    name: "//external/auto:auto_service_plugin",
-}
-
-java_library_host {
-    name: "//external/error_prone:error_prone_core",
-}
-
-java_library_host {
-    name: "javaparser",
-}
-
-java_library_host {
-    name: "javaparser-symbol-solver",
-}
-
-java_library_host {
-    name: "javapoet",
-}
-
-java_library_host {
-    name: "javapoet-prebuilt-jar",
-}
-
-java_library_host {
-    name: "gson-prebuilt-jar",
-}
-
-java_library_host {
-    name: "guavalib",
-}
-
-java_library_host {
-    name: "jopt-simple-4.9",
-}
-
-java_library_host {
-    name: "auto_common",
-}
-
-java_library_host {
-    name: "auto_value_annotations",
-}
-
-java_library_host {
-    name: "jetbrains-annotations",
-}
-
-java_library_host {
-    name: "kotlinx-metadata-jvm",
-}
-
-java_library_host {
-    name: "symbol-processing-api",
+    name: "guice",
 }

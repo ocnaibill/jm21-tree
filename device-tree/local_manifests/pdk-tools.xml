@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Re-adiciona projetos podados pelo remove-minimal.xml do TWRP que projetos
+     mantidos referenciam no parse do soong (testes/ferramentas; nao vao para
+     a imagem de recovery). -->
+<manifest>
+  <project path="prebuilts/tools"            name="platform/prebuilts/tools" />
+  <project path="external/junit"             name="platform/external/junit" />
+  <project path="external/junit-params"      name="platform/external/junit-params" />
+  <project path="external/mockito"           name="platform/external/mockito" />
+  <project path="external/kotlinc"           name="platform/external/kotlinc" />
+  <project path="external/guava"             name="platform/external/guava" />
+  <project path="external/testng"            name="platform/external/testng" />
+  <project path="external/hamcrest"          name="platform/external/hamcrest" />
+  <project path="external/doclava"           name="platform/external/doclava" />
+  <project path="external/jsilver"           name="platform/external/jsilver" />
+  <project path="external/javaparser"        name="platform/external/javaparser" />
+  <project path="external/javapoet"          name="platform/external/javapoet" />
+  <project path="external/auto"              name="platform/external/auto" />
+  <project path="external/error_prone"       name="platform/external/error_prone" />
+  <project path="external/ply"               name="platform/external/ply" />
+  <project path="external/python/parse_type" name="platform/external/python/parse_type" />
+  <project path="external/python/pyfakefs"   name="platform/external/python/pyfakefs" />
+  <project path="external/rust/crates/serde_json" name="platform/external/rust/crates/serde_json" />
+  <project path="test/vts-testcase/fuzz" name="platform/test/vts-testcase/fuzz" />
+  <project path="cts" name="platform/cts" clone-depth="1" />
+</manifest>
