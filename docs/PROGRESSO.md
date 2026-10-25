@@ -1,6 +1,6 @@
 # Progresso do laboratório JM21
 
-> Atualizado em 2026-10-23, após a sessão 2 (root).
+> Atualizado em 2026-10-25, após a sessão 4 (TWRP próprio + Q20).
 > Este arquivo é o **placar**. O dossiê (`dossie.md`) é o índice; `docs/` tem o
 > detalhe; as issues guardam o que falta.
 
@@ -24,7 +24,7 @@
 | Driver do DAC (`cs43198`) | ✅ | faixa/uso do trim calibrado |
 | FPGA (driver, I²C, MCLK) | 🟨 | **o que o bitstream faz**; `fpga_config` confirmado como cache |
 | HAL (`libfiioaudio`, `libfiioaqm`) | ✅ | MQA completo × core; label `MQA` com `isMQA:false` |
-| Apps (`FiiOMusic`, `Settings`, `Scrcpy`) | ✅ | inventário dos demais apps (issue #7) |
+| Apps (`FiiOMusic`, `Settings`, `Scrcpy`) | ✅ | — (issue #7 fechada, inclui Q20) |
 | Plano de controle (kcontrols/props/sysfs) | ✅ | modos alternativos (issue #8) |
 | `fiioconfig` | 🟨 | semântica do cabeçalho e do journal (`0xcac1`/`0xcac3`) |
 | **Medição elétrica / bancada** | ⬜ | **tudo** — nenhuma medição física ainda |
@@ -56,7 +56,7 @@
 | Q12 | `+1dB_EN` liga em 120? | volume 120 e ler `0x80000` | baixo (cuidado) |
 | Q13 | Quantos degraus a UI expõe? | menu de ganho + `DAC PO Gain` | baixo |
 | Q16 | Trim de calibração: o que muda? | variar trim em `fiioconfig` + regs | médio |
-| Q20 | Apps expõem superfície insegura? | issue #7 | médio |
+| ~~Q20~~ | ~~Apps expõem superfície insegura?~~ | **respondida**: 24 componentes exportados sem permissão, todos de UI/modo; `Tape` é skin (127 MB de imagem); nenhum app toca no DAC. `docs/32` §11 | ✅ |
 | Q24 | FiiO libera fonte GPL? | aguardar ticket; plano B em `17` | externo |
 | Q25 | Modos alternativos expõem mais controles? | issue #8 | baixo |
 | Q26 | DSD nativo: quais registradores? | `read_all_regs` tocando DSD | baixo |
@@ -209,3 +209,44 @@ Ao fim de cada sessão:
 2. Fechar/abrir linhas na tabela §3.
 3. Registrar o experimento novo em §4 com o link do doc.
 4. Commit `progress: <resumo>`.
+
+---
+
+## 8. Sessão 4 (2026-10-25) — TWRP próprio e Q20
+
+### 8.1 O que foi provado
+
+1. **TWRP próprio compila e sobe** (12.1). Causa raiz do "trava na logo":
+   `/system/bin/recovery` não linkava porque `libresetprop.so` nunca entrava no
+   ramdisk (`TW_OVERRIDE_SYSTEM_PROPS` liga `TW_INCLUDE_LIBRESETPROP`).
+   Correção: `recovery: true` no `Android.bp` do `magisk-prebuilt/resetprop`.
+2. **Tela/cores**: `TW_MAX_BRIGHTNESS` 2047→255 e `TW_DEFAULT_BRIGHTNESS`
+   1024→128 (painel aceita 0–255; com o valor antigo ficava em 0 = preto).
+   `TARGET_RECOVERY_PIXEL_FORMAT` `ABGR_8888`→`RGBX_8888` (Hovatek usa
+   `DRM_FORMAT_XBGR8888`; antes vermelho e azul trocavam).
+3. **fstab**: o parser do TWRP trata linha iniciada por `/` como formato TWRP;
+   o nosso estava em formato AOSP → `Unknown File System` em tudo.
+4. **Empacotamento**: ramdisk em **LZ4 legacy** + `mkbootimg` do sistema (o do
+   AOSP injeta 4096 bytes de assinatura AVB zerada).
+5. **Q20 fechada** (`docs/32` §11): 24 componentes exportados sem permissão,
+   nenhum de áudio/hardware; `Tape` é skin de fita (127 MB de imagem).
+
+### 8.2 O que NÃO foi possível
+
+`/data` continua sem montar. Diagnosticado até o fim (`docs/51` §17):
+o TWRP 12.1 conversa com `keystore2`, que no Android 13 fala **KeyMint (AIDL)**
+e depende do modelo de *lazy AIDL service* do `init` do 13. Cinco bloqueios
+intermediários foram resolvidos (VINTF 5.0, `/odm`, libs NDK, keymint como
+root), mas o `init` do 12.1 não faz a ponte.
+
+Rota C (AOSP 14 / `twrp-14`) tentada e **bloqueada no build system**: o manifest
+do TWRP mistura forks de snapshots diferentes do AOSP (`build/make` 14.1 ×
+`build/soong` android-14) e nenhuma das três combinações testadas monta
+(`docs/51` §19).
+
+### 8.3 Artefatos
+
+- `~/jm21-artifacts/twrp-jm21-build-own-funcional.img` (sobe, crypto off)
+- `~/jm21-artifacts/twrp-jm21-crypto-experimental.img` (rota A, trava no splash)
+- `device-tree/fiio/jm21/` no repo = build reproduzível
+- `tools/audit-exported.py` = auditoria Q20
