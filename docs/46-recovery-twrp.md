@@ -237,3 +237,47 @@ fastboot) — motivo a investigar; o stock foi restaurado.
 - Para um recovery utilizável: **TWRP-style** (com adbd e policy próprios) ou
   patch de policy (`allow adbd shell:process setcurrent;`) — `libsepol` já
   instalado no host para isso.
+
+## 15. RECOVERY FUNCIONAL — shell por adb (2026-10-25)
+
+### Achado de bônus: o **stock Android é permissivo**
+`getenforce` = **Permissive** no boot stock; o `dmesg` mostra
+`init: Error: Apex SEPolicy failed signature check`. O **recovery** stock, ao
+contrário, sobe **enforcing** — é por isso que só lá o adbd quebra.
+
+### A causa real do adbd
+`selinux_android_setcon("u:r:shell:s0")` falha. O `sepol_compute_av` mostrou:
+- `adbd → shell:process setcurrent` **negado**;
+- `init → kernel:security setenforce` **negado** → o `write enforce 0` do init
+  era barrado (por isso permissivo nunca funcionava).
+
+### Receita que funciona (auto-contida no ramdisk)
+1. `init.recovery.qcom.rc`: bloco `on early-init` com
+   `write /sys/fs/selinux/enforce 0`.
+2. `/sepolicy` do ramdisk, com `tools/sepolicy-patch.c`:
+   - `allow init kernel security setenforce`
+   - `allow adbd shell process setcurrent` (dispensável com permissivo,
+     mas idempotente).
+3. Repack do cpio (padding relativo a `110 + namesize`) + LZ4 **legacy**
+   (`lz4 -l`).
+4. Imagem **sem kernel** (`mkbootimg --ramdisk ... --header_version 4`),
+   igual ao stock.
+5. `fastboot flash recovery_a` + **`adb reboot recovery`** (o
+   `fastboot reboot recovery` é não confiável neste ABL).
+
+Resultado:
+```
+adb shell → uid=2000(shell) ... context=u:r:shell:s0
+getenforce → Permissive
+```
+
+### Regras aprendidas
+- Recovery **com kernel** quebra o **boot normal** (o ABL espera kernel-less).
+- O `vbmeta` inclui o hash da `recovery`; a imagem kernel-less modificada é
+  **tolerada** no boot normal. Quando for preciso mexer nos descritores, o
+  vbmeta pode ser re-assinado com a **testkey do AOSP** (o aparelho é dev-keys:
+  a chave pública do vbmeta é `2597c218…`).
+- **Nunca** `erase misc` (metadados de slot) — §13.
+
+Ferramenta: `tools/sepolicy-patch.c` (adiciona regra allow a policy binária;
+compila com `libsepol.a`).
