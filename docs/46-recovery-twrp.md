@@ -200,3 +200,40 @@ fastboot reboot
 **Regra:** nunca `erase misc` neste aparelho. Para limpar um comando de BCB,
 zerar **só o campo `command`** (primeiros 32 bytes) — ou usar o "Reboot system
 now" do próprio recovery, que limpa corretamente.
+
+## 14. Sessão 2026-10-25 — lições do adbd e do slot
+
+### O que foi confirmado
+- **`adb reboot recovery` entra** no recovery stock; o **combo Volume− + Power**
+  (segurando bastante) também, com a **UI funcionando**.
+- O **adbd do recovery quebra** em qualquer shell:
+  `selinux_android_setcon("u:r:shell:s0")` falha → `LOG(FATAL)` em
+  `shell_service.cpp:380` (bloco `__ANDROID_RECOVERY__`). O **file sync
+  funciona** (usamos para puxar `/prop.default`, `/sepolicy`,
+  `/system/bin/adbd`, `/sys/fs/selinux/enforce`, `/proc/mounts`).
+- **Permissivo não foi obtido**: o cmdline `androidboot.selinux=permissive` da
+  imagem é **ignorado** pelo ABL (enforce continuou 1) e o
+  `write /sys/fs/selinux/enforce 0` no `init.recovery.qcom.rc` **não tem
+  efeito** (provavelmente negado pela policy). `fastboot oem selinux` →
+  "unknown command".
+- **`fastboot boot` ignora o ramdisk** (confirmado de novo com kernel stock +
+  ramdisk de recovery stock → Android).
+
+### O erro que custou tempo: **slot B**
+`getvar current-slot` = **b** em certo momento: as imagens iam para
+`recovery_a`, mas o boot usava **`recovery_b`** (stock) — por isso o adbd ao
+vivo continuava o original. Regra: **conferir `current-slot` antes e depois de
+cada flash**.
+
+### Formato do cpio (armadilha)
+O padding do newc é relativo a **`110 + namesize`** (não só ao nome). O primeiro
+rebuild gerou 351/472 entradas → recovery com tela preta. O rebuild corrigido
+(473 listagens) é válido, mas a **imagem final não bootou** pelo ABL (voltou ao
+fastboot) — motivo a investigar; o stock foi restaurado.
+
+### Estado final
+- Android no **slot A**; `recovery_a` e `recovery_b` com o **stock**
+  (hash `a4119d50…` nos dois).
+- Para um recovery utilizável: **TWRP-style** (com adbd e policy próprios) ou
+  patch de policy (`allow adbd shell:process setcurrent;`) — `libsepol` já
+  instalado no host para isso.
