@@ -159,3 +159,44 @@ O que não funciona é o **adbd** dele (§10).
 **Consequência:** um recovery próprio tem de ir para a **partição** (`fastboot
 flash recovery_a`) — e o alvo prático é consertar o **adbd do ramdisk**
 (SELinux), não o kernel.
+
+## 12. Tentativa de ramdisk modificado (permissivo) — não resolveu
+
+Patch aplicado em `init.recovery.qcom.rc` (dentro do cpio newc, para preservar
+tudo):
+
+```
+on early-init
+    write /sys/fs/selinux/enforce 0
+```
+
+Imagem = kernel stock + ramdisk patchado (LZ4 legacy), gravada em
+`recovery_a`; `fastboot reboot recovery` **entrou** no recovery, mas:
+
+- **adbd continuou quebrando** (`Could not set SELinux context for subprocess`
+  → SIGABRT) — permissivo não resolve;
+- **tela preta** (só backlight) — a UI do recovery não desenhou.
+
+`[HIP]` O erro de `setcon` é contexto **inexistente/incompatível** (não uma
+negativa que o permissivo libere) — o adbd do `/system` não serve para o
+recovery como está; um recovery próprio (TWRP) traz o **seu** adbd/política.
+
+## 13. INCIDENTE: `fastboot erase misc` quebrou o slot
+
+`[FATO]` O `misc` guarda o **`struct bootloader_message_ab`**: além do comando
+(`command[32]`), ele contém `slot_suffix` e os flags de slot. Apagar a partição
+inteira **zerou os metadados de slot** → o bootloader foi para o **slot B**
+(sem sistema válido) e marcou **`slot-unbootable:a: yes`** → bootloop para o
+recovery.
+
+Recuperação:
+```
+fastboot set_active a     # volta ao slot A e limpa o unbootable
+fastboot reboot
+```
+`[FATO]` Voltou ao Android no slot A, e o `recovery_a` stock foi restaurado
+(hash conferido).
+
+**Regra:** nunca `erase misc` neste aparelho. Para limpar um comando de BCB,
+zerar **só o campo `command`** (primeiros 32 bytes) — ou usar o "Reboot system
+now" do próprio recovery, que limpa corretamente.
