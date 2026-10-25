@@ -56,3 +56,40 @@ O port Android do Rockbox usa `AudioTrack` → HAL → nosso caminho de áudio. 
   `fastboot boot`** (RAM), sem gravar.
 - Sem o ADSP/touch, o Linux mínimo sobe "mudo e cego" — é o primeiro marco a
   validar (console por USB/serial, depois painel).
+
+---
+
+## 7. Inventário verificado no dump (`fw-1.1.1`) — 2026-10-25
+
+Tudo que a §3 listava como "falta" foi conferido nas partições originais. **Nada
+precisa ser compilado**: as peças existem no firmware, o trabalho da opção B é
+de userspace (initramfs + ordem de carga + ALSA + UI).
+
+| Peça | Onde está | Evidência |
+|---|---|---|
+| Techpack de áudio | `/vendor_dlkm/lib/modules/` | `machine_dlkm.ko`, `bolero_cdc_dlkm.ko`, `wcd937x_dlkm.ko`, `wcd_core_dlkm.ko`, `swr_ctrl_dlkm.ko`, `swr_dlkm.ko`, `spf_core_dlkm.ko`, `q6_dlkm.ko`, `q6_pdr_dlkm.ko`, `q6_notifier_dlkm.ko`, `audio_pkt_dlkm.ko`, `audio_prm_dlkm.ko`, `adsp_loader_dlkm.ko` |
+| Carregador do ADSP | idem | `qcom_q6v5_pas.ko`, `qcom_q6v5.ko` |
+| Firmware do ADSP | `/vendor/firmware/` | `adsp.b00`…`adsp.b04` (formato `.b*` segmentado, carregado pelo `qcom_q6v5_pas`) |
+| Nó do sound card no DTB | `prebuilt/dtb` (de `dtbo.img`) | `qcom,bengal-asoc-snd`, `bengal_snd`, `/soc/spf_core_platform/qcom,msm-audio-ion` |
+| Rotas do codec | `/vendor/etc/` | `mixer_paths_bengal_idp.xml` (a placa é IDP), `mixer_paths_bengal_qrd.xml`, `mixer_paths_scubaidp.xml`, `mixer_paths_scubaqrd.xml` |
+| Política de áudio | `/vendor/etc/audio/` | `audio_policy_configuration.xml` |
+| Touch | `/vendor_dlkm/lib/modules/` | `ts_core.ko`, `goodix_gt9xx_ts.ko` |
+| Stack FiiO | já provado no Plano B (`docs/45`) | `cs43198`, `dac_core_module`, `anolog_board_jm21`, `gw_fpga`, `fpga_audio_interface`, `fiio_config` |
+
+### 7.1 Consequência para o plano
+
+A ordem de carga deixa de ser incógnita: `adsp_loader_dlkm` → `qcom_q6v5_pas`
+(+ `adsp.b*`) → techpack (`bolero`/`wcd*`/`swr*`/`spf_core`/`machine`) → a placa
+`bengal_snd` aparece → stack FiiO (`cs43198`/`dac_core`/`anolog_board`) → ALSA
+`hw:0`.
+
+O primeiro marco testável continua sendo o mesmo e é barato: **boot por
+`fastboot boot` com initramfs próprio, console por USB, e ver a placa de som
+nascer no `dmesg`** — sem gravar nada, sem tela ainda.
+
+### 7.2 Opção A (RaaA), situação do host
+
+Não há Android SDK nem NDK na máquina (`~/Android/Sdk` inexistente, nenhum
+`ndk-build`), e o Rockbox não está clonado. Para a opção A seria preciso baixar
+SDK + NDK e compilar o port Android do Rockbox — é o único caminho que depende
+de download novo.
