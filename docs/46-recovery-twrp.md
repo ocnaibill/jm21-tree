@@ -134,3 +134,28 @@ funciona (protocolo do host, não passa pelo shell) e devolve ao Android.
 **adbd/UI utilizável** — o recovery stock é mínimo (ramdisk sem kernel, sepolicy
 incompleta). É exatamente o que um recovery próprio/TWRP resolve — e não há mais
 mistério sobre "não entrar": ele entra.
+
+## 11. Teste de controle (2026-10-25) — confirma o ramdisk ignorado
+
+Receita usada:
+```bash
+unpack_bootimg --boot_img dumps/fw-1.1.1/boot.img     --out /tmp/boot_stock   # kernel 48M, ramdisk 0
+unpack_bootimg --boot_img dumps/fw-1.1.1/recovery.img --out /tmp/rec_stock    # kernel 0,  ramdisk 14M
+mkbootimg --kernel /tmp/boot_stock/kernel --ramdisk /tmp/rec_stock/ramdisk \
+  --header_version 4 --os_version 13.0.0 --os_patch_level 2023-02 \
+  --pagesize 4096 --output /tmp/rec_stock.img
+fastboot boot /tmp/rec_stock.img
+```
+
+`[FATO]` Kernel **stock** + ramdisk de **recovery stock** → o aparelho voltou ao
+**Android**. Ou seja: **não é o nosso kernel nem o nosso empacotamento** — o
+bootloader do JM21, no `fastboot boot`, usa o ramdisk do `init_boot` e ignora o
+do `boot.img`. Bate com o §8.
+
+`[FATO]` O recovery stock **sobe pela partição** (combo **Volume− + Power**,
+segurando bastante): menu "Android Recovery / qti/bengal_515 / 13/… / user/dev-keys".
+O que não funciona é o **adbd** dele (§10).
+
+**Consequência:** um recovery próprio tem de ir para a **partição** (`fastboot
+flash recovery_a`) — e o alvo prático é consertar o **adbd do ramdisk**
+(SELinux), não o kernel.
