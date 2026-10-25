@@ -380,3 +380,22 @@ Consequências:
 `[HIP]` É uma omissão do DT (ou desligamento proposital do pause térmico de
 áudio). Os limiares de carga seguem ativos no `sgm4154x` (JEITA) e no próprio
 FCM (tabela `fcm-battery-temp-*` no DT, em décimos de °C: 20/45/47/60).
+
+### CORREÇÃO: o `-61` é do **nosso kernel**, não do DT
+
+Medição comparada (mesmo DT, kernels diferentes):
+
+| | Kernel stock | Kernel nosso (Plano B) |
+|---|---|---|
+| `battery/temp` | **370** (37,0 °C) | **-61** |
+| zonas térmicas | inclui **`sgm41513-charger`** (37 °C) | **sem** essa zona |
+
+`[FATO]` No kernel stock a temperatura é **correta**. No nosso kernel, a zona
+térmica do carregador (`sgm41513-charger`) **não foi registrada**, a leitura do
+`fcm_get_battery_temperature` falha e o `get_property` devolve o sentinela
+**-61**.
+
+`[CORREÇÃO]` A hipótese anterior ("`measure_battery_temp` ausente no DT") estava
+**errada**: o DT é o mesmo e no stock funciona. Falta descobrir por que o módulo
+`sgm4154x_charger` não registra a zona térmica no nosso kernel (provável
+dependência de `thermal_of`/DTB ou config de build). `[?]`
