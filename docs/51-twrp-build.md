@@ -84,3 +84,31 @@ ausentes (ex.: `EddParser.py`/`hostConfig.py` no `frameworks/av/.../tools`,
   **remover os projetos de teste não usados** (`<remove-project>` no local
   manifest: `test/vts`, `cts` que adicionamos) + **stubs** só para os módulos
   referenciados por projetos **necessários** (o `frameworks/base`).
+
+## Onde a cauda realmente está (raiz do problema)
+
+O manifest **mínimo** do TWRP (`twrp-12.1`) remove 828 projetos
+(`remove-minimal.xml`) e troca alguns pelos forks do LineageOS/TeamWin — mas os
+projetos **mantidos** do AOSP 12.1 referenciam módulos que ficaram de fora em
+**testes, docs e ferramentas** (`test/vts`, `cts`, `dalvik/dx` docs,
+`frameworks/av` audio-policy tools, crates Rust de teste, etc.). Cada correção
+(stub ou projeto re-sincronizado) revela mais 1–2. Isso é **inconsistência do
+tree mínimo do TWRP nesta tag**, não do nosso device tree.
+
+### Números desta sessão
+- Projetos re-sincronizados via `local_manifests/pdk-tools.xml`: ~25
+  (junit/kotlinc/auto/error_prone/guava/mockito/testng/hamcrest/doclava/
+  jsilver/javaparser/javapoet/ply/python/serde/itoa/ryu/serde_derive/
+  antlr/tagsoup/escapevelocity/prebuilts/tools/jsr305/javassist/
+  modules-utils…).
+- Stubs **documentados** (`device/fiio/jm21/Android.bp`): 20 (só para o parse;
+  nada deles vai para a imagem).
+
+### Duas rotas para terminar o nosso build
+1. **Continuar a cauda** (stubs/projetos até o parse fechar). Mecânico, mas não
+   se sabe quantos faltam (a cada rodada aparecem 1–3).
+2. **Árvore AOSP 12.1 completa** + o fork do `bootable/recovery` do TWRP +
+   nosso device tree. É o que os builds "de verdade" fazem: o AOSP completo é
+   **consistente** por construção (nada de referência a módulo podado). Custa
+   ~150–200 GB e horas de sync, mas elimina a cauda de uma vez. O disco tem
+   440 GB livres.

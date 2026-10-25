@@ -85,3 +85,48 @@ java_library_host {
 java_library_host {
     name: "guice",
 }
+
+// cts (removida do tree): default usado pelos testes do frameworks/base.
+java_defaults {
+    name: "cts_support_defaults",
+}
+
+// test/vts-testcase/fuzz (removido): default dos fuzzers HIDL/QTI.
+cc_defaults {
+    name: "vts_proto_fuzzer_default",
+}
+
+// Modulo de teste ausente do tree (upstream): referenciado por java_test_host.
+java_defaults {
+    name: "cts_defaults",
+}
+
+// Modulo de teste ausente do tree (upstream): referenciado por android_test.
+java_defaults {
+    name: "mts-target-sdk-version-current",
+}
+
+// Modulo de teste ausente do tree (upstream): referenciado por java_test_host.
+java_library_host {
+    name: "cts-tradefed",
+}
+
+// Modulo de teste ausente do tree (upstream): referenciado por java_test_host.
+java_library_host {
+    name: "cts-host-utils",
+}
+
+// Modulo de teste ausente do tree (upstream): referenciado por android_robolectric_runtimes.
+java_library_host {
+    name: "robolectric-host-android_all",
+}
+
+// Ferramenta de build ausente do tree (stub so para o parse).
+java_library_host {
+    name: "apache-bcel",
+}
+
+// Ferramenta de build ausente do tree (stub so para o parse).
+java_library_host {
+    name: "dexlib2-no-guava-no-cli",
+}

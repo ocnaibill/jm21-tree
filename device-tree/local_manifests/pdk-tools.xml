@@ -3,6 +3,7 @@
      mantidos referenciam no parse do soong (testes/ferramentas; nao vao para
      a imagem de recovery). -->
 <manifest>
+  <remove-project name="platform/test/vts" />
   <project path="prebuilts/tools"            name="platform/prebuilts/tools" />
   <project path="external/junit"             name="platform/external/junit" />
   <project path="external/junit-params"      name="platform/external/junit-params" />
@@ -21,6 +22,14 @@
   <project path="external/python/parse_type" name="platform/external/python/parse_type" />
   <project path="external/python/pyfakefs"   name="platform/external/python/pyfakefs" />
   <project path="external/rust/crates/serde_json" name="platform/external/rust/crates/serde_json" />
-  <project path="test/vts-testcase/fuzz" name="platform/test/vts-testcase/fuzz" />
-  <project path="cts" name="platform/cts" clone-depth="1" />
+  <project path="external/jsr305" name="platform/external/jsr305" />
+  <project path="external/javassist" name="platform/external/javassist" />
+  <project path="frameworks/libs/modules-utils" name="platform/frameworks/libs/modules-utils" />
+  <project path="external/rust/crates/itoa" name="platform/external/rust/crates/itoa" />
+  <project path="external/rust/crates/ryu" name="platform/external/rust/crates/ryu" />
+  <project path="external/rust/crates/serde" name="platform/external/rust/crates/serde" />
+  <project path="external/rust/crates/serde_derive" name="platform/external/rust/crates/serde_derive" />
+  <project path="external/antlr" name="platform/external/antlr" />
+  <project path="external/tagsoup" name="platform/external/tagsoup" />
+  <project path="external/escapevelocity" name="platform/external/escapevelocity" />
 </manifest>
