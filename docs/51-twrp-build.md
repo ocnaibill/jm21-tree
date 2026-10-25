@@ -328,3 +328,59 @@ Custo: ~130 GB de sync (há 308 GB livres) + refazer o device tree.
 Artefatos desta rodada: imagem experimental com crypto em
 `/tmp/recovery-jm21-twrp-crypto-exp.img`; build funcional (crypto off) em
 `/tmp/recovery-jm21-twrp-nocrypt-ok.img`.
+
+---
+
+# 18. Rota C — AOSP 13 + camada TWRP (estaca 0)
+
+## 18.1 Por que 13 e o que o TWRP tem de fato
+
+O aparelho é Android 13; o stack que falta:
+- `keystore2` fala **KeyMint (AIDL)** e usa o modelo de **lazy AIDL service**
+  do `init` (`ctl.interface_start`), que o `init` do 12.1 não tem;
+- o `vold` do 13 (repo `android_system_vold`, branch `android-13`) tem
+  `Keystore.cpp`/`Keystore.h` com KeyMint.
+
+O que **não** existe: nenhum branch do TWRP está completo para 13 ou 14.
+Matriz verificada com `git ls-remote`:
+
+| repo | android-13 | android-14 |
+|---|---|---|
+| android_bootable_recovery | sim | sim |
+| android_build | **sim** | não |
+| android_build_soong | sim | sim |
+| android_system_core | sim | sim |
+| android_system_vold | sim | sim |
+| android_vendor_twrp | sim | sim |
+| android_external_icu / sqlite | sim | sim |
+| android_packages_modules_adb | sim | não |
+| android_device_qcom_twrp-common | **não** | sim |
+| external_magisk-prebuilt | não | não (só 12.1/master) |
+| android_external_libxml2 / system_libhidl / libhwbinder / update_engine / extras / external_zip | não | parcial |
+
+Conclusão: **AOSP 13 completo** (`android-13.0.0_r84`) e sobrescrever só o que
+tem branch 13. O resto fica AOSP (consistente por construção).
+
+## 18.2 Árvore criada
+
+`~/twrp13` — `repo init -u platform/manifest -b android-13.0.0_r84 --depth=1`
++ `.repo/local_manifests/twrp13.xml`:
+
+- TeamWin **android-13**: bootable/recovery, build/make, build/soong,
+  external/icu, external/sqlite, packages/modules/adb, system/core,
+  system/vold, vendor/twrp
+- TeamWin **android-14**: device/qcom/twrp-common (única versão existente)
+- TeamWin **android-12.1**: external/magisk-prebuilt (única com libresetprop)
+- LineageOS **lineage-20.0** (= Android 13): external/bash, external/libncurses,
+  external/nano, prebuilts/tools-lineage, hardware/interfaces
+- sem `external/zip` (não existe em 13/14; entra depois se o build pedir)
+
+## 18.3 Artefatos preservados (fora do /tmp)
+
+`~/jm21-artifacts/`:
+- `twrp-jm21-build-own-funcional.img` — build nossa que sobe (crypto off),
+  cores/brilho/fstab certos.
+- `twrp-jm21-crypto-experimental.img` — a da rota A (trava no splash, mas com
+  keymint + keystore2 subindo; útil para continuar o diagnóstico).
+
+(`*.img` está no `.gitignore`, por isso ficam fora do repo.)
