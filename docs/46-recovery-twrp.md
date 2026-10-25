@@ -111,3 +111,26 @@ Call trace:
 `[FATO]` O aviso vem do driver vendor `qseecom_dlkm`, no caminho de **suspend**,
 e não impede o suspend/resume. É independente do áudio e do Plano B; fica
 registrado como ruído esperado do stack Qualcomm com o nosso kernel.
+
+## 10. Teste `adb reboot recovery` (2026-10-24) — o recovery **entra**
+
+```
+adb reboot recovery
+adb devices  →  39dc45d6  recovery
+```
+
+`[FATO]` O aparelho **entra no recovery stock** e ali permanece (estável, sem
+reiniciar). O problema é o **adbd do recovery**:
+
+```
+adbd F shell_service.cpp:380] Could not set SELinux context for subprocess
+libc: Fatal signal 6 (SIGABRT) ... pid 436 (adbd)
+```
+
+Todo comando de shell derruba o adbd (novo pid, mesmo erro). `adb reboot`
+funciona (protocolo do host, não passa pelo shell) e devolve ao Android.
+
+**Conclusão:** o caminho de **entrada** no recovery funciona; o que falta é um
+**adbd/UI utilizável** — o recovery stock é mínimo (ramdisk sem kernel, sepolicy
+incompleta). É exatamente o que um recovery próprio/TWRP resolve — e não há mais
+mistério sobre "não entrar": ele entra.
