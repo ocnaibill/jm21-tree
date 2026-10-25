@@ -384,3 +384,57 @@ tem branch 13. O resto fica AOSP (consistente por construção).
   keymint + keystore2 subindo; útil para continuar o diagnóstico).
 
 (`*.img` está no `.gitignore`, por isso ficam fora do repo.)
+
+---
+
+# 19. Rota C em andamento — AOSP 14 (`twrp-14`)
+
+## 19.1 Base escolhida
+
+O TWRP **nao tem** manifest para Android 13 (`twrp-11`, `twrp-12.1`,
+`twrp-14`, `twrp-14.1`). O 13 foi abandonado e fomos para o manifest oficial
+`minimal-manifest-twrp/platform_manifest_twrp_aosp`, branch **`twrp-14`**
+(AOSP `android-14.0.0_r17` + forks TeamWin).
+
+## 19.2 Problema estrutural do manifest
+
+O manifest mistura forks de snapshots diferentes: `build/make` e
+`android-14.1` (epoca QPR3) enquanto o resto do AOSP fica em `r17` (14 inicial).
+Isso gera uma cascata de incompatibilidades. Resolvido fixando **todo o lado
+AOSP em `r50`** (`.repo/local_manifests/` + `default revision` alterado em
+`.repo/manifests/default.xml`).
+
+Overrides criados em `~/twrp14/.repo/local_manifests/`:
+
+| arquivo | funcao |
+|---|---|
+| `build-bazel.xml` | `build/bazel` em r50 (r17 nao tem `utils/schema_validation.scl`) |
+| `build-release.xml` | adiciona `platform/build/release` (release configs) |
+| `extra-projects.xml` | `toolchain/pgo-profiles` em r50 |
+| `r50-fallbacks.xml` | 264 projetos sem tag r50 (crates de Rust etc.) -> branch `android14-release`, gerado por `converge-sync.py` |
+| `soong-aosp.xml` | `build/soong` do AOSP r50 (o fork do TWRP nao combina com `build/blueprint` r50) |
+
+`~/twrp14/converge-sync.py` roda o sync em laco, coleta os projetos que falham
+por tag inexistente e regenera o fallback — convergiu em 5 iteracoes.
+
+## 19.3 O que ja funciona
+
+- `repo sync` completo (~90 GB)
+- release config `ap1a` reconhecido
+- `build/bazel` e `pgo-profiles` presentes
+- **`soong_ui` compila e executa** (Go 1.21.4 do r50)
+
+## 19.4 Blocker atual
+
+`lunch twrp_jm21-ap1a-eng` falha com "Don't have a product spec". Investigado:
+
+- `out/.module_paths/AndroidProducts.mk.list` **contem**
+  `device/fiio/jm21/AndroidProducts.mk` (o finder acha o arquivo);
+- porem `get_build_var TARGET_PRODUCT`, `COMMON_LUNCH_CHOICES` e
+  `TARGET_DEVICE` saem **todos vazios**, inclusive `TARGET_PRODUCT` (que e
+  entrada) -> o `product_config.mk` nao esta registrando nenhum produto.
+
+Proximo passo: rodar o kati sem suprimir stderr (`get_build_var` puro) e ver o
+erro real; suspeitas: `_read-ap-file`/`node_fns.mk` do `build/make` 14.1
+esperando formato diferente, ou `PRODUCT_MAKEFILES` precisando da forma
+`<produto>:<caminho>`.
