@@ -1,0 +1,13 @@
+# TWRP fstab - JM21 (bengal_515, A/B, super)
+/system_root  /system_root  ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
+/system       /system_root  ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
+/vendor       /vendor       ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
+/odm          /odm          ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
+/product      /product      ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
+/system_ext   /system_ext   ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
+/boot         /boot         emmc  defaults      defaults
+/recovery     /recovery     emmc  defaults      defaults
+/misc         /misc         emmc  defaults      defaults
+/metadata     /metadata     f2fs  noatime,nosuid,nodev,discard  wait,check,formattable,wrappedkey
+/data         /data         ext4  noatime,nosuid,nodev,discard,barrier=1,inlinecrypt  wait,check,encryptable=footer
+/usb-otg      /usb-otg      auto  defaults      voldmanaged=usb:auto

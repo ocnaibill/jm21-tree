@@ -1,0 +1,10 @@
+# JM21: permissivo + modulos de touch (cadeia FiiO -> ts_core -> goodix)
+on early-init
+    write /sys/fs/selinux/enforce 0
+
+on post-fs-data
+    insmod /lib/modules/qcom_ipc_logging.ko
+    insmod /lib/modules/i2c-msm-geni.ko
+    insmod /lib/modules/fiio_primary_modules.ko
+    insmod /lib/modules/ts_core.ko
+    insmod /lib/modules/goodix_gt9xx_ts.ko

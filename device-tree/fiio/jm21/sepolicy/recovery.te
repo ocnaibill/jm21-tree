@@ -1,0 +1,3 @@
+# Permissivo no recovery (TWRP); regras minimas
+permissive recovery;
+permissive adbd;

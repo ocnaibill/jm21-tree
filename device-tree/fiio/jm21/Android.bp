@@ -1,0 +1,222 @@
+// Stubs para o manifest minimo do TWRP: os modulos abaixo sao referenciados
+// pelo tree (VTS fuzzers / Connectivity tests) mas nao existem aqui.
+cc_defaults {
+    name: "vts_proto_fuzzer_default",
+}
+
+java_defaults {
+    name: "libnetworkstackutilsjni_deps",
+}
+
+java_defaults {
+    name: "cts_defaults",
+}
+
+cc_defaults {
+    name: "neuralnetworks_utils_defaults",
+}
+
+java_defaults {
+    name: "cts_support_defaults",
+}
+
+java_defaults {
+    name: "mts-target-sdk-version-current",
+}
+
+java_library_host {
+    name: "compatibility-host-util",
+}
+
+java_library_host {
+    name: "tradefed",
+}
+
+java_library_host {
+    name: "cts-tradefed",
+}
+
+filegroup {
+    name: "droiddoc-templates-sdk",
+    srcs: [],
+}
+
+java_library_host {
+    name: "junit",
+}
+
+java_library_host {
+    name: "junit-host",
+}
+
+java_library_host {
+    name: "doclava",
+}
+
+java_library_host {
+    name: "jsilver",
+}
+
+java_library_host {
+    name: "guava",
+}
+
+java_library_host {
+    name: "jna-prebuilt",
+}
+
+java_library_host {
+    name: "apache-bcel",
+}
+
+java_library_host {
+    name: "compatibility-tradefed",
+}
+
+java_library_host {
+    name: "cts-host-utils",
+}
+
+java_library_host {
+    name: "hamcrest-library",
+}
+
+java_library_host {
+    name: "platform-test-annotations-host",
+}
+
+java_library_host {
+    name: "pyfakefs",
+}
+
+java_library_host {
+    name: "cts-install-lib-host",
+}
+
+java_library_host {
+    name: "kotlin-stdlib",
+}
+
+java_library_host {
+    name: "kotlin-stdlib-jdk7",
+}
+
+java_library_host {
+    name: "kotlin-stdlib-jdk8",
+}
+
+java_library_host {
+    name: "kotlin-test",
+}
+
+java_library_host {
+    name: "net-host-tests-utils",
+}
+
+java_library_host {
+    name: "py-parse_type",
+}
+
+java_library_host {
+    name: "py-ply",
+}
+
+java_library_host {
+    name: "dexlib2-no-guava-no-cli",
+}
+
+java_library_host {
+    name: "kotlin-reflect",
+}
+
+java_library_host {
+    name: "metalava-gradle-plugin-deps",
+}
+
+java_library_host {
+    name: "metalava-tools-common-m2-deps",
+}
+
+java_library_host {
+    name: "modules-utils-build-testing",
+}
+
+java_library_host {
+    name: "testng",
+}
+
+java_library_host {
+    name: "truth-prebuilt",
+}
+
+java_library_host {
+    name: "vts_vndk_utils",
+}
+
+java_library_host {
+    name: "org-netbeans-api-visual",
+}
+
+java_library_host {
+    name: "org-openide-util",
+}
+
+java_library_host {
+    name: "//external/auto:auto_service_annotations",
+}
+
+java_library_host {
+    name: "//external/auto:auto_service_plugin",
+}
+
+java_library_host {
+    name: "//external/error_prone:error_prone_core",
+}
+
+java_library_host {
+    name: "javaparser",
+}
+
+java_library_host {
+    name: "javaparser-symbol-solver",
+}
+
+java_library_host {
+    name: "javapoet",
+}
+
+java_library_host {
+    name: "javapoet-prebuilt-jar",
+}
+
+java_library_host {
+    name: "gson-prebuilt-jar",
+}
+
+java_library_host {
+    name: "guavalib",
+}
+
+java_library_host {
+    name: "jopt-simple-4.9",
+}
+
+java_library_host {
+    name: "auto_common",
+}
+
+java_library_host {
+    name: "auto_value_annotations",
+}
+
+java_library_host {
+    name: "jetbrains-annotations",
+}
+
+java_library_host {
+    name: "kotlinx-metadata-jvm",
+}
+
+java_library_host {
+    name: "symbol-processing-api",
+}
