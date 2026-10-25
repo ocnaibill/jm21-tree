@@ -233,3 +233,52 @@ continua esperando.
    usar o caminho padrão do `device/qcom/twrp-common` (que espera
    `ro.crypto.state` + `sys.listeners.registered` — este último nunca é setado
    no nosso init).
+
+## 17.5 Avanço da sessão seguinte (o que já funciona)
+
+Aplicadas e verificadas no aparelho:
+
+1. **`/vendor` montado antes do decrypt** — `partitionmanager.cpp` (`Setup_Data_Partition`)
+   agora monta `/vendor` antes de chamar `Decrypt_Data()`. Sem isso o
+   `/vendor/firmware` (86 arquivos, `a610_zap.*` etc.) não existe e o TEE não carrega.
+2. **SELinux permissivo** — o `init.recovery.qcom.rc` que realmente vai para o
+   ramdisk NÃO tinha `write /sys/fs/selinux/enforce 0`. Sem isso o `qseecomd`
+   saía com status 255 em 10 ms. Com o `enforce 0`: `init.svc.qseecomd = running`.
+3. **Keymaster 4.0 QTI** — `init.svc.keymaster-4-0-qti = running` e o processo
+   fica em `binder_wait_for_work` (registrado, ocioso), não mais em `nanosleep`.
+
+## 17.6 O bloqueio atual (diagnóstico fechado)
+
+O `recovery` continua parado em `futex_wait` logo depois de
+`Using additional fstab for decryption`. O `dmesg` mostra a causa:
+
+```
+init: Control message: Could not find
+      'aidl/android.system.keystore2.IKeystoreService/default' for ctl.interface_start
+init: starting service 'keystore2'...
+init: Service 'keystore2' (pid 573) received signal 11
+```
+
+O TWRP espera o **`keystore2`**, e o `keystore2` está em crash-loop
+(SIGSEGV sob o init, SIGABRT quando rodado à mão; todas as libs estão
+presentes, então é abort de runtime).
+
+Ou seja: no Android 13 o `keystore2` fala **KeyMint (AIDL)** —
+`android.hardware.security.keymint.IKeyMintDevice/default` — e não o
+keymaster 4.x HIDL. O TWRP 3.7.1 monta o stack de keymaster HIDL, não de
+KeyMint. Por isso o `keystore2` não sobe e o decrypt fica esperando para sempre.
+
+### Caminhos possíveis para o `/data`
+1. Portar o suporte a **KeyMint AIDL** para o `bootable/recovery` (o ramo
+   TWRP 12.1 não tem; versões mais novas do TWRP têm).
+2. Tentar o `keystore2` com o HAL `android.hardware.security.keymint-service-qti`
+   do `/vendor` e ver se o abort some (falta saber por que ele aborta — não é
+   linker).
+3. Usar a rota antiga: `vold` do Android 12 (`TW_INCLUDE_FBE`) em vez do
+   `MetadataCrypt` do 13.
+
+### Estado entregue
+- `recovery_a` com a build **funcional** (crypto desligado): GUI, cores,
+  brilho, fstab e adb root ok. `/data` não monta (igual ao Hovatek).
+- Todo o material de keymaster (binários + 9 libs + serviços + patch do
+  vendor mount) está no device tree, pronto para retomar.
