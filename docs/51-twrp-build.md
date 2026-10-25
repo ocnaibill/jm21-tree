@@ -282,3 +282,49 @@ KeyMint. Por isso o `keystore2` não sobe e o decrypt fica esperando para sempre
   brilho, fstab e adb root ok. `/data` não monta (igual ao Hovatek).
 - Todo o material de keymaster (binários + 9 libs + serviços + patch do
   vendor mount) está no device tree, pronto para retomar.
+
+## 17.7 Segunda rodada: até onde a rota A chegou
+
+Com `logd`/`logcat` ligados (`TWRP_INCLUDE_LOGCAT`, `TARGET_USES_LOGD`) deu para
+ver a cadeia inteira. Ordem dos bloqueios encontrados e o que foi corrigido:
+
+| # | Erro | Correção |
+|---|---|---|
+| 1 | `keystore2` SIGSEGV: `Unrecognized manifest.version 5.0 (libvintf@4.0)` | `system/libvintf/include/vintf/constants.h`: `kMetaVersion{5,0}` |
+| 2 | `VINTF parse error: /odm/etc/vintf/manifest.xml: Too many symbolic links` | montar `/odm` antes do decrypt (no ramdisk `/odm/etc -> /vendor/odm/etc` e no vendor `/vendor/odm -> /odm`) |
+| 3 | `keymint` não achava `android.hardware.security.keymint-V2-ndk.so` | libs NDK do Android 13 extraídas do `system.img` para o ramdisk |
+| 4 | `libkm_compat.so` pedia `android.system.keystore2-V2-ndk.so` / `android.security.compat-ndk.so` | idem |
+| 5 | `keymint-qti` SIGABRT sob o init como `user system` | rodar como `user root` |
+
+Estado depois disso:
+- `getDeviceHalManifest: Successfully processed VINTF information` ✔
+- `/vendor` e `/odm` montados ✔
+- `keymint-qti` roda e registra os 4 serviços (`IKeyMintDevice`,
+  `ISecureClock`, `ISharedSecret`, `IRemotelyProvisionedComponent`) ✔
+- `keystore2` sobe e lê o VINTF ✔
+
+**Bloqueio final:** o `keystore2` (pid vivo, em `nanosleep`) fica em
+`Waiting for service 'android.hardware.security.keymint.IKeyMintDevice/default'`
+e o `servicemanager` responde
+`Could not find 'aidl/android.system.keystore2.IKeystoreService/default' for
+ctl.interface_start`. Ou seja: o `init` do 12.1 não faz a ponte de
+lazy-AIDL-service que o Android 13 usa (o `keystore2.rc` também não declara
+`interface aidl ...`).
+
+### Conclusão honesta sobre A vs C
+
+A rota A (graft do stack 13 no ramdisk 12.1) andou muito — VINTF, vendor, odm,
+KeyMint — mas cada camada puxa a próxima, e a última é o próprio modelo de
+serviços AIDL do `init`. **Não é mais um flag, é o `init`.**
+
+Rota C (AOSP 13 + TWRP `android-13`) tem tudo isso pronto:
+- branches existentes: `android-13`, `android-14`, `android-14.1`;
+- o `bootable/recovery` do `android-13` já relinca `libkeymint*`,
+  `keymint-V1-ndk`, `libkm_compat`, `libkeymint_support`;
+- o `vold` do 13 (repo `android_system_vold`, branch `android-13`) tem
+  `Keystore.cpp`/`Keystore.h` com suporte a KeyMint.
+Custo: ~130 GB de sync (há 308 GB livres) + refazer o device tree.
+
+Artefatos desta rodada: imagem experimental com crypto em
+`/tmp/recovery-jm21-twrp-crypto-exp.img`; build funcional (crypto off) em
+`/tmp/recovery-jm21-twrp-nocrypt-ok.img`.

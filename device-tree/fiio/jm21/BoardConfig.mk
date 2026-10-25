@@ -68,8 +68,10 @@ TW_OVERRIDE_SYSTEM_PROPS := "ro.build.fingerprint"
 # Perfis
 # Crypto desligado: sem keymaster funcional o TWRP trava no boot.
 # inicializacao esperando a HAL. Ver docs/51 para o plano de reativacao.
-TW_INCLUDE_CRYPTO :=
-TW_INCLUDE_CRYPTO_FBE :=
+TWRP_INCLUDE_LOGCAT := true
+TARGET_USES_LOGD := true
+TW_INCLUDE_CRYPTO := true
+TW_INCLUDE_CRYPTO_FBE := true
 
 # Sepolicy (permissive no recovery)
 

@@ -46,6 +46,7 @@ on fs
 # libdrmfs...) estao copiadas no proprio ramdisk em /system/lib64, porque o
 # /vendor ainda nao esta montado quando o TWRP tenta decifrar o /data.
 on early-init
+    write /sys/fs/selinux/enforce 0
     setprop keymaster_ver 4.0
 
 on property:hwservicemanager.ready=true
@@ -68,4 +69,14 @@ service keymaster-4-0-qti /system/bin/android.hardware.keymaster@4.0-service-qti
     class core
     disabled
     oneshot
+    seclabel u:r:recovery:s0
+
+# O manifest do /vendor do JM21 (Android 13) declara KeyMint, nao keymaster.
+# Este e iniciado pelo TWRP logo depois de montar o /vendor (ctl.start).
+service keymint-qti /vendor/bin/hw/android.hardware.security.keymint-service-qti
+    class core
+    user system
+    group system drmrpc
+    setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
+    disabled
     seclabel u:r:recovery:s0
