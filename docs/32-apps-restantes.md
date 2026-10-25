@@ -190,3 +190,46 @@ pelo framework.
    JM21 não tem — o mesmo padrão dos controles fantasma da HAL.
 5. A URL de OTA é **derivada do modelo** (`ro.product.model`), e o caminho do
    pacote é `JM21-updateCN.zip`, não `update-<ver>.zip`.
+
+---
+
+## 11. Q20 — superfície exportada (fechamento da issue #7)
+
+Método: para cada um dos 13 pacotes FiiO, `dumpsys package <pkg>` e leitura das
+*Resolver Tables* (Activity/Receiver/Service/Provider). Componente que aparece
+na resolver table é **exportado**; se a entrada traz `permission <perm>`, está
+protegido. Script reproduzível: `tools/audit-exported.py`.
+
+Resultado: **24 componentes exportados sem permissão** (fora de bibliotecas de
+terceiros como androidx/Google).
+
+### 11.1 Os que importam (código FiiO, não infraestrutura)
+
+| Pacote (uid) | Componente | Gatilho | Risco |
+|---|---|---|---|
+| `com.fiio.tape` (**system**) | `.TapeShellModeReceiver` | broadcast `fiio.intent.action.TAPE_SHELL_MODE` | **qualquer app** pode enviar e alternar o modo/UI de fita |
+| `com.fiio.android` | `.ModeSelection` (activity) | `com.fiio.android.ModeSelection` | qualquer app abre o seletor de modo do aparelho |
+| `com.fiio.android` | `.ModeChooseReceiver` | `MEDIA_MOUNTED` (file) | broadcast de sistema, baixo |
+| `com.fiio.entersleep` (**system**) | `.EnterSleep` (activity) | `MAIN`/`LAUNCHER` | qualquer app força a tela de dormir |
+| `com.android.fiioupdate` (**system**) | `.online.receiver.SystemUpdateReceiver` | `BOOT_COMPLETED`, `CONNECTIVITY_CHANGE` | broadcasts protegidos, baixo |
+| `com.fiio.devicevendor` (**system**) | `.VendorReceiver` | `BOOT_COMPLETED`, `MEDIA_MOUNTED` | broadcasts protegidos, baixo |
+| `com.fiio.music` | `.activity.SplashActivity` | `VIEW` + scheme **`um.5a77bbe6f43e487c33000172`** (BROWSABLE) | deep link público — falta ver o que faz com a URI |
+
+As activities `MAIN/LAUNCHER` dos apps (About, Market, EQ, Tape, EnterSleep)
+aparecem como exportadas por definição — é o ícone do app, não achado.
+
+### 11.2 O que o `Tape` realmente é
+
+`FiiOTape.apk` = **127 MB**, sendo a esmagadora maioria assets de imagem
+(`img_*_tape_*_bg_m21/m33`…). Não há `sh`, `setprop`, `reboot` nem `am start`
+no dex. O `TapeShellModeReceiver` alterna o *skin* de fita cassete. Ou seja: o
+risco do receiver exportado é **cosmético**, não privilegiado — apesar de o app
+rodar como `android.uid.system`.
+
+### 11.3 Conclusão
+
+O que existe de superfície aberta é **de UI/modo**, não de áudio nem de acesso a
+hardware. Confirma a conclusão anterior (§10): nenhum app escreve no DAC. Os
+únicos pontos que mereceriam patch seriam `TapeShellModeReceiver` e
+`ModeSelection` (declarar permissão de assinatura), e o deep link `um.` do
+Music precisa de uma olhada no que faz com a URI.
