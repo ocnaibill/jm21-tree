@@ -50,7 +50,7 @@ TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
 
 # Recovery / TWRP
-TARGET_RECOVERY_PIXEL_FORMAT := "ABGR_8888"
+TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 TW_THEME := portrait_hdpi
 TW_DEVICE_VERSION := jm21-billzinho
 TW_DEFAULT_LANGUAGE := pt_BR
@@ -61,13 +61,30 @@ TW_USE_TOOLBOX := true
 TW_NO_USB_STORAGE := true
 TW_EXCLUDE_TWRPAPP := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
-TW_MAX_BRIGHTNESS := 2047
-TW_DEFAULT_BRIGHTNESS := 1024
+TW_MAX_BRIGHTNESS := 255
+TW_DEFAULT_BRIGHTNESS := 128
 TW_OVERRIDE_SYSTEM_PROPS := "ro.build.fingerprint"
 
 # Perfis
-TW_INCLUDE_CRYPTO := false
-TW_INCLUDE_FBE := false
+# Crypto desligado: sem keymaster funcional o TWRP trava no boot.
+# inicializacao esperando a HAL. Ver docs/51 para o plano de reativacao.
+TW_INCLUDE_CRYPTO :=
+TW_INCLUDE_CRYPTO_FBE :=
 
 # Sepolicy (permissive no recovery)
-BOARD_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy
+
+# Fork do TWRP removeu libminadbd/plat_hardware_contexts (required do twrp_ramdisk).
+BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
+
+AB_OTA_PARTITIONS += \
+    boot \
+    dtbo \
+    init_boot \
+    vendor_boot \
+    system \
+    system_ext \
+    product \
+    vendor \
+    odm \
+    vendor_dlkm \
+    system_dlkm

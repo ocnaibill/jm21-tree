@@ -1,13 +1,16 @@
 # TWRP fstab - JM21 (bengal_515, A/B, super)
-/system_root  /system_root  ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
-/system       /system_root  ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
-/vendor       /vendor       ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
-/odm          /odm          ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
-/product      /product      ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
-/system_ext   /system_ext   ext4  ro,barrier=1  wait,slotselect,logical,first_stage_mount
-/boot         /boot         emmc  defaults      defaults
-/recovery     /recovery     emmc  defaults      defaults
-/misc         /misc         emmc  defaults      defaults
-/metadata     /metadata     f2fs  noatime,nosuid,nodev,discard  wait,check,formattable,wrappedkey
-/data         /data         ext4  noatime,nosuid,nodev,discard,barrier=1,inlinecrypt  wait,check,encryptable=footer
-/usb-otg      /usb-otg      auto  defaults      voldmanaged=usb:auto
+# Formato TWRP: a primeira coluna NAO pode comecar com '/' (senao o parser
+# interpreta como "mountpoint fstype device" e quebra). Use o nome da particao
+# ou um caminho /dev/block/...
+
+system      /system       ext4  ro,barrier=1,discard  wait,slotselect,avb=vbmeta_system,logical,first_stage_mount
+system_ext  /system_ext   ext4  ro,barrier=1,discard  wait,slotselect,avb=vbmeta_system,logical,first_stage_mount
+vendor      /vendor       ext4  ro,barrier=1,discard  wait,slotselect,avb,logical,first_stage_mount
+odm         /odm          ext4  ro,barrier=1,discard  wait,slotselect,avb,logical,first_stage_mount
+product     /product      ext4  ro,barrier=1,discard  wait,slotselect,avb=vbmeta_system,logical,first_stage_mount
+
+/dev/block/bootdevice/by-name/userdata  /data      ext4  noatime,nosuid,nodev,discard,barrier=1,inlinecrypt  wait,check,encryptable=footer
+/dev/block/bootdevice/by-name/metadata  /metadata  f2fs  noatime,nosuid,nodev,discard                    wait,check,formattable,wrappedkey
+/dev/block/bootdevice/by-name/boot      /boot      emmc  defaults                                       defaults
+/dev/block/bootdevice/by-name/misc      /misc      emmc  defaults                                       defaults
+/dev/block/mmcblk1p1                    /sdcard    vfat  nosuid,nodev                                    wait

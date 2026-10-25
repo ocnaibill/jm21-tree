@@ -8,3 +8,7 @@ PRODUCT_MODEL := FiiO JM21
 PRODUCT_MANUFACTURER := FiiO
 PRODUCT_SYSTEM_NAME := jm21
 PRODUCT_SYSTEM_DEVICE := jm21
+
+# libminuitwrp e dependencia do binario 'recovery' mas nao entra no ramdisk
+# sozinha (sem variante recovery instalada) -> declarar explicitamente.
+TARGET_RECOVERY_DEVICE_MODULES += libminuitwrp
