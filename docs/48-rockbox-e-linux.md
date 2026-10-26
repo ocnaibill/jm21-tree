@@ -487,3 +487,38 @@ Ligar o master SoundWire (`swr-wcd`) — o device dele vem do DT
 (`soc:spf_core_platform:...`), e o mesmo truque de rebind do `spf_core` deve
 criar os filhos que faltam. Depois disso o `wcd937x` enumera como slave, o card
 para de deferir e `/proc/asound/cards` deve mostrar `bengal-idp-snd-card`.
+
+### 10.16 SoundWire: por que o card ainda defere
+
+Comparacao com o Android (mesmo DT, mesmo kernel):
+
+| | Android | recovery (TWRP) |
+|---|---|---|
+| `.../sound` (card) | bound | criado, **deferred** |
+| `rx_swr_ctrl`, `va_swr_ctrl` | **existem** | **nao existem** |
+| bus SoundWire | `swr0`, `swr1`, 2x `wcd937x-slave.*` | **vazio** |
+| driver `swr-wcd` | bound nos dois ctrl | sem device |
+
+O `modalias` deles revela o no: `of:Nrx_swr_masterT(null)Cqcom,swr-mstr`. E esse
+no **nao existe no DT estatico** — os devices `rx_swr_ctrl`/`va_swr_ctrl` sao
+criados **dinamicamente pelo `bolero`** durante o probe.
+
+No TWRP o `bolero-codec` esta bound, mas os masters nao foram criados. E nao da
+para re-probar:
+
+- o driver tem `suppress_bind_attrs` (nao existe `bind`/`unbind` no sysfs);
+- `rmmod bolero_cdc_dlkm` responde "Try again" (em uso).
+
+Tambem testamos carregar o `bolero` **depois** do ADSP de pe (ordem correta):
+mesmo assim os masters nao aparecem.
+
+### 10.17 Onde a investigacao para (precisa do fonte)
+
+O que falta e saber **qual condicao** o `bolero` usa para criar os nos
+`rx_swr_master`/`va_swr_master` (clocks? `lpass` power domain? callback do
+ADSP?). Isso esta dentro de `bolero_cdc_dlkm`, que e binario fechado.
+
+Alternativas sem fonte:
+1. Testar ordem com **reboot** para cada variacao (caro; bolero nao recarrega).
+2. DTB proprio com os nos `rx_swr_master`/`va_swr_master` estaticos (bypassa a
+   criacao dinamica) — promissor, e mexe só no DT do nosso initramfs/boot.
