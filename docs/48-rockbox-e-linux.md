@@ -601,3 +601,44 @@ Proximo passo: descobrir por que o `wcd937x_dlkm` nao registra o `swr_driver`
 `/sys/bus/platform/drivers/`, mas nao o driver de barramento SoundWire).
 Possivelmente depende do `swr_ctrl` estar com `digital_cdc_rsc_mgr_hw_vote_enable`
 ok (o dmesg mostra `return 0` nos dois masters, entao o vote passou).
+
+### 10.22 Ordem final da cadeia (e o elo que sobrou)
+
+Depois de varias rodadas, a ordem que faz o SoundWire enumerar:
+
+```
+pinctrl_lpi_dlkm -> swr_dlkm -> swr_ctrl_dlkm -> bolero_cdc_dlkm
+ -> va_macro_dlkm -> rx_macro_dlkm -> tx_macro_dlkm
+ -> mbhc_dlkm -> wcd9xxx_dlkm -> wcd_core_dlkm
+ -> wcd937x_dlkm -> wcd937x_slave_dlkm -> machine_dlkm
+```
+
+Cada erro de ordem que apareceu no caminho:
+
+| faltando antes | erro |
+|---|---|
+| `pinctrl_lpi_dlkm` | `msm-cdc-pinctrl` defer -> `va_macro: failed to get swr pin state` |
+| `swr_dlkm`/`swr_ctrl_dlkm` | `va_macro_dlkm: Unknown symbol swrm_wcd_notify` |
+| `mbhc_dlkm` | `wcd937x_dlkm: Unknown symbol wcd_mbhc_init` |
+
+Com a ordem certa:
+
+```
+va_swr_ctrl criado
+/sys/bus/soundwire/devices: swr0 + wcd937x-slave.a01170223 -> driver wcd937x-slave
+```
+
+### 10.23 O elo final: voto de clock do lpass falha
+
+```
+swr-wcd va_swr_ctrl: swrm_request_hw_vote: lpass audio hw enable failed
+swr-wcd va_swr_ctrl: swrm_core_vote_request: core vote request failed
+```
+
+E exatamente a hipotese do §10.19: sem o **voto de clock do lpass**, o master
+SoundWire nao habilita o hardware, o codec nao completa o registro e o card nao
+nasce. (Numa rodada anterior o mesmo voto retornou 0 — entao ele depende do
+estado de ordem/energia do lpass, nao e impossivel.)
+
+Proximo: achar quem liga o `lpass` (GDSC/`lpass_audio_hw` clock controller) e se
+da para faze-lo pelo sysfs antes dos macros.

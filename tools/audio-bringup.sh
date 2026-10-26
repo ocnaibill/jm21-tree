@@ -31,12 +31,15 @@ for r in /sys/class/remoteproc/remoteproc*; do
 done
 sleep 3
 
-# 4. codecs. pinctrl_lpi_dlkm e OBRIGATORIO antes dos macros, senao
-#    msm-cdc-pinctrl defer e va_macro falha com "failed to get swr pin state"
-insmod $VDL/lib/modules/pinctrl_lpi_dlkm.ko 2>/dev/null
-for m in bolero_cdc_dlkm rx_macro_dlkm va_macro_dlkm tx_macro_dlkm \
-         wcd9xxx_dlkm wcd_core_dlkm swr_dlkm swr_ctrl_dlkm wcd937x_dlkm \
-         mbhc_dlkm machine_dlkm; do
+# 4. A ORDEM AQUI E CRITICA (cada erro abaixo custou uma rodada):
+#    - pinctrl_lpi_dlkm  -> fornece msm_cdc_pinctrl_* (sem ele va/tx_macro falham)
+#    - swr_dlkm/swr_ctrl -> fornecem swrm_wcd_notify (sem eles os macros falham)
+#    - mbhc_dlkm         -> fornece wcd_mbhc_* (tem de vir ANTES do wcd937x_dlkm)
+#    - wcd937x_slave_dlkm-> registra o driver SoundWire "wcd937x-slave"
+for m in pinctrl_lpi_dlkm swr_dlkm swr_ctrl_dlkm bolero_cdc_dlkm \
+         va_macro_dlkm rx_macro_dlkm tx_macro_dlkm \
+         mbhc_dlkm wcd9xxx_dlkm wcd_core_dlkm wcd937x_dlkm wcd937x_slave_dlkm \
+         machine_dlkm; do
     insmod $VDL/lib/modules/$m.ko 2>/dev/null
 done
 sleep 5
