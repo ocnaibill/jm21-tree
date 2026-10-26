@@ -394,3 +394,22 @@ imagem de recovery (não é o tamanho da partição, que é 96 MB).
    ser contornado).
 3. Copiar o techpack para `/lib/modules` em runtime e recarregar a cadeia com o
    ADSP **já de pé**, resolvendo o problema de enumeração do `spf_core`.
+
+### 10.12 Limite de tamanho da imagem de recovery (medido)
+
+Bisectado com arquivos dummy (dados aleatórios, incomprimíveis), para isolar
+tamanho de conteudo:
+
+| imagem | resultado |
+|---|---|
+| 27,0 MB (base, sem dummy) | boota |
+| 29,1 MB (+2 MB) | **boota** (dummy presente no /) |
+| 30,68 MB (+3,5 MB) | **nao boota** — ABL cai para o fastboot |
+
+Ou seja: o teto pratico esta entre **29,1 e 30,7 MB**, bem abaixo dos 96 MB da
+particao `recovery`. Nao e o tamanho da particao.
+
+Consequencia: embutir os 21 modulos do techpack (13 MB crus, ~4 MB comprimidos)
+**nao cabe**. O caminho tem de ser carregar do `vendor_dlkm` em runtime — e para
+isso o `vendor_dlkm` precisa estar montado antes do carregador de modulos (no
+Android isso e o *first stage mount* do init, que o recovery do TWRP nao faz).
