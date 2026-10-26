@@ -852,3 +852,36 @@ carregados, mas sem registrar DAI.
 Proximo passo: comparar a lista de DAIs com o Android (qual `msm-dai-q6-*`
 existe la) e descobrir qual modulo registra essas DAIs — provavelmente o mesmo
 padrao: falta carregar algo (`audio_pkt_dlkm` ja esta) ou a ordem.
+
+### 10.34 DAIs: a diferenca com o Android (medida)
+
+`/sys/kernel/debug/asoc/dais` nos dois lados:
+
+| | Android | TWRP |
+|---|---|---|
+| `tx_macro_tx1..3` | 3 | 3 |
+| `rx_macro_rx1..6` + echo | 7 | 7 |
+| `va_macro_tx1..2` | 2 | 2 |
+| **`va_macro_tx3`** | **sim** | **nao** |
+| **`btfm_*` (4 DAIs)** | **sim** | **nao** |
+| stub/fiio/dummy | sim | sim |
+| total | 22 | 18 |
+
+Duas diferencas, com pesos bem diferentes:
+
+1. **`btfm_*`** vem do `bt_fm_slim`, que precisa do `btpower`, que precisa de
+   `cnss_utils_update_device_type` (stack de WLAN). Carregar conectividade no
+   recovery e outro projeto — e essas DAIs sao de **Bluetooth SCO/FM**, nao de
+   playback. Provavelmente nao sao o bloqueio.
+2. **`va_macro_tx3`** falta mesmo com `bolero_register_macro: successful:3`.
+   E a diferenca que sobra do lado do audio.
+
+### 10.35 Proximo passo
+
+Descobrir por que o `va_macro` registra 2 DAIs em vez de 3. Suspeitas: numero de
+DMICs lido do DT (`va-macro@a730000`), ou ordem de registro dos macros (o
+`tx_macro`/`rx_macro` entram antes e ocupam indices).
+
+Metodo: comparar as propriedades do no `va-macro@a730000` (Android x TWRP, que
+devem ser iguais por virem do mesmo DT) e tracar `snd_soc_register_dai` durante
+o probe do `va_macro` para ver quantas chamadas acontecem e com que retorno.
