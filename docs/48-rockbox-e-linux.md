@@ -956,3 +956,38 @@ Proximo passo: subir o ADSP antes do `spf_core` carregar — o que exige o
 `adsp_loader`, que depende do `spf_core`. Se confirmar-se o ciclo, a saida e
 rebindar o `spf_core` **depois** do ADSP estar de pe e conferir o `dmesg` da
 enumeracao imediatamente.
+
+### 10.40 Duas regras de ordem provadas (e o estado final da rodada)
+
+1. **`machine_dlkm` antes dos macros** — ele exporta `msm_cdc_pinctrl_*`; com ele
+   carregado primeiro, `va/rx/tx_macro` carregam.
+2. **ADSP `running` antes do rebind do `spf_core`** — sem o DSP de pe a
+   enumeracao **nao roda** (0 filhos, nenhuma linha `enumarate` no dmesg). Com o
+   ADSP de pe:
+
+```
+adsp=running
+rebind -> spf_core_add_child_devices:enumarate machine driver
+        -> 11 filhos criados (incluindo sound)
+```
+
+Com isso + `stub_dlkm`, os componentes ficaram **identicos ao Android** (menos
+`btfmslim_slave`):
+
+```
+soc:qcom,msm-stub-codec
+soc:spf_core_platform:bolero-codec
+soc:fiio,dac-core  (+ dummies)
+```
+
+### 10.41 Onde esta o bloqueio agora
+
+Mesmo com filhos, componentes e `sound` presentes, o card continua sem driver e
+`/proc/asound/cards` vazio. O kprobe precisa ser rearmado a cada boot (tracefs
+some) — a proxima rodada comeca rearmando e medindo `snd_soc_register_card` de
+novo.
+
+Suspeita principal agora: **`btfmslim_slave`**, a unica peca do Android que
+ainda nao temos. Se o `snd_soc_register_card` continuar deferindo sem ele, ou
+aceitamos o custo de carregar `bt_fm_slim`(+`btpower`+`cnss_utils`) ou o card nao
+fecha.
