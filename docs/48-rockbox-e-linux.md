@@ -564,3 +564,40 @@ Caminhos daqui:
    HAL via QMI/GLINK) — projeto grande, e o oposto do "Linux minimo".
 3. **Opcao A (RaaA)**: o Rockbox como app usa a HAL pronta — nao precisa de nada
    disso, mas perde acesso direto ao DAC/DSD.
+
+### 10.20 GRANDE AVANCO: SoundWire de pe no recovery
+
+Duas descobertas que mudaram tudo:
+
+1. **Os nos `rx_swr_master`/`va_swr_master` EXISTEM no DT** — estao mais fundo do
+   que eu procurei:
+   `/soc/spf_core_platform/bolero-codec/rx-macro@a600000/rx_swr_master`
+   (o `of_node` do device no Android aponta para la). O DTB nao precisa ser
+   mexido.
+2. **Faltava o `pinctrl_lpi_dlkm`.** Sem ele, o `msm-cdc-pinctrl` defer para
+   sempre e o `va_macro` falha com `failed to get swr pin state` — o que
+   cascateia em `rx_macro: va-macro not registered yet, defer`.
+
+Carregando `pinctrl_lpi_dlkm` **antes** dos macros, com o ADSP de pe:
+
+```
+msm-cdc-pinctrl: bound em cdc_dmic01/23, msm_cdc_pinctrl@18, pri_mi2s, rx_swr
+rx-macro -> rx_macro      va-macro -> va_macro      tx-macro -> tx_macro
+rx_swr_ctrl / va_swr_ctrl  -> criados
+/sys/bus/soundwire/devices -> swr0, swr1, wcd937x-slave.a01170223, ...224
+```
+
+**Igual ao Android.** A receita completa esta em `tools/audio-bringup.sh`.
+
+### 10.21 O elo final que falta
+
+`/sys/bus/soundwire/drivers/` esta **vazio** e os dois `wcd937x-slave` nao tem
+driver. Sem o driver SoundWire do codec, o componente ASoC `wcd937x` nao
+registra, o card `soc:spf_core_platform:sound` nao probeia e
+`/proc/asound/cards` continua vazio.
+
+Proximo passo: descobrir por que o `wcd937x_dlkm` nao registra o `swr_driver`
+(ele registra um `platform_driver` `wcd937x_codec`, visivel em
+`/sys/bus/platform/drivers/`, mas nao o driver de barramento SoundWire).
+Possivelmente depende do `swr_ctrl` estar com `digital_cdc_rsc_mgr_hw_vote_enable`
+ok (o dmesg mostra `return 0` nos dois masters, entao o vote passou).
