@@ -59,6 +59,8 @@ TW_INCLUDE_FB2PNG := true
 TW_SCREEN_BLANK_ON_BOOT := true
 TW_USE_TOOLBOX := true
 TW_NO_USB_STORAGE := true
+# MTP derrubava o gadget USB inteiro (adb junto). Ver docs/51 secao 20.
+TW_EXCLUDE_MTP := true
 TW_EXCLUDE_TWRPAPP := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
 TW_MAX_BRIGHTNESS := 255
@@ -70,8 +72,8 @@ TW_OVERRIDE_SYSTEM_PROPS := "ro.build.fingerprint"
 # inicializacao esperando a HAL. Ver docs/51 para o plano de reativacao.
 TWRP_INCLUDE_LOGCAT := true
 TARGET_USES_LOGD := true
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_CRYPTO_FBE := true
+TW_INCLUDE_CRYPTO :=
+TW_INCLUDE_CRYPTO_FBE :=
 
 # Sepolicy (permissive no recovery)
 

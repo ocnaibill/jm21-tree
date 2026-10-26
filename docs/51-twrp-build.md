@@ -514,3 +514,22 @@ enumerar de forma determinística, previsível.
 Observação: o "No space left on device" que apareceu durante os testes era o
 `/tmp` do host (tmpfs de 7,8 GB) cheio de extrações de ramdisk — não tem
 relação com o aparelho.
+
+### 20.1 Correção aplicada e verificada
+
+`TW_EXCLUDE_MTP := true` no `BoardConfig.mk` (o fork usa essa flag: tira
+`-DTW_HAS_MTP` e `libtwrpmtp-ffs` do link do `recovery`).
+
+Depois de recompilar e flashar:
+
+```
+adb reboot recovery
+[28s] RECOVERY ADB OK (sem mexer no MTP)
+ro.twrp.version = 3.7.1_12-jm21-billzinho
+lsusb -> 18d1:d001
+```
+
+O recovery agora enumera sozinho, sempre, em ~28 s. Não é mais preciso
+desabilitar MTP na tela de Mount.
+
+Imagem boa: `~/jm21-artifacts/twrp-jm21-build-own-funcional.img` (atualizada).
