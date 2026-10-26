@@ -750,3 +750,48 @@ recarga — o que conflita com o rebind do `spf_core` (que recria os filhos).
    ASoC (kprobe em `snd_soc_register_component`).
 3. O `fiio_codec` vem da stack FiiO (`soc:fiio,dac-core` ja registra componente,
    mas com outro nome) — comparar com o nome que o DT pede.
+
+### 10.30 Componentes ASoC: comparacao Android x recovery
+
+Android (com audio funcionando, `debugfs` montado):
+
+```
+soc:spf_core_platform:bolero-codec
+btfmslim_slave
+soc:qcom,msm-stub-codec
+soc:fiio,dac-core
+soc:snd_soc_dummy x2, snd-soc-dummy x2
+```
+
+O DT do card pede (`asoc-codec-names`): `msm-stub-codec.1`, `bolero-codec`,
+`fiio_codec`.
+
+Descobertas desta rodada:
+
+| componente | como obter | estado |
+|---|---|---|
+| `soc:qcom,msm-stub-codec` | **`stub_dlkm.ko`** (nao estava na nossa lista) | OK apos carregar |
+| `soc:spf_core_platform:bolero-codec` | registra **so depois** que os 3 macros registram (`bolero_register_macro`) | OK numa passada limpa |
+| `btfmslim_slave` | `bt_fm_slim.ko` | falha: precisa de `btpower` (`btpower_*`), que tambem falhou |
+| `fiio_codec` | vem da stack FiiO (`soc:fiio,dac-core` e componente, mas com outro nome) | a mapear |
+
+### 10.31 O no a desatar: o rebind derruba os componentes
+
+O device `sound` so e criado pela enumeracao do `spf_core` — e ela so acontece
+no **probe** dele. Como o `spf_core` carrega antes do `machine_dlkm` (dependencia
+de simbolos), o rebind e necessario.
+
+Mas o rebind **derruba os filhos** (bolero, macros) e, ao reprobar, o
+`bolero-codec` **nao volta a registrar** como componente (nem com os macros
+sendo descarregados antes e recarregados depois). Resultado: ou temos `sound`
+sem componentes, ou componentes sem `sound`.
+
+Caminhos para o proximo round:
+1. Fazer o `sound` nascer no **primeiro** probe do `spf_core` — exigiria o
+   `machine_dlkm` carregado antes, o que hoje e impossivel por simbolo.
+   Alternativa: descobrir se ha outro gatilho para `spf_core_add_child_devices`
+   (um notifier de SSR, por exemplo).
+2. Instrumentar com kprobe o `snd_soc_register_component` no ciclo
+   rebind+reload para ver onde o bolero desiste.
+3. Confirmar se `bt_fm_slim`/`fiio_codec` sao realmente necessarios para o card
+   (o DT lista, mas talvez o probe so precise de bolero+stub).
