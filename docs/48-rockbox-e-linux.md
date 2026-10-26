@@ -795,3 +795,23 @@ Caminhos para o proximo round:
    rebind+reload para ver onde o bolero desiste.
 3. Confirmar se `bt_fm_slim`/`fiio_codec` sao realmente necessarios para o card
    (o DT lista, mas talvez o probe so precise de bolero+stub).
+
+### 10.32 SSR nao re-dispara a enumeracao (kprobe)
+
+Hipotese do passo 1: existiria outro gatilho para `spf_core_add_child_devices`
+(um notifier de SSR). Medido com kprobe:
+
+```
+p:e spf_core_add_child_devices
+p:p spf_core_platform_driver_probe
+```
+
+Procedimento: subir o ADSP (`state=running`), zerar o trace, `stop` + `start` no
+remoteproc do adsp (SSR), esperar.
+
+Resultado: **0 eventos `e:`** — o restart do ADSP nao chama a enumeracao.
+
+Conclusao: o unico gatilho e o **probe** do driver. Entao a escolha
+"`sound` sem componentes" x "componentes sem `sound`" continua, e o proximo
+passo e entender por que o `bolero-codec` nao re-registra componente depois do
+rebind (kprobe em `snd_soc_register_component`).
