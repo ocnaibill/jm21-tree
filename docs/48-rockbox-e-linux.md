@@ -683,3 +683,70 @@ Suspeitas, em ordem: `qcom,msm_audio_ssr_devs` (SSR) nao pronto; alguma
 o card quando o `fe_be_cc`/`lpass` estiver em estado especifico.
 
 Receita ate aqui: `tools/audio-bringup.sh` (com a ordem critica documentada).
+
+### 10.26 Kprobes: a ferramenta que faltava
+
+O kernel stock tem `CONFIG_KPROBES=y` e `CONFIG_KPROBE_EVENTS=y` (mas
+`CONFIG_FUNCTION_TRACER` esta off). Montando tracefs da para tracar funcoes de
+modulo por **nome**:
+
+```
+mount -t debugfs none /sys/kernel/debug
+mount -t tracefs nodev /sys/kernel/debug/tracing
+echo 'p:mp msm_asoc_machine_probe'          >> tracing/kprobe_events
+echo 'r:mr msm_asoc_machine_probe ret=$retval' >> tracing/kprobe_events
+echo 'r:sc snd_soc_register_card ret=$retval'   >> tracing/kprobe_events
+```
+
+Trace obtido ao forcara o probe do card:
+
+```
+mp: msm_asoc_machine_probe+0x0
+sc: snd_soc_register_card ret=0xfffffdfb   <-- -517 = -EPROBE_DEFER
+mr: msm_asoc_machine_probe ret=0xfffffdfb
+```
+
+**O probe do machine roda e defere dentro de `snd_soc_register_card`.**
+
+### 10.27 Por que defere: componentes ASoC faltando
+
+O DT (`/proc/device-tree/.../sound/asoc-codec-names`) exige tres codecs:
+
+```
+msm-stub-codec.1
+bolero-codec
+fiio_codec
+```
+
+Mas `/sys/kernel/debug/asoc/components` so tem:
+
+```
+soc:fiio,dac-core
+soc:snd_soc_dummy  (x2)
+snd-soc-dummy      (x2)
+```
+
+**Nenhum dos tres.** Sem eles o `snd_soc_register_card` nunca completa.
+
+### 10.28 Armadilha descoberta: recarregar os macros quebra o bolero
+
+Num ciclo com `rmmod`/`insmod` dos macros apareceu:
+
+```
+bolero-codec: ASoC: error - multiple DAI ... registered with no name
+bolero-codec: ASoC: Failed to register DAIs: -12
+tx_macro: bolero_register_macro: register codec failed
+```
+
+Registrar os macros duas vezes no mesmo boot duplica as DAIs e **impede o
+bolero de registrar o codec**. Ou seja: a receita tem de ser passada unica, sem
+recarga — o que conflita com o rebind do `spf_core` (que recria os filhos).
+
+### 10.29 Proximo passo
+
+1. Verificar, numa passada limpa, se `bolero_register_macro` aparece para os tres
+   macros (nesta ultima rodada nao apareceu — pode ter faltado dependencia).
+2. Entender por que o `bolero-codec`, estando bound, nao registra componente
+   ASoC (kprobe em `snd_soc_register_component`).
+3. O `fiio_codec` vem da stack FiiO (`soc:fiio,dac-core` ja registra componente,
+   mas com outro nome) — comparar com o nome que o DT pede.
