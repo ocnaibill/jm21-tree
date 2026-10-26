@@ -333,3 +333,25 @@ um `insmod` por vez em ordem estrita: um laço único disparando `insmod` sem
 Se o device nascer, `/proc/asound/cards` deve mostrar `bengal-idp-snd-card`
 dentro do recovery — e a opção B fica provada de ponta a ponta sem imagem de
 boot própria.
+
+### 10.8 Tentativa "DSP primeiro" — e uma dependência a mais
+
+Invertendo (subir o ADSP antes de carregar qualquer módulo), o `start` **falhou**:
+`state=offline`. Motivo: sem o `adsp_loader_dlkm` carregado, o firmware não é
+entregue ao `qcom_q6v5_pas` — e o `adsp_loader` depende de símbolos do
+`spf_core` (`spf_core_is_apm_ready`), que por sua vez enumera o `machine` no
+init.
+
+Ou seja, a ordem real é uma cadeia apertada:
+
+```
+spf_core (enumera machine)  ->  adsp_loader  ->  ADSP start  ->  machine bind
+```
+
+e o `machine_dlkm` só pode entrar **depois** do `spf_core` (dependência de
+símbolo), mas é enumerado **durante** o init dele.
+
+Isso reforça o §10.7: o caminho certo é deixar o **init carregar tudo** (como no
+Android, em paralelo, `androidboot.load_modules_parallel=true`), em vez de
+reproduzir a ordem à mão. Concretamente: copiar o techpack de `vendor_dlkm` para
+`/lib/modules` do ramdisk e deixar o init do TWRP carregar no boot.
