@@ -447,3 +447,43 @@ Conclusao: para ir alem aqui precisa do **codigo-fonte do kernel FiiO**
 (`spf_core_dlkm`/`machine_dlkm`) para ver a condicao exata de
 `spf_core_add_child_devices` — ou seja, cai no plano B do `docs/45`
 (pedido GPL / kernel proprio).
+
+### 10.14 O device existe! E a cadeia que falta
+
+Duas correcoes de metodo que destravaram tudo:
+
+1. **O device do machine NAO se chama "asoc"** — no Android ele e
+   `soc:spf_core_platform:sound` (filho do `spf_core`). Eu vinha filtrando por
+   "asoc" e concluindo "nao existe".
+2. **O `remoteproc` muda de indice entre boots** — `echo start > remoteproc0`
+   pode estar subindo o **cdsp**, nao o adsp. Tem de ser por nome:
+   `for r in /sys/class/remoteproc/*; do ... *adsp* ...`.
+
+Com ADSP de pe (por nome) + rebind do `spf_core`:
+
+```
+/sys/bus/platform/devices -> soc:spf_core_platform:sound      <-- CRIADO
+/sys/kernel/debug/devices_deferred -> soc:spf_core_platform:sound
+/sys/bus/platform/devices/soc:spf_core_platform:sound/waiting_for_supplier -> 0
+supplier: platform:1b40000.qfprom (bound)
+```
+
+O device nasce, o probe roda e devolve **-EPROBE_DEFER**. A cadeia que falta:
+
+| elo | estado |
+|---|---|
+| `soc:spf_core_platform:sound` (card) | criado, **deferred** |
+| driver `bengal-asoc-snd` | registrado, sem device ligado |
+| drivers de codec (`bolero-codec`, `wcd937x_codec`, `swr-wcd`) | registrados, **sem device ligado** |
+| bus **SoundWire** | **vazio** (nenhum slave enumerado) |
+
+Ou seja: o card espera o **componente ASoC** (`wcd937x`), que e um slave de
+**SoundWire**, e o barramento SoundWire nao tem nenhum slave — falta o master
+`swr-wcd` ser ligado.
+
+### 10.15 Proximo passo
+
+Ligar o master SoundWire (`swr-wcd`) — o device dele vem do DT
+(`soc:spf_core_platform:...`), e o mesmo truque de rebind do `spf_core` deve
+criar os filhos que faltam. Depois disso o `wcd937x` enumera como slave, o card
+para de deferir e `/proc/asound/cards` deve mostrar `bengal-idp-snd-card`.
