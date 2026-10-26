@@ -93,3 +93,36 @@ Não há Android SDK nem NDK na máquina (`~/Android/Sdk` inexistente, nenhum
 `ndk-build`), e o Rockbox não está clonado. Para a opção A seria preciso baixar
 SDK + NDK e compilar o port Android do Rockbox — é o único caminho que depende
 de download novo.
+
+---
+
+## 8. Experimento 1 (opção B): TWRP como bancada de áudio
+
+Ideia: **não** é preciso construir initramfs para o primeiro teste. O TWRP roda
+com o **kernel stock** do `boot_a` (a imagem é kernel-less), então os módulos do
+`vendor_dlkm` casam com o `vermagic` — dá para carregar o techpack de dentro do
+recovery e ver a placa de som nascer no `dmesg`.
+
+Ordem de carga prevista:
+
+```
+adsp_loader_dlkm -> qcom_q6v5_pas (+ adsp.b*) -> q6_dlkm, q6_pdr_dlkm,
+q6_notifier_dlkm, spf_core_dlkm, swr_ctrl_dlkm, swr_dlkm, bolero_cdc_dlkm,
+wcd9xxx_dlkm, wcd_core_dlkm, wcd937x_dlkm, wcd937x_slave_dlkm,
+audio_pkt_dlkm, audio_prm_dlkm, machine_dlkm
+```
+
+Passos:
+1. `adb reboot recovery`
+2. montar `/vendor` (TWRP já faz) e `/vendor_dlkm` (`/dev/block/mapper/vendor_dlkm`
+   — se não estiver mapeado, o TWRP mapeia ao montar; alternativa: `mount` do
+   `dm-*` correspondente)
+3. `insmod` em ordem, checando `dmesg` a cada passo
+4. marco: `dmesg | grep -i "bengal_snd\|asoc-snd\|sound card"` e `ls /proc/asound`
+
+Se a placa nascer, o resto da opção B é userspace (ALSA + UI). Se não, o
+primeiro suspeito é o `adsp_loader` (firmware/`adsp.b*` fora do caminho) ou a
+ordem.
+
+Instrumentação: script `tools/audio-harness.sh` (a escrever) que recebe o
+caminho do `vendor_dlkm` e faz a carga com log por etapa.
