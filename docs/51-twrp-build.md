@@ -533,3 +533,34 @@ O recovery agora enumera sozinho, sempre, em ~28 s. Não é mais preciso
 desabilitar MTP na tela de Mount.
 
 Imagem boa: `~/jm21-artifacts/twrp-jm21-build-own-funcional.img` (atualizada).
+
+### 20.2 Segundo bug de montagem: `/system` cobria o ramdisk
+
+Ao testar o Mount de verdade, montar o system **funcionou** — mas derrubou tudo:
+
+```
+mount -o ro /dev/block/mapper/system_a /system   -> OK
+mkdir/mount/grep/sh: inaccessible or not found
+```
+
+O motivo: o `/system` do ramdisk (onde ficam `sh`, `mount`, `toybox`…) foi
+**coberto** pela partição real. Em device com *system-as-root*, o TWRP espera o
+system montado em **`/system_root`**.
+
+Correção no `twrp.fstab`:
+
+```diff
+-system      /system       ext4  ro,barrier=1,discard  wait,slotselect,...
++system      /system_root  ext4  ro,barrier=1,discard  wait,slotselect,...
+```
+
+Verificado no aparelho:
+
+```
+mount -o ro /dev/block/mapper/system_a /system_root  -> OK
+ls /system_root -> acct apex bin bugreports cache ...
+ls /system/bin/sh -> OK          (ferramentas continuam vivas)
+```
+
+Estado do Mount no nosso TWRP: `/system_root`, `/vendor`, `/odm` e `/metadata`
+montam normalmente; `/data` não (cifrado, ver §17).
