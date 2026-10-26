@@ -642,3 +642,44 @@ estado de ordem/energia do lpass, nao e impossivel.)
 
 Proximo: achar quem liga o `lpass` (GDSC/`lpass_audio_hw` clock controller) e se
 da para faze-lo pelo sysfs antes dos macros.
+
+### 10.24 Voto do lpass: causa e o que ficou funcionando
+
+O erro `init failed or vote handle NULL` tem causa clara:
+
+```
+[45.675] va_macro: digital_cdc_rsc_mgr_hw_vote_enable: return 0     <- OK
+... rebind do spf_core ...
+[45.678] digital_cdc_rsc_mgr_hw_vote_enable: init failed or vote handle NULL
+```
+
+**O rebind do `spf_core` destroi o handle de voto do RSC.** Ele e necessario para
+criar o device `sound`, mas derruba o estado do `bolero-clk-rsc-mngr`.
+
+Recarregando os macros **depois** do rebind (novo probe contra o manager novo),
+o estado final fica completo:
+
+```
+rx_swr_ctrl, va_swr_ctrl            criados
+/sys/bus/soundwire/devices          swr0, swr1, wcd937x-slave .223 e .224
+                                    (ambos ligados no driver wcd937x-slave)
+sound (card)                        existe, mas SEM driver
+/proc/asound/cards                  vazio
+devices_deferred                    vazio (nao e defer)
+```
+
+### 10.25 Onde travou (e por que)
+
+O device `sound` casa com o driver (`modalias` = `of:NsoundT(null)Cqcom,bengal-asoc-snd`,
+alias do driver igual), `driver_override` aceito, `drivers_probe` retorna 0 —
+**e nada acontece: sem bind, sem mensagem no dmesg, sem deferred**.
+
+Ou seja: o probe do `bengal-asoc-snd` roda (ou e chamado) e retorna sem registrar
+o card, silenciosamente. Sem log e sem fonte do `machine_dlkm`, nao da para saber
+a condicao que falta.
+
+Suspeitas, em ordem: `qcom,msm_audio_ssr_devs` (SSR) nao pronto; alguma
+`asoc-codec-names` nao registrada como componente ASoC; ou o driver so registrar
+o card quando o `fe_be_cc`/`lpass` estiver em estado especifico.
+
+Receita ate aqui: `tools/audio-bringup.sh` (com a ordem critica documentada).
