@@ -815,3 +815,40 @@ Conclusao: o unico gatilho e o **probe** do driver. Entao a escolha
 "`sound` sem componentes" x "componentes sem `sound`" continua, e o proximo
 passo e entender por que o `bolero-codec` nao re-registra componente depois do
 rebind (kprobe em `snd_soc_register_component`).
+
+### 10.33 Componentes ok, card ainda defere — e faltam as DAIs q6
+
+Depois de acertar os componentes, o estado ficou **igual ao Android** (menos
+`btfmslim_slave`):
+
+```
+soc:spf_core_platform:bolero-codec
+soc:qcom,msm-stub-codec
+soc:fiio,dac-core  (+ dummies)
+```
+
+E, mesmo assim, o trace continua:
+
+```
+mp: msm_asoc_machine_probe
+sc: snd_soc_register_card ret=0xfffffdfb   (-EPROBE_DEFER)
+mr: msm_asoc_machine_probe ret=0xfffffdfb
+```
+
+Olhando as **DAIs** registradas (`/sys/kernel/debug/asoc/dais`, 18 no total):
+
+```
+tx_macro_tx1..3, rx_macro_rx1..6, rx_macro_echo, va_macro_tx1..2
+msm-stub-rx, msm-stub-tx
+soc:fiio,dac-core
+fiio-snd-soc-dummy-dai
+snd-soc-dummy-dai
+```
+
+**Zero DAIs `q6`/AFE** (`grep -ic q6` = 0). O card do bengal liga as rotas nos
+DAIs do **Q6 AFE** (`msm-dai-q6-afe*`), que vem do `audio_pkt_dlkm`/`q6_dlkm` —
+carregados, mas sem registrar DAI.
+
+Proximo passo: comparar a lista de DAIs com o Android (qual `msm-dai-q6-*`
+existe la) e descobrir qual modulo registra essas DAIs — provavelmente o mesmo
+padrao: falta carregar algo (`audio_pkt_dlkm` ja esta) ou a ordem.
