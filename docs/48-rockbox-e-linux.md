@@ -297,3 +297,39 @@ inexistente / deferred) e nunca foi repetido.
 
 Se a placa nascer, o caminho da opção B está provado de ponta a ponta dentro do
 recovery, sem precisar de imagem de boot própria — o que simplifica muito o §10.3.
+
+### 10.6 Teste com ordem corrigida: impasse de ordem circular
+
+Estado medido (TWRP, ADSP `running`, firmware em `/lib/firmware`):
+
+```
+/sys/bus/platform/drivers  -> bengal-asoc-snd          (driver REGISTRADO)
+/sys/bus/platform/devices  -> (nenhum device asoc)     (device NAO criado)
+/proc/asound/cards         -> --- no soundcards ---
+dmesg                      -> spf_core_add_child_devices: enumarate machine driver
+```
+
+O `spf_core_dlkm`, no próprio init, **enumera e cria o device** do machine
+driver. Quando ele carregou, o `machine_dlkm` ainda não estava presente (ele
+depende de símbolos do `spf_core`, então não pode vir antes) — e a enumeração
+não se repete:
+
+```
+rmmod spf_core_dlkm -> "Try again" (em uso por gpr/q6/etc.)
+```
+
+Impasse: `machine` precisa do `spf_core` carregado; `spf_core` enumera uma única
+vez no init. No Android funciona porque o `init` carrega os módulos **em
+paralelo** (`androidboot.load_modules_parallel=true`) e/ou a enumeração é
+assíncrona.
+
+### 10.7 Próximo passo
+
+Carregar o conjunto **todo de uma vez** (como o init do Android faz), em vez de
+um `insmod` por vez em ordem estrita: um laço único disparando `insmod` sem
+`wait`, ou preencher `/lib/modules` com os módulos do `vendor_dlkm` e deixar o
+`init` do TWRP carregar tudo no boot (aí a ordem é a paralela do Android).
+
+Se o device nascer, `/proc/asound/cards` deve mostrar `bengal-idp-snd-card`
+dentro do recovery — e a opção B fica provada de ponta a ponta sem imagem de
+boot própria.
