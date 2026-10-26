@@ -885,3 +885,42 @@ DMICs lido do DT (`va-macro@a730000`), ou ordem de registro dos macros (o
 Metodo: comparar as propriedades do no `va-macro@a730000` (Android x TWRP, que
 devem ser iguais por virem do mesmo DT) e tracar `snd_soc_register_dai` durante
 o probe do `va_macro` para ver quantas chamadas acontecem e com que retorno.
+
+### 10.36 Dependencia circular suspeita entre machine e macros
+
+Ao tentar tracar o registro de DAIs do `va_macro`, o `insmod` falhou com:
+
+```
+va_macro_dlkm: Unknown symbol msm_cdc_pinctrl_get_state
+va_macro_dlkm: Unknown symbol msm_cdc_pinctrl_select_active_state
+```
+
+Procurando quem define esses simbolos nos modulos do `vendor_dlkm`:
+
+| modulo | ocorrencias do simbolo |
+|---|---|
+| `pinctrl_lpi_dlkm` | 0 |
+| `pinctrl_msm` | 0 |
+| **`machine_dlkm`** | **3** |
+
+Ou seja: os macros dependem de simbolos que aparecem no `machine_dlkm`, e o
+`machine_dlkm` depende de simbolos dos macros (`bolero_register_wake_irq`,
+`wcd937x_*`). Isso **parece** circular.
+
+Observacao importante: numa rodada anterior os macros carregaram normalmente com
+o `machine_dlkm` ainda **nao** carregado — entao a dependencia real deve estar em
+outro lugar (talvez `pinctrl_lpi_dlkm` exporte com nome diferente, ou o
+`machine_dlkm` apenas **importe** esses simbolos e o exportador seja o kernel
+base).
+
+### 10.37 Onde paramos
+
+Estado confirmado em rodadas anteriores: componentes ASoC iguais ao Android,
+`sound` criado, card deferindo por DAI/codec faltante; diferenca de DAIs reduzida
+a `va_macro_tx3` + 4 DAIs de Bluetooth (estas inviaveis: `bt_fm_slim` ->
+`btpower` -> `cnss_utils` da WLAN).
+
+Proximo passo objetivo: numa passada limpa **sem** `machine_dlkm`, verificar se
+os macros carregam e se `va_macro_tx3` aparece; e confirmar com
+`grep -l msm_cdc_pinctrl_select_active_state` em todos os `.ko` do vendor_dlkm
+qual e o exportador real.
