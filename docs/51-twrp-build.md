@@ -477,3 +477,40 @@ interacao do `vendor/twrp` (hook de `TW_` vars no `soong_config.mk`) com o
 Conclusao da rodada: o branch `android-14`/`android-14.1` do TWRP nao e
 montavel apenas com os repos publicos + um device tree externo, do jeito que o
 `twrp-12.1` era. Vale pedir a receita no Zulip do TWRP antes de insistir.
+
+---
+
+# 20. USB do TWRP: o culpado é o MTP
+
+Sintoma: ao entrar no recovery o aparelho **desaparecia do barramento USB**
+(nem `adb`, nem `lsusb`), de forma intermitente — o que parecia "bug de energia"
+do aparelho.
+
+Descoberta (observação do billzinho na tela do TWRP > Mount): alternando
+**"Desabilitar MTP"** o aparelho **aparece** no sistema; com **"Habilitar MTP"**
+ele **some**.
+
+Confirmado por comando: com o MTP desabilitado na UI,
+
+```
+$ adb get-state      -> recovery
+$ adb devices        -> 39dc45d6   recovery
+$ lsusb -d 18d1:     -> ID 18d1:d001   (PID de adb)
+```
+
+Ou seja: a função MTP do nosso build (`libtwrpmtp-ffs`) falha ao subir o gadget
+e **leva o adb junto**. Não é o aparelho, e não é o `init.recovery.usb.rc` (que
+é byte-idêntico ao do Hovatek).
+
+Correção recomendada no `BoardConfig.mk`:
+
+```make
+TW_EXCLUDE_MTP := true
+```
+
+(Ou `TW_HAS_MTP := false`, dependendo do fork.) Depois disso o recovery passa a
+enumerar de forma determinística, previsível.
+
+Observação: o "No space left on device" que apareceu durante os testes era o
+`/tmp` do host (tmpfs de 7,8 GB) cheio de extrações de ramdisk — não tem
+relação com o aparelho.

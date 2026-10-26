@@ -126,3 +126,52 @@ ordem.
 
 Instrumentação: script `tools/audio-harness.sh` (a escrever) que recebe o
 caminho do `vendor_dlkm` e faz a carga com log por etapa.
+
+---
+
+## 9. Experimento 1 executado (2026-10-25) — resultado parcial
+
+Rodou com o TWRP em recovery e adb ativo (após desabilitar o MTP, ver
+`docs/51` §20).
+
+### 9.1 O que o TWRP já carrega sozinho
+
+Surpresa boa: o ramdisk do TWRP carrega **257 módulos** de `/lib/modules` e,
+entre eles, a stack FiiO inteira:
+
+```
+cs43198  dac_core_module  anolog_board_jm21  gw_fpga  fpga_audio_interface
+fpga_interface  fpga_mgr  fiio_config  fiio_headset_jack  fiio_primary_modules
+fiio_charger_manager  fiio_underlay_modules  fiio_gpio_debug_module ...
+qcom_q6v5  qcom_q6v5_pas  frpc_adsprpc        <- ADSP/PAS já de pé
+```
+
+E o `dmesg` mostra `[dac_core]: snd_dac_load_work: Enter!` — ou seja, o driver
+do DAC executa no recovery.
+
+### 9.2 O que faltava e o que foi carregado
+
+O techpack **não** está no ramdisk (só 257 dos 219+ de `vendor_dlkm`); está em
+`vendor_dlkm`, que o TWRP não mapeia como `/vendor/lib/modules` (e `/vendor` é
+read-only, não dá para montar sobre ele). Montado em `/mnt/vdlkm`:
+
+- carregaram: `q6_dlkm`, `q6_pdr_dlkm`, `snd_event_dlkm`, `mbhc_dlkm`,
+  `gpr_dlkm`, `swr_dlkm`, `wcd_core_dlkm`, `wcd937x_slave_dlkm`, `spf_core_dlkm`
+  (o `dmesg` confirma com `spf_core_platform_driver_probe`);
+- falharam com `ENOENT` (símbolo não resolvido): `machine_dlkm`,
+  `bolero_cdc_dlkm`, `wcd937x_dlkm`, `wcd9xxx_dlkm`, `swr_ctrl_dlkm`,
+  `audio_pkt_dlkm`, `audio_prm_dlkm`, `adsp_loader_dlkm`, `pinctrl_lpi_dlkm`.
+
+Resultado: `--- no soundcards ---` (a placa não nasceu ainda).
+
+### 9.3 Próximo passo
+
+A ordem de `modules.load` não basta: o que resolve `ENOENT` é a ordem
+**topológica** de `modules.dep`. Caminhos:
+1. usar `modprobe` com `-d /mnt/vdlkm` (resolve `.dep`) em vez de `insmod`;
+2. ou carregar `modules.dep` em ordem inversa de dependência.
+
+Detalhe importante: `insmod` reporta `ENOENT` mesmo quando o módulo **entra** —
+`spf_core` provou isso (`spf_core_platform_driver_probe` no dmesg). Então o
+critério de sucesso tem de ser `/proc/modules` + `dmesg`, nunca o código de
+retorno do `insmod`.
