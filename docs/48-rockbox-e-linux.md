@@ -924,3 +924,35 @@ Proximo passo objetivo: numa passada limpa **sem** `machine_dlkm`, verificar se
 os macros carregam e se `va_macro_tx3` aparece; e confirmar com
 `grep -l msm_cdc_pinctrl_select_active_state` em todos os `.ko` do vendor_dlkm
 qual e o exportador real.
+
+### 10.38 A ordem correta e: machine ANTES dos macros
+
+Confirmado por medicao: `msm_cdc_pinctrl_*` **nao existe** no kernel rodando
+(`grep -c` em `/proc/kallsyms` = 0) e, entre os `.ko` do `vendor_dlkm`, so
+aparece em **importadores** (`machine_dlkm`, `rx/va/tx_macro_dlkm`,
+`wcd937x_dlkm`). Quem exporta e o **`machine_dlkm`**.
+
+Logo a ordem certa e:
+
+```
+... bolero -> mbhc -> wcd9xxx -> wcd_core -> wcd937x -> wcd937x_slave
+    -> machine_dlkm            <-- exporta msm_cdc_pinctrl_*
+    -> va_macro / rx_macro / tx_macro
+```
+
+Testado: com essa ordem os tres macros carregam (`va=1 rx=1 tx=1`).
+
+### 10.39 Novo detalhe: a enumeracao do spf_core nao criou filhos
+
+Nessa mesma rodada, depois do rebind, `/sys/bus/platform/devices` ficou **sem
+nenhum filho** do `spf_core` (nem os pinctrl, nem o `sound`) — e o `dmesg` nao
+mostrou `enumarate machine driver`. O driver `spf-core-platform` continua bound.
+
+Nas rodadas anteriores o rebind criava `sound`. Hipotese: a enumeracao depende
+do ADSP ja estar `running` no momento do probe do `spf_core` (nesta rodada o
+ADSP sobe depois do `spf_core` carregar).
+
+Proximo passo: subir o ADSP antes do `spf_core` carregar — o que exige o
+`adsp_loader`, que depende do `spf_core`. Se confirmar-se o ciclo, a saida e
+rebindar o `spf_core` **depois** do ADSP estar de pe e conferir o `dmesg` da
+enumeracao imediatamente.
