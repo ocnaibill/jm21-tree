@@ -175,3 +175,42 @@ Detalhe importante: `insmod` reporta `ENOENT` mesmo quando o módulo **entra** �
 `spf_core` provou isso (`spf_core_platform_driver_probe` no dmesg). Então o
 critério de sucesso tem de ser `/proc/modules` + `dmesg`, nunca o código de
 retorno do `insmod`.
+
+### 9.4 Ordem topológica: carregou tudo, mas o DSP não sobe
+
+Calculado o fecho de dependências de `machine_dlkm`/`adsp_loader_dlkm` a partir
+de `/mnt/vdlkm/lib/modules/modules.dep` (20 módulos) e carregado nessa ordem.
+Resultado: **todos entraram** (`adsp_loader_dlkm`, `audio_pkt_dlkm`,
+`audio_prm_dlkm`, `bolero_cdc_dlkm`, `wcd9xxx_dlkm`, `wcd937x_dlkm`,
+`machine_dlkm`, `swr_ctrl_dlkm` …), e os que já estavam deram `File exists`.
+
+Mesmo assim: `--- no soundcards ---`.
+
+Causa encontrada:
+
+```
+/sys/class/remoteproc/remoteproc0  ab00000.remoteproc-adsp  state=offline
+/sys/class/remoteproc/remoteproc1  b300000.remoteproc-cdsp  state=offline
+/sys/class/remoteproc/remoteproc2  6080000.remoteproc-mss   state=offline
+```
+
+**O ADSP nunca foi iniciado.** Sem o DSP de pé, o `machine_dlkm` não faz bind e
+a placa `bengal_snd` não nasce. `/vendor` está montado e
+`/vendor/firmware/adsp.b00` existe, então não é falta de firmware — é ninguém
+ter disparado o remoteproc.
+
+`echo start > /sys/class/remoteproc/remoteproc0/state` **não** mudou o estado
+(segue `offline`, sem mensagem no dmesg).
+
+### 9.5 Próximo passo (retomada)
+
+1. Descobrir o que inicia o ADSP no Android: provavelmente `qcom_q6v5_pas` com
+   `qcom,auto-boot` no DTB, ou um serviço de init que escreve em
+   `/sys/class/remoteproc/*/state`. Comparar com o `init.rc`/`vendor` do stock.
+2. Verificar por que a escrita em `state` não pega (dmesg completo no momento
+   da escrita, não o tail).
+3. Alternativa: escrever no `state` do `qcom_q6v5_pas` via
+   `/sys/module/qcom_q6v5_pas/parameters/...` ou usar `remoteproc` do
+   subsistema correto (o `ab00000.remoteproc-adsp` é o certo).
+
+Se o ADSP subir, o resto do caminho já está carregado — é só ver a placa nascer.
