@@ -61,6 +61,9 @@ TW_USE_TOOLBOX := true
 TW_NO_USB_STORAGE := true
 # MTP derrubava o gadget USB inteiro (adb junto). Ver docs/51 secao 20.
 TW_EXCLUDE_MTP := true
+
+# Techpack de audio carregado no boot do recovery (ordem dada). Issue #13.
+TW_LOAD_VENDOR_MODULES := "adsp_loader_dlkm snd_event_dlkm q6_pdr_dlkm q6_notifier_dlkm gpr_dlkm spf_core_dlkm audpkt_ion_dlkm audio_pkt_dlkm audio_prm_dlkm bolero_cdc_dlkm mbhc_dlkm wcd9xxx_dlkm wcd_core_dlkm swr_dlkm wcd937x_dlkm swr_ctrl_dlkm machine_dlkm pinctrl_lpi_dlkm"
 TW_EXCLUDE_TWRPAPP := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
 TW_MAX_BRIGHTNESS := 255

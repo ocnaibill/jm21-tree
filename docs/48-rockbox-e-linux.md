@@ -355,3 +355,42 @@ Isso reforça o §10.7: o caminho certo é deixar o **init carregar tudo** (como
 Android, em paralelo, `androidboot.load_modules_parallel=true`), em vez de
 reproduzir a ordem à mão. Concretamente: copiar o techpack de `vendor_dlkm` para
 `/lib/modules` do ramdisk e deixar o init do TWRP carregar no boot.
+
+### 10.9 Por que a flag `TW_LOAD_VENDOR_MODULES` não resolveu
+
+Configurada no `BoardConfig.mk` com os 18 módulos do áudio. No boot, o log do
+TWRP mostra:
+
+```
+I:Attempting to load modules
+I:Checking directory: /vendor/lib/modules
+I:Unable to open module directory: /vendor/lib/modules. Skipping
+I:number of modules loaded by init: 249
+```
+
+Duas descobertas:
+
+1. **Os módulos disponíveis no boot do recovery não vêm do `vendor_dlkm`.** O
+   `/lib/modules` do recovery (251 `.ko`, sem nenhum do techpack) vem do
+   **ramdisk do `vendor_boot`** (GKI). O techpack de áudio está só no
+   `vendor_dlkm`, que **não está montado** quando o carregador roda.
+2. O carregador sai cedo: `modules_loaded >= expected_module_count` (249 já
+   carregados pelo init contra 18 pedidos) → não tenta os nossos.
+
+### 10.10 Tentativa de embutir os módulos no ramdisk: limite de tamanho
+
+Injetados os 21 `.ko` (13 MB) direto no ramdisk (sem build): a imagem foi de
+27 MB para 31 MB e **não bootou** — o ABL caiu para o fastboot. Com 3 módulos
+(27 MB) bootou normal. Ou seja, há um limite entre 27 e 31 MB para esta
+imagem de recovery (não é o tamanho da partição, que é 96 MB).
+
+### 10.11 Próximos testes (ordem de custo)
+
+1. **Descobrir o limite real de tamanho** (testar 28/29/30 MB). Se for ~30 MB,
+   embutir só o subconjunto essencial pode caber.
+2. **Montar o `vendor_dlkm` antes do carregador de módulos** — o caminho do
+   TWRP é `/vendor/lib/modules`; se ele estiver montado a tempo, a lista do
+   `TW_LOAD_VENDOR_MODULES` funciona (mas o curto-circuito do item 1 precisa
+   ser contornado).
+3. Copiar o techpack para `/lib/modules` em runtime e recarregar a cadeia com o
+   ADSP **já de pé**, resolvendo o problema de enumeração do `spf_core`.
