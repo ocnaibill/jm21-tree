@@ -522,3 +522,45 @@ Alternativas sem fonte:
 1. Testar ordem com **reboot** para cada variacao (caro; bolero nao recarrega).
 2. DTB proprio com os nos `rx_swr_master`/`va_swr_master` estaticos (bypassa a
    criacao dinamica) — promissor, e mexe só no DT do nosso initramfs/boot.
+
+### 10.18 DTB com nos estaticos: descartado por evidencia
+
+Antes de mexer no `dtbo`, verifiquei se os nos existiriam em algum lugar para
+copiar. Resultado:
+
+1. `/proc/device-tree/soc/spf_core_platform/rx_swr_master` -> **nao existe** (nem
+   no Android, com o audio funcionando);
+2. varredura de **todos** os `compatible` da arvore viva do Android procurando
+   `swr-mstr` -> **nenhum resultado**;
+3. `dtbo.img` tem **32** overlays e o `androidboot.dtbo_idx` e **40**
+   (inconsistencia que ja indica que o indice nao aponta para essa tabela).
+
+Ou seja: os devices `rx_swr_ctrl`/`va_swr_ctrl` **nao vem do DT**. O `bolero`
+os cria por codigo (`platform_device_register` com nome/modalias sintetizados).
+Nao ha no para copiar, e `CONFIG_OF_OVERLAY` esta **desligado** no kernel stock.
+
+### 10.19 Conclusao da #13-B (fim desta linha)
+
+A cadeia completa medida no recovery:
+
+```
+spf_core -> (rebind) -> sound (card, deferred)
+                          |
+                          +-> precisa do componente wcd937x
+                                +-> precisa de slave SoundWire  <-- AQUI
+                                      +-> precisa do master swr
+                                            +-> criado por bolero (fechado)
+```
+
+O `bolero` esta bound no recovery mas **nao cria os masters**. A hipotese mais
+provavel (coerente com tudo): o bring-up de audio QCOM exige que o **userspace**
+vote os clocks do `lpass` (o HAL faz isso no Android). Sem HAL — que e
+exatamente o que a opcao B tira — nao ha quem faca o voto.
+
+Caminhos daqui:
+1. **Fonte GPL da FiiO** (`docs/45`, pedido, issue #17) — destrava `bolero`/
+   `spf_core`/`machine`.
+2. **Reimplementar o voto de clock/power do lpass em userspace** (equivalente ao
+   HAL via QMI/GLINK) — projeto grande, e o oposto do "Linux minimo".
+3. **Opcao A (RaaA)**: o Rockbox como app usa a HAL pronta — nao precisa de nada
+   disso, mas perde acesso direto ao DAC/DSD.
