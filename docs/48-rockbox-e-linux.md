@@ -266,3 +266,34 @@ de boot própria, não o slot de recovery.
 2. Verificar no `dmesg` do boot se `qcom,bengal-asoc-snd` aparece em
    `/proc/device-tree` **antes** de carregar os módulos.
 3. Só então o `machine_dlkm` terá onde fazer bind e a placa `bengal_snd` nasce.
+
+### 10.4 Correção da hipótese: o nó não vem do DT
+
+Comparação feita nos dois modos:
+
+| | recovery (TWRP) | Android |
+|---|---|---|
+| `androidboot.dtbo_idx` | 40 | **40** (igual) |
+| `/proc/device-tree/soc` | `snd_soc_dummy` | `snd_soc_dummy` (**igual**) |
+| `qcom,bengal-asoc-snd` | ausente | **ausente** |
+| `/proc/asound/cards` | vazio | `bengal-idp-snd-card` |
+
+Ou seja: **o nó não é aplicado por overlay em nenhum dos dois**. O DT é o mesmo.
+O `machine_dlkm` casa por `alias=platform:bengal-asoc-snd` — o device de
+plataforma é criado **em runtime**, não pelo DT.
+
+Consequência: a diferença está na **ordem**. No nosso teste carregamos o
+`machine_dlkm` **antes** de subir o ADSP; o probe falhou (device ainda
+inexistente / deferred) e nunca foi repetido.
+
+### 10.5 Próximo teste (ordem correta)
+
+1. montar `/vendor`, copiar `adsp.*` para `/lib/firmware`, montar `vendor_dlkm`;
+2. carregar `q6*`, `spf_core`, `swr*`, `bolero`, `wcd*` (sem o `machine_dlkm`);
+3. `echo start > /sys/class/remoteproc/remoteproc0/state` e confirmar
+   `state=running`;
+4. **só então** `insmod machine_dlkm.ko` (ou `rmmod` + `insmod` se já estava);
+5. verificar `/proc/asound/cards`.
+
+Se a placa nascer, o caminho da opção B está provado de ponta a ponta dentro do
+recovery, sem precisar de imagem de boot própria — o que simplifica muito o §10.3.
