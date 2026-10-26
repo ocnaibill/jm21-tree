@@ -991,3 +991,68 @@ Suspeita principal agora: **`btfmslim_slave`**, a unica peca do Android que
 ainda nao temos. Se o `snd_soc_register_card` continuar deferindo sem ele, ou
 aceitamos o custo de carregar `bt_fm_slim`(+`btpower`+`cnss_utils`) ou o card nao
 fecha.
+
+---
+
+## 11. MARCO: a placa de audio sobe DENTRO do recovery
+
+Medido no aparelho, sem Android:
+
+```
+/proc/asound/cards:
+ 0 [bengalidpsndcar]: bengal-idp-snd- - bengal-idp-snd-card
+                      bengal-idp-snd-card
+
+/dev/snd/controlC0, pcmC0D0c ... pcmC0D14p ...
+/proc/asound/pcm:
+ 00-05: CODEC_DMA-LPAIF_RXTX-RX-0 rx_macro_rx1-5 : : playback 1
+```
+
+O driver `bengal-asoc-snd` esta bound ao device
+`soc:spf_core_platform:sound` e o card registrou.
+
+### 11.1 A peca que faltava: a stack de Bluetooth
+
+O ultimo `-EPROBE_DEFER` vinha de `snd_soc_add_pcm_runtime` num **DAI link de BT
+SCO**. `snd_soc_find_dai` sempre achava a DAI (0 falhas), mas o **codec** do link
+(`btfmslim_slave`) nao existia.
+
+Cadeia necessaria:
+
+```
+cnss_utils (cnss_utils_update_device_type) -> btpower -> bt_fm_slim
+```
+
+`btpower` sobe depois do `cnss_utils`; `bt_fm_slim` registra o componente
+`btfmslim_slave` e as 4 DAIs (`btfm_fm_slim_tx`, `btfm_bt_sco_slim_tx`,
+`btfm_bt_sco_a2dp_slim_rx`, `btfm_bt_split_a2dp_slim_rx`).
+
+### 11.2 Receita final
+
+`tools/audio-bringup.sh` — 9 blocos, com a ordem medida:
+
+```
+1. montar /vendor, /vendor_dlkm, copiar adsp.* -> /lib/firmware
+2. base DSP (spf_core antes de adsp_loader)
+3. ADSP start POR NOME (o indice do remoteproc muda entre boots)
+4. pinctrl_lpi -> swr -> swr_ctrl -> bolero -> mbhc -> wcd* -> MACHINE
+5. rebind do spf_core (SO com ADSP running)
+6. macros va/rx/tx
+7. stub_dlkm
+8. cnss_prealloc -> cnss_utils -> btpower -> bt_fm_slim
+9. drivers_probe no device 'sound'
+```
+
+### 11.3 O que isso significa para a opcao B
+
+O audio **existe e funciona fora do Android**: kernel stock, modulos do vendor,
+ALSA com PCM de playback. Nao foi preciso kernel proprio nem HAL.
+
+O que falta para "Linux minimo tocando":
+1. um `aplay`/player no userspace (o TWRP nao tem);
+2. a rota de mixer (escrever `mixer_paths_bengal_idp.xml` nos kcontrols) — o
+   card existe, mas a rota precisa ser aberta;
+3. UI/initramfs proprio (o TWRP serviu de bancada).
+
+Ou seja: o item mais arriscado da opcao B (audio sob Linux) **deixou de ser
+risco**.
