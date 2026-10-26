@@ -413,3 +413,37 @@ Consequencia: embutir os 21 modulos do techpack (13 MB crus, ~4 MB comprimidos)
 **nao cabe**. O caminho tem de ser carregar do `vendor_dlkm` em runtime — e para
 isso o `vendor_dlkm` precisa estar montado antes do carregador de modulos (no
 Android isso e o *first stage mount* do init, que o recovery do TWRP nao faz).
+
+### 10.13 Rebind do `spf_core`: re-executa o probe, mas não cria o device
+
+Ideia nova que funcionou tecnicamente: desligar e religar o driver do
+`spf_core` pela sysfs **re-executa o probe** — e portanto a enumeração:
+
+```
+echo soc:spf_core_platform > /sys/bus/platform/drivers/spf-core-platform/unbind
+echo soc:spf_core_platform > /sys/bus/platform/drivers/spf-core-platform/bind
+-> dmesg: spf_core_add_child_devices: enumarate machine driver
+```
+
+Isso resolve a questao circular (o `machine_dlkm` nao pode estar carregado
+antes do `spf_core` por dependencia de simbolos): carrega-se o `spf_core`,
+depois o resto, depois o `machine`, e entao rebinda-se.
+
+Estado medido com **tudo** carregado e o rebind feito:
+
+```
+machine_dlkm=1  bolero_cdc_dlkm=1  wcd937x_dlkm=1
+adsp = running
+dmesg: spf_core_add_child_devices: enumarate machine driver  (t=58,8 -> o rebind)
+/sys/bus/platform/devices -> (nenhum asoc)
+/proc/asound/cards        -> --- no soundcards ---
+```
+
+Ou seja: mesmo a enumeracao rodando **com o driver do machine presente**, nenhum
+platform device e criado. O `spf_core` parece esperar que o **device** ja exista
+(do DT), e nao cria-lo a partir do driver.
+
+Conclusao: para ir alem aqui precisa do **codigo-fonte do kernel FiiO**
+(`spf_core_dlkm`/`machine_dlkm`) para ver a condicao exata de
+`spf_core_add_child_devices` — ou seja, cai no plano B do `docs/45`
+(pedido GPL / kernel proprio).
