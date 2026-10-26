@@ -214,3 +214,55 @@ ter disparado o remoteproc.
    subsistema correto (o `ab00000.remoteproc-adsp` é o certo).
 
 Se o ADSP subir, o resto do caminho já está carregado — é só ver a placa nascer.
+
+## 10. ADSP subiu; o próximo muro é o DT (2026-10-26)
+
+### 10.1 Firmware: a causa era o caminho, não a falta
+
+`echo start > /sys/class/remoteproc/remoteproc0/state` falhava com:
+
+```
+remoteproc0: Direct firmware load for adsp.mdt failed with error -2
+remoteproc0: request_firmware failed: -2
+```
+
+O `request_firmware` procura em `/lib/firmware` (ramdisk), **não** no `/vendor`
+montado depois. Com `/vendor` montado e o firmware copiado:
+
+```
+cp /vendor/firmware/adsp.* /lib/firmware/     # 36 arquivos
+echo start > /sys/class/remoteproc/remoteproc0/state
+-> state=running
+-> "lpass subsystem is up" / "remote processor ab00000.remoteproc-adsp is now up"
+-> qcom_smd_qrtr_probe: SMD QRTR driver probed
+-> fastrpc_rpmsg_probe: opened rpmsg channel for lpass
+```
+
+**O ADSP sobe fora do Android.** Foi o primeiro marco do §7.1 cumprido.
+
+### 10.2 A placa ainda não nasce: falta o nó no DT
+
+Mesmo com ADSP de pé e os 20 módulos do techpack carregados:
+
+```
+/proc/asound/cards -> --- no soundcards ---
+/proc/device-tree/soc -> ... snd_soc_dummy, slim@a5c0000, vote_lpass_audio_hw
+                          (NAO existe qcom,bengal-asoc-snd)
+/sys/bus/platform/devices -> snd-soc-dummy, soc:snd_soc_dummy
+                             (NAO existe o device do machine driver)
+```
+
+Ou seja: **o overlay do `dtbo` com o nó de áudio não é aplicado no boot de
+recovery.** O `machine_dlkm` carrega, mas não tem device para fazer bind.
+
+Isso muda o desenho da opção B: não basta um initramfs — é preciso bootar com o
+**DT completo** (dtb do `boot_a` + overlay do `dtbo`), o que implica uma imagem
+de boot própria, não o slot de recovery.
+
+### 10.3 Próximo passo
+
+1. Montar a imagem de boot do experimento com o `dtb` + `dtbo` corretos
+   (temos os dois no dump) e um initramfs mínimo.
+2. Verificar no `dmesg` do boot se `qcom,bengal-asoc-snd` aparece em
+   `/proc/device-tree` **antes** de carregar os módulos.
+3. Só então o `machine_dlkm` terá onde fazer bind e a placa `bengal_snd` nasce.
