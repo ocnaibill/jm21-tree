@@ -239,3 +239,98 @@ Rollback: `fastboot flash system dumps/fw-1.1.1/system.img` + `vbmeta.img`.
 Criterio da primeira rodada (A13, controle): **boota? audio? roda de volume?**
 A resposta mede quanto do DAP vem do `system` e quanto vem do `vendor` — que e
 exatamente a pergunta aberta na §"MAPA DO FORK OFICIAL" (docs/05).
+
+## 9. RESULTADO DA RODADA 1 (A13 GSI) — 2026-10-27
+
+### 9.1 Como foi o flash
+
+```
+fastboot flash vbmeta vbmeta.img            # stock primeiro (a particao estava sem AVB valido)
+python: flags AVB offset 120 = 3 -> vbmeta-noverity.img
+fastboot flash vbmeta vbmeta-noverity.img   # o fastboot 37 nao consegue remendar (erro de AVB_MAGIC)
+fastboot flash recovery recovery.img        # <- TWRP nao tem fastbootd! precisou do stock
+fastboot reboot fastboot -> fastbootd
+fastboot snapshot-update cancel
+fastboot flash system ~/jm21-gsi/system.img # 1,811.5 MiB em 58 s
+fastboot reboot
+```
+
+**Achado operacional:** `fastboot reboot fastboot` com a TWRP instalada **trava**
+em "entering into fastboot" — fastbootd mora no recovery stock. Guardar isso.
+
+### 9.2 O que a GSI A13 fez
+
+| item | resultado |
+|---|---|
+| boot | **sim**, ~35 s |
+| fingerprint | `Android/aosp_arm64/generic_arm64:13/TQ3A.230805.001.A3/10454027:user/release-keys` |
+| `verifiedbootstate` | `orange` (esperado, bootloader destravado) |
+| card de audio | **presente** (`/dev/snd/controlC0` + 25 PCMs) |
+| modulos de vendor | carregados (`machine_dlkm`, `bolero_cdc`, `spf_core`, `gpr`, ...) |
+| HAL de audio QCOM | **rodando** (`android.hardware.audio.service_64`, `audioadsprpcd`) |
+| thread `fiio_charger_ma` | viva (vendor_dlkm) |
+| cartao SD | **montado** (476,94 GB, 385,62 GB livres) |
+| apps FiiO em `/system` | **0** (como previsto: estavam no system) |
+| props `fiio*` | 25, vindas de vendor/odm |
+
+### 9.3 O FiiOMusic roda — mas NAO toca
+
+O app sobreviveu em `/data` (v109). Instalado/aberto no AOSP puro:
+
+- UI **renderiza e navega** normalmente (biblioteca, SD, 60 musicas, browser de pastas);
+- ao dar play, o log mostra:
+
+```
+I FiioMediaPlayer: open: support = true
+I FiioMediaPlayer: openAudio : /storage/emulated/0/Music/Epic_Trailer_Theme.flac
+I FiioMediaPlayer: prepareToPlay
+W System.err: java.lang.NumberFormatException: For input string: "unknown"
+    at com.other.utils.FiiOAUtils.b(SourceFile:7)
+    at com.example.root.checkappmusic.FiioMediaPlayer.k0(SourceFile:21)
+```
+
+e o AudioFlinger fica em `0 Tracks` — **nada toca**.
+
+### 9.4 A CAUSA, medida
+
+Properties que o app le (`strings` do APK instalado):
+
+```
+fiio.current.play.device        persist.sys.audio.output.select
+persist.sys.fiio.config         persist.sys.dsd2pcm.exist
+persist.sys.eq.exist            fiio.vehicle.mode / fiio.run.vehicel.mode
+fiio.tape.mode                  persist.sys.theme
+```
+
+Estado no GSI x stock:
+
+```
+fiio.current.play.device = [vazio]   <-- no stock era "SPEAKER"
+persist.sys.audio.output.select = 0
+persist.sys.fiio.config = FiiODPA
+persist.sys.dsd2pcm.exist = [vazio]
+persist.sys.eq.exist = [vazio]
+```
+
+**`fiio.current.play.device` e sintetizada pelo `framework.jar` patcheado**
+(visto no mapa: `FIIO_CURRENT_PLAY_DEVICE`). Sem o patch ela nao existe, o app
+recebe `"unknown"`, o `Integer.parseInt` estoura e o caminho de reproducao morre.
+Nao foi possivel setar a mao (`setprop` negado pelo SELinux em build user).
+
+### 9.5 Conclusao da rodada (o que isso responde)
+
+1. **O vendor basta para o hardware**: card, modulo, HAL, SD e charging seguem
+   funcionando com um system AOSP puro. A camada de drivers nao depende do DAP.
+2. **O framework patcheado e load-bearing**: o app oficial da FiiO *abre*, mas
+   nao reproduz, porque depende de uma property que so o framework da FiiO cria.
+3. Portanto, para ROM custom: **manter o framework da FiiO e obrigatorio** (ou
+   reescrever os pontos de contato do app). Isso confirma, com medicao, o que o
+   mapa da docs/05 indicava.
+
+### 9.6 Pendencias desta rodada
+
+- `[?]` roda de volume / teclas fisicas: precisa de teste manual na tela.
+- `[?]` algum som de sistema (toque, teclado)? Se houver, a rota de audio do
+  vendor esta viva e so o app quebra.
+- Proximo passo natural: **rodada 2 com A14** (mesma GSI AOSP, so system) para
+  medir o teto de versao — e o mesmo teste, repetido.
