@@ -251,3 +251,39 @@ Como decidir sem o DAP: plugar o Sonata num PC e ler os descritores
 
 Nota: "SPDIF OUT = DoP" e uma opcao **diferente** do "DSD out mode" da tela de
 USB audio; nenhuma das duas foi alterada no teste.
+
+### RESPOSTA DEFINITIVA: o DAC suporta DSD nativo; quem nao engaja e o JM21
+
+Descritores do Sonata lidos no PC (`lsusb -v -d 22e1:e208`, TempoTec):
+
+| alt | bmFormats | formato | bits |
+|---|---|---|---|
+| 1 | `0x00000001` | PCM | 16 |
+| 2 | `0x00000001` | PCM | 24 |
+| 3 | `0x00000001` | PCM | 32 |
+| **4** | **`0x80000000`** | **RAW_DATA (DSD nativo UAC2)** | **32 (DSD_U32)** |
+
+Clock: `CLOCK_SOURCE` com `bmAttributes 7` (internal programmable) e
+`Clock Frequency Control (read/write)` — **o DAC nao declara lista fixa de
+taxas**; o host programa.
+
+Banda do alt 4: `wMaxPacketSize 0x0190` = 400 B/microframe x 8000 = **3,20 MB/s**.
+
+```
+DSD256 estereo em DSD_U32 = 11.2896e6/32 * 4 * 2 = 2,82 MB/s   cabe
+```
+
+**Conclusao (fecha o item):** o Sonata oferece o altsetting nativo e tem banda
+para DSD256. O DSD256 fica mudo porque o **lado do JM21** nao engaja o alt 4:
+por padrao o app usa **DoP**, e DoP de DSD256 exigiria **705,6 kHz**, que o
+caminho USB do HAL nao entrega (o `Audio open failure : UNSUPPORTED` registrado
+antes e o mesmo sintoma pelo lado do UAPP).
+
+Ou seja: **nao e limite de DAC nem "USB nao faz DSD"** — e o caminho **nativo**
+do stack de audio USB (app/HAL `audio.usb.bengal.so`) que nunca e ativado.
+
+Proximo teste de campo (dois minutos, sem reboot): na tela de **USB audio** do
+FiiO Music, mudar **"DSD out mode" para Native** e repetir o DSD256.
+- tocar -> confirmado: o defeito e o default DoP + ausencia de 705,6 kHz.
+- continuar mudo -> o caminho nativo esta quebrado no HAL, e o alvo passa a ser
+  `audio.usb.bengal.so`.
