@@ -1123,3 +1123,16 @@ do userspace se registra — a mensagem companheira e
 Proximo passo mais promissor: **comparar `/dev` e `/sys` entre Android e TWRP**
 procurando o canal de registro (um misc device ou um notifier de `audio_pd` que
 existe no Android e nao no recovery).
+
+### 11.7 Gate do userspace service: mais testes negativos
+
+| teste | resultado |
+|---|---|
+| diff completo de `/dev` (Android x TWRP) | nenhuma diferenca de device de audio |
+| abrir `/dev/aud_pasthru_adsp` e entao tocar | `state 0` continua — nao e esse device |
+| receita completa + probe | card sobe, mas o probe precisa de **retry** (rodada em que o BT ainda subia) |
+
+Aprendizados operacionais ja incorporados em `tools/audio-bringup.sh`:
+- o passo 9 agora **insiste** no `drivers_probe` (ate 10x, 2 s);
+- o script avisa que `tinyplay`/`tinymix`/`libtinyalsa.so` e o WAV de teste **nao
+  vivem no ramdisk** — precisam de push a cada boot (ou entrar na imagem).

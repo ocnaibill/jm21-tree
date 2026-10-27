@@ -80,9 +80,18 @@ done
 ok "bt stack" "cnss_utils=$(cnt cnss_utils) btpower=$(cnt btpower) bt_fm_slim=$(cnt bt_fm_slim)"
 
 # ----------------------------------------------------------- 9. probe do card
-echo soc:spf_core_platform:sound > /sys/bus/platform/drivers_probe 2>/dev/null
-sleep 5
+# o probe pode falhar se algum componente ainda nao registrou: insistir.
+i=0
+while [ $i -lt 10 ]; do
+    readlink /sys/bus/platform/devices/soc:spf_core_platform:sound/driver >/dev/null 2>&1 && break
+    echo soc:spf_core_platform:sound > /sys/bus/platform/drivers_probe 2>/dev/null
+    sleep 2
+    i=$((i+1))
+done
 
+echo
+echo "Lembrete: tinyplay/tinymix/vendor libs NAO estao na imagem; push a cada boot."
+echo "Playback ainda barrado por check_userspace_service_state (docs/48 11.4)."
 echo
 echo "=== /proc/asound/cards:"
 cat /proc/asound/cards
