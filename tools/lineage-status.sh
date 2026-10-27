@@ -20,7 +20,7 @@ bar() {  # $1 = pct
 phase() {
     local unit
     unit=$(systemctl --user list-units --all --plain --no-legend 2>/dev/null \
-           | grep -oE "^(lineage-build[0-9]*|fixconf[0-9]*|soong-b[0-9]*)" | tail -1)
+           | grep -oE "^(lineage-build[0-9]*|lineage-full[0-9]*|fixconf[0-9]*|soong-b[0-9]*)" | tail -1)
     if [ -z "$unit" ]; then echo "parado"; return; fi
     if ! systemctl --user is-active -q "$unit"; then echo "parado (ultimo: $unit)"; return; fi
     case "$unit" in

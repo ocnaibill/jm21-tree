@@ -8,12 +8,14 @@
 
 set -o pipefail
 
+# Ordem OFICIAL, lida de /vendor/lib/modules/modules.load no Android
+# (linhas 111..187 do arquivo). Nao e chute: e o que o proprio Android faz.
 ORDER=(
-  q6_dlkm q6_pdr_dlkm q6_notifier_dlkm
-  adsp_loader_dlkm qcom_q6v5_pas
-  spf_core_dlkm swr_ctrl_dlkm swr_dlkm
-  bolero_cdc_dlkm wcd9xxx_dlkm wcd_core_dlkm wcd937x_dlkm wcd937x_slave_dlkm
-  audio_pkt_dlkm audio_prm_dlkm machine_dlkm
+  qcom_q6v5 qcom_q6v5_pas
+  q6_notifier_dlkm spf_core_dlkm audio_pkt_dlkm q6_dlkm adsp_loader_dlkm
+  audio_prm_dlkm q6_pdr_dlkm
+  swr_dlkm swr_ctrl_dlkm wcd_core_dlkm wcd9xxx_dlkm machine_dlkm
+  bolero_cdc_dlkm wcd937x_dlkm wcd937x_slave_dlkm
 )
 
 say() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -28,11 +30,13 @@ fi
 say "TWRP: $(adb shell getprop ro.twrp.version | tr -d '\r')"
 
 # --- localiza/monta vendor_dlkm ---
-adb shell 'mount | grep -q " /vendor_dlkm " || { mkdir -p /vendor_dlkm; dev=$(ls /dev/block/mapper/vendor_dlkm* 2>/dev/null | head -1); [ -n "$dev" ] && mount -o ro "$dev" /vendor_dlkm; }' >/dev/null 2>&1
+# o vendor_dlkm monta em /vendor/lib/modules (e o firmware do ADSP fica em
+# /vendor/firmware, que vem da particao vendor)
+adb shell 'mount | grep -q " /vendor/lib/modules " || { mkdir -p /vendor/lib/modules; dev=$(ls /dev/block/mapper/vendor_dlkm* 2>/dev/null | head -1); [ -n "$dev" ] && mount -o ro "$dev" /vendor/lib/modules; }' >/dev/null 2>&1
 
-moddir=$(adb shell 'ls -d /vendor_dlkm/lib/modules/* 2>/dev/null | head -1' | tr -d '\r')
+moddir=$(adb shell 'ls -d /vendor/lib/modules 2>/dev/null | head -1' | tr -d '\r')
 if [ -z "$moddir" ]; then
-  say "FALHA: /vendor_dlkm nao montado (nenhum /vendor_dlkm/lib/modules/*)"
+  say "FALHA: vendor_dlkm nao montado em /vendor/lib/modules"
   adb shell 'mount | grep -E "vendor|dlkm"; ls /dev/block/mapper | grep -i dlkm'
   exit 1
 fi
