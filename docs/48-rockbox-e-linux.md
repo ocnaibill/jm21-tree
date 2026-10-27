@@ -1136,3 +1136,56 @@ Aprendizados operacionais ja incorporados em `tools/audio-bringup.sh`:
 - o passo 9 agora **insiste** no `drivers_probe` (ate 10x, 2 s);
 - o script avisa que `tinyplay`/`tinymix`/`libtinyalsa.so` e o WAV de teste **nao
   vivem no ramdisk** — precisam de push a cada boot (ou entrar na imagem).
+
+### 11.8 CORRECAO: o gate nao era o `userspace_service` (REA/Ghidra no `machine_dlkm.ko`)
+
+Desmontagem com REA/Ghidra 12.1.2 do `machine_dlkm.ko` (sha256 `259c8c3d...`).
+
+**O que o `check_userspace_service_state` realmente e:** um helper *inline*,
+usado dentro de `msm_common_snd_shutdown` (0x109fa0), que apenas **relata** o
+estado de streaming daquele PCM:
+
+```c
+plVar14 = mach_data;
+_dev_info(dev, "%s: pcm_id %d state %d\n", "check_userspace_service_state",
+          pcm_id, *(char *)(*plVar14 + pcm_id));
+if (*(char *)(*plVar14 + pcm_id) == 1) {          /* == "estava tocando" */
+    printk("%s userspace service crashed\n", ...);
+    spf_core_apm_close_all();
+    msm_audio_ion_crash_handler();
+    *(char *)(*plVar14 + pcm_id) = 0;              /* limpa */
+}
+```
+
+Ou seja: `state 0` significa **"esse PCM nao estava tocando"** — e nao
+"servico ausente". O `shutdown` roda porque o open falhou depois. **A mensagem
+era um relatorio, nao o portao.**
+
+**Canal kernel<->userspace que existe de fato** (`snd_card_sysfs_init`, 0x1093c0):
+
+```c
+kobject_init_and_add(pdata, &snd_card_ktype, kernel_kobj, "snd_card");
+sysfs_create_file_ns(pdata, &card_state_attr, 0);
+/* store: sscanf(buf, "%d", &pdata->card_status); sysfs_notify(..., "card_state"); */
+```
+
+=> `/sys/kernel/snd_card/card_state` (existe no TWRP, leitura inicial **1**).
+E o canal **kernel -> userspace** (`snd_card_notify_user` seta o status e
+notifica). Nao e o registro do HAL.
+
+**Onde a falha realmente esta (kprobes):**
+
+| funcao | retorno |
+|---|---|
+| `snd_pcm_open` | **0** (abre!) |
+| `msm_common_snd_startup` | **0** |
+| `msm_common_snd_hw_params` | **0** |
+| prepare / trigger / write | *(nao medido — proximo passo)* |
+
+O `tinyplay` falha em **"Error playing sample"** depois de todos esses passarem:
+o PCM abre, o machine driver aceita, e a falha esta em **prepare/trigger/write**
+— isto e, o DSP recusa iniciar o stream, nao o ALSA.
+
+Consequencia pratica: a frente "stub de HAL" que eu propus **nao e o caminho**.
+O caminho e achar por que o `spf_core`/DSP recusa o `RUN` (provavelmente
+topologia/calibracao ACDB ausente, que e justamente o que o HAL carregaria).
