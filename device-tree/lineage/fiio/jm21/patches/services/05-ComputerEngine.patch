@@ -1,0 +1,14 @@
+diff --git a/services/core/java/com/android/server/pm/ComputerEngine.java b/services/core/java/com/android/server/pm/ComputerEngine.java
+index 46b7460d..b2c5e0cc 100644
+--- a/services/core/java/com/android/server/pm/ComputerEngine.java
++++ b/services/core/java/com/android/server/pm/ComputerEngine.java
+@@ -5535,7 +5535,8 @@ public class ComputerEngine implements Computer {
+             final boolean matchesAware = ((flags & MATCH_DIRECT_BOOT_AWARE) != 0)
+                     && p.isDirectBootAware();
+ 
+-            if (p.isPersistent()
++            // FiiO: inclui os apps do DAP entre os "sempre visiveis"
++            if ((p.isPersistent() || isHighPackage(p.getPackageName()))
+                     && (!safeMode || p.isSystem())
+                     && (matchesUnaware || matchesAware)) {
+                 PackageStateInternal ps = mSettings.getPackage(p.getPackageName());

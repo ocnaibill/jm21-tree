@@ -1,0 +1,21 @@
+diff --git a/media/java/android/media/AudioTrack.java b/media/java/android/media/AudioTrack.java
+index 85cd342b..69e27665 100644
+--- a/media/java/android/media/AudioTrack.java
++++ b/media/java/android/media/AudioTrack.java
+@@ -31,6 +31,7 @@ import android.media.audiopolicy.AudioMixingRule;
+ import android.media.audiopolicy.AudioPolicy;
+ import android.media.metrics.LogSessionId;
+ import android.os.Binder;
++import android.os.SystemProperties;
+ import android.os.Build;
+ import android.os.Handler;
+ import android.os.HandlerThread;
+@@ -2919,6 +2920,8 @@ public class AudioTrack extends PlayerBase
+      */
+     public void play()
+     throws IllegalStateException {
++        // FiiO: expoe a sessao atual (lida pelos apps do DAP)
++        SystemProperties.set("fiio.cur.session.id", String.valueOf(mSessionId));
+         if (mState != STATE_INITIALIZED) {
+             throw new IllegalStateException("play() called on uninitialized AudioTrack.");
+         }

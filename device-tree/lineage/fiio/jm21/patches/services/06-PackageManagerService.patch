@@ -1,0 +1,24 @@
+diff --git a/services/core/java/com/android/server/pm/PackageManagerService.java b/services/core/java/com/android/server/pm/PackageManagerService.java
+index 47860373..6a4f36d9 100644
+--- a/services/core/java/com/android/server/pm/PackageManagerService.java
++++ b/services/core/java/com/android/server/pm/PackageManagerService.java
+@@ -4417,8 +4417,19 @@ public class PackageManagerService implements PackageSender, TestUtilityService
+         mHandler.sendMessage(msg);
+     }
+ 
++
++    /* FiiO: apps do DAP sempre podem ser iniciados */
++    private static final String[] FIIO_PACKAGE_NAMES = {"com.fiio.music", "com.android.aboutfiio", "com.fiio.control", "com.fiio.android", "com.fiio.devicevendor", "com.android.fiioupdate", "com.android.fiio.scrcpy", "com.fiio.market"};
++
++    static boolean isHighPackage(String pkg) {
++        return java.util.Arrays.asList(FIIO_PACKAGE_NAMES).indexOf(pkg) != -1;
++    }
++
+     void checkPackageStartable(@NonNull Computer snapshot, @NonNull String packageName,
+             @UserIdInt int userId) {
++        if (isHighPackage(packageName)) {
++            return;     // FiiO: sem checagem para apps do DAP
++        }
+         final int callingUid = Binder.getCallingUid();
+         if (snapshot.getInstantAppPackageName(callingUid) != null) {
+             throw new SecurityException("Instant applications don't have access to this method");

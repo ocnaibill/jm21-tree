@@ -1,0 +1,23 @@
+diff --git a/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java b/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java
+index 32ee21cf..26dbfd67 100644
+--- a/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java
++++ b/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java
+@@ -631,6 +631,18 @@ final class DefaultPermissionGrantPolicy {
+                         MediaStore.Audio.Media.RECORD_SOUND_ACTION, userId),
+                 userId, MICROPHONE_PERMISSIONS);
+ 
++        // FiiO: permissoes padrao dos apps do DAP
++        grantPermissionsToPackage(pm, "com.fiio.music", userId, false, true,
++                MICROPHONE_PERMISSIONS);
++        grantPermissionsToPackage(pm, "com.fiio.music", userId, false, true,
++                STORAGE_PERMISSIONS);
++        grantPermissionsToPackage(pm, "com.fiio.market", userId, false, true,
++                STORAGE_PERMISSIONS);
++        grantPermissionsToPackage(pm, "com.android.fiioupdate", userId, false, true,
++                STORAGE_PERMISSIONS);
++        grantPermissionsToPackage(pm, "com.android.aboutfiio", userId, false, true,
++                STORAGE_PERMISSIONS);
++
+         // Media provider
+         grantSystemFixedPermissionsToSystemPackage(pm,
+                 getDefaultProviderAuthorityPackage(MediaStore.AUTHORITY, userId), userId,

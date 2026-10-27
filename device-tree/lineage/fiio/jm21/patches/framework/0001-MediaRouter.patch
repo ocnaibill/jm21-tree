@@ -1,0 +1,46 @@
+diff --git a/media/java/android/media/MediaRouter.java b/media/java/android/media/MediaRouter.java
+index 7d57734d..3e8b7060 100644
+--- a/media/java/android/media/MediaRouter.java
++++ b/media/java/android/media/MediaRouter.java
+@@ -36,6 +36,7 @@ import android.hardware.display.WifiDisplay;
+ import android.hardware.display.WifiDisplayStatus;
+ import android.media.session.MediaSession;
+ import android.os.Build;
++import android.os.SystemProperties;
+ import android.os.Handler;
+ import android.os.IBinder;
+ import android.os.Process;
+@@ -78,6 +79,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
+ @SystemService(Context.MEDIA_ROUTER_SERVICE)
+ public class MediaRouter {
+     private static final String TAG = "MediaRouter";
++
++    /* FiiO: rota de reproducao atual (consumida pelos apps do DAP) */
++    private static final String FIIO_CURRENT_PLAY_DEVICE = "fiio.current.play.device";
++    private static final String MEDIA_ROUTER_CHANGE = "fiio.media.router.change";
++    private static final String OUT_DEVICE_USB_CARD_ID = "output.device.usb.card.id";
+     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
+     private static final boolean DEBUG_RESTORE_ROUTE = true;
+ 
+@@ -268,6 +274,21 @@ public class MediaRouter {
+ 
+             if (audioRoutesChanged) {
+                 Log.v(TAG, "Audio routes updated: " + newRoutes + ", a2dp=" + isBluetoothA2dpOn());
++                // FiiO: publica a rota atual antes de qualquer outra acao
++                String fiioRoute;
++                if (isBluetoothA2dpOn()) {
++                    fiioRoute = "A2DP";
++                } else if (SystemProperties.get(OUT_DEVICE_USB_CARD_ID, "0").equals("1")) {
++                    fiioRoute = "USB";
++                } else {
++                    fiioRoute = typeToString(newRoutes.mainType);
++                }
++                SystemProperties.set(FIIO_CURRENT_PLAY_DEVICE, fiioRoute);
++                if (Process.myUid() == Process.SYSTEM_UID) {
++                    Log.d(TAG, "Current is System process send media route change "
++                            + fiioRoute);
++                    mAppContext.sendBroadcast(new Intent(MEDIA_ROUTER_CHANGE));
++                }
+                 if (mSelectedRoute == null || mSelectedRoute.isDefault()
+                         || mSelectedRoute.isBluetooth()) {
+                     if (forceUseDefaultRoute || mBluetoothA2dpRoute == null) {

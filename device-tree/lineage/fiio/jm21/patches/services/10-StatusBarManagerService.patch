@@ -1,0 +1,15 @@
+diff --git a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+index 6e342939..40ca7842 100644
+--- a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
++++ b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+@@ -231,6 +231,10 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+         @Override
+         public void binderDied() {
+             Slog.i(TAG, "binder died for pkg=" + pkg);
++            // FiiO: o app de update nao deve derrubar a status bar
++            if ("com.android.fiioupdate".equals(pkg)) {
++                return;
++            }
+             disableForUser(0, token, pkg, userId);
+             disable2ForUser(0, token, pkg, userId);
+             token.unlinkToDeath(this, 0);

@@ -1,0 +1,20 @@
+diff --git a/services/core/java/com/android/server/power/PowerManagerService.java b/services/core/java/com/android/server/power/PowerManagerService.java
+index 5d1a5810..45ccc0e5 100644
+--- a/services/core/java/com/android/server/power/PowerManagerService.java
++++ b/services/core/java/com/android/server/power/PowerManagerService.java
+@@ -5010,6 +5010,15 @@ public final class PowerManagerService extends SystemService
+     final class BatteryReceiver extends BroadcastReceiver {
+         @Override
+         public void onReceive(Context context, Intent intent) {
++            // FiiO: o fiio-charger-manager informa carga/descarga externa
++            final String fiioAction = intent.getAction();
++            if ("fiio.intent.action.ACTION_EXTERNAL_CHARGING".equals(fiioAction)
++                    || "fiio.intent.action.ACTION_EXTERNAL_DISCHARGING".equals(fiioAction)) {
++                synchronized (mLock) {
++                    mPowerInChanged = true;
++                }
++            }
++
+             synchronized (mLock) {
+                 handleBatteryStateChangedLocked();
+             }

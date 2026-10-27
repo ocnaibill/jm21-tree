@@ -1,0 +1,17 @@
+diff --git a/services/core/java/com/android/server/am/ContentProviderHelper.java b/services/core/java/com/android/server/am/ContentProviderHelper.java
+index 212793a3..116508a9 100644
+--- a/services/core/java/com/android/server/am/ContentProviderHelper.java
++++ b/services/core/java/com/android/server/am/ContentProviderHelper.java
+@@ -1509,6 +1509,12 @@ public class ContentProviderHelper {
+             int userId, boolean checkUser, String appName) {
+         boolean checkedGrants = false;
+         if (checkUser) {
++        // FiiO: apps do DAP tem acesso livre a provedores
++        String fiioApp = mService.getAppName(callingUid);
++        if (fiioApp != null && fiioApp.contains("fiio")) {
++            return null;
++        }
++
+             // Looking for cross-user grants before enforcing the typical cross-users permissions
+             int tmpTargetUserId = mService.mUserController.unsafeConvertIncomingUser(userId);
+             if (tmpTargetUserId != UserHandle.getUserId(callingUid)) {

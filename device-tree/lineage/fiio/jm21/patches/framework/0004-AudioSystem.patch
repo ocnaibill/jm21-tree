@@ -1,0 +1,14 @@
+diff --git a/media/java/android/media/AudioSystem.java b/media/java/android/media/AudioSystem.java
+index 7ccbe51b..5c2b85e5 100644
+--- a/media/java/android/media/AudioSystem.java
++++ b/media/java/android/media/AudioSystem.java
+@@ -106,6 +106,9 @@ public class AudioSystem
+     public static final int STREAM_TTS = 9;
+     /** @hide Used to identify the volume of audio streams for accessibility prompts */
+     public static final int STREAM_ACCESSIBILITY = 10;
++
++    /** FiiO: parametro de codec para MQA (consumido pela HAL) */
++    public static final int CODEC_PARAM_FIIO_MQA = 9;
+     /** @hide Used to identify the volume of audio streams for virtual assistant */
+     public static final int STREAM_ASSISTANT = 11;
+     /**

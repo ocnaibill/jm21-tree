@@ -1,7 +1,27 @@
 # Patches
 
-Os diffs completos estao em `docs/55` (framework) e `docs/56` (services).
-Aqui ficam os arquivos aplicaveis quando forem transcritos para `.patch`.
+Os diffs completos estao em `docs/55` (framework) e `docs/56` (services). Aqui
+estao os `.patch` **gerados de verdade**: aplicados numa arvore AOSP 13, com
+`git diff` e revertidos em seguida.
+
+```
+framework/   0001-MediaRouter     0002-AudioTrack   0003-PowerProfile
+             0004-AudioSystem      0005-ContentProvider
+services/    01-ActivityManagerService   02-ContentProviderHelper
+             03-OomAdjuster            04-AudioService
+             05-ComputerEngine         06-PackageManagerService
+             07-DefaultPermissionGrantPolicy
+             08-PhoneWindowManager     09-PowerManagerService
+             10-StatusBarManagerService 11-UsbAlsaManager
+```
+
+Total: **16 arquivos, 168 linhas inseridas** (64 no framework, 104 no services).
+
+Aplicar:
+
+```bash
+./apply-patches.sh /caminho/da/arvore-lineage
+```
 
 ## `framework-res/config_fiio.xml`
 

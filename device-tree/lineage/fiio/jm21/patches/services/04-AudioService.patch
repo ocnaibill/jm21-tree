@@ -1,0 +1,17 @@
+diff --git a/services/core/java/com/android/server/audio/AudioService.java b/services/core/java/com/android/server/audio/AudioService.java
+index 3ddb0ae9..b7a04ff3 100644
+--- a/services/core/java/com/android/server/audio/AudioService.java
++++ b/services/core/java/com/android/server/audio/AudioService.java
+@@ -8195,6 +8195,12 @@ public class AudioService extends IAudioService.Stub
+         }
+ 
+         private void setStreamVolumeIndex(int index, int device) {
++            // FiiO: com o controle de volume do DAC USB desligado, o stream vai ao maximo
++            if (Settings.System.getInt(mContentResolver, "usb_vol_ctl", 1) == 0
++                    && SystemProperties.get("fiio.current.play.device", "HEADPHONES")
++                            .equals("USB")) {
++                index = AudioService.MAX_STREAM_VOLUME[mStreamType];
++            }
+             // Only set audio policy BT SCO stream volume to 0 when the stream is actually muted.
+             // This allows RX path muting by the audio HAL only when explicitly muted but not when
+             // index is just set to 0 to repect BT requirements

@@ -1,0 +1,31 @@
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 6e542178..15686b56 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -5084,6 +5084,26 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         PhoneWindow.sendCloseSystemWindows(mContext, null);
+     }
+ 
++    /** FiiO: o sistema mostra a view de power key do DAP */
++    public boolean getShowPowerKeyView() {
++        return SystemProperties.getBoolean("fiio.test.show_power_key_view", false);
++    }
++
++    /** FiiO: home desabilitado por propriedade (modo player) */
++    public final boolean isDisableHomeKey() {
++        boolean disabled = SystemProperties.getBoolean("sys.fiio.home_disabled", false);
++        Log.i(TAG, "isDisableHomeKey:  " + disabled);
++        return disabled;
++    }
++
++    /** FiiO: encaminha teclas para o seletor de modo */
++    public final void sendKeyEventToModeSelection(int keyCode, int keyAction) {
++        Intent intent = new Intent("fiio.intent.action.KEY.EVENT");
++        intent.putExtra("keyCode", keyCode);
++        intent.putExtra("keyAction", keyAction);
++        mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
++    }
++
+     void sendCloseSystemWindows(String reason) {
+         PhoneWindow.sendCloseSystemWindows(mContext, reason);
+     }

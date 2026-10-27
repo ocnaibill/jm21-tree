@@ -1,0 +1,27 @@
+diff --git a/services/core/java/com/android/server/am/OomAdjuster.java b/services/core/java/com/android/server/am/OomAdjuster.java
+index 441506d1..60748f32 100644
+--- a/services/core/java/com/android/server/am/OomAdjuster.java
++++ b/services/core/java/com/android/server/am/OomAdjuster.java
+@@ -3104,11 +3104,22 @@ public class OomAdjuster {
+     }
+ 
+     @GuardedBy({"mService", "mProcLock"})
++    /* FiiO: apps do DAP nunca entram no freezer */
++    private static final String[] FIIO_PACKAGE_NAMES = {"com.fiio.music", "com.android.aboutfiio", "com.fiio.control", "com.fiio.android", "com.fiio.devicevendor", "com.android.fiioupdate", "com.android.fiio.scrcpy", "com.fiio.market"};
++
++    static boolean cantFreezePackage(String pkg) {
++        return java.util.Arrays.asList(FIIO_PACKAGE_NAMES).indexOf(pkg) != -1;
++    }
++
+     private void updateAppFreezeStateLSP(ProcessRecord app, String oomAdjReason) {
+         if (!mCachedAppOptimizer.useFreezer()) {
+             return;
+         }
+ 
++        if (cantFreezePackage(app.processName)) {
++            return;
++        }
++
+         if (app.mOptRecord.isFreezeExempt()) {
+             return;
+         }

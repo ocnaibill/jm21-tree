@@ -1,0 +1,30 @@
+diff --git a/services/core/java/com/android/server/am/ActivityManagerService.java b/services/core/java/com/android/server/am/ActivityManagerService.java
+index ba0aaa1b..0889611b 100644
+--- a/services/core/java/com/android/server/am/ActivityManagerService.java
++++ b/services/core/java/com/android/server/am/ActivityManagerService.java
+@@ -518,6 +518,13 @@ public class ActivityManagerService extends IActivityManager.Stub
+ 
+     public static final int MY_PID = myPid();
+ 
++    /* FiiO: apps do DAP nunca podem ser mortos */
++    private static final String[] FIIO_PACKAGE_NAMES = {"com.fiio.music", "com.android.aboutfiio", "com.fiio.control", "com.fiio.android", "com.fiio.devicevendor", "com.android.fiioupdate", "com.android.fiio.scrcpy", "com.fiio.market"};
++
++    static boolean isHighPackage(String pkg) {
++        return java.util.Arrays.asList(FIIO_PACKAGE_NAMES).indexOf(pkg) != -1;
++    }
++
+     static final String[] EMPTY_STRING_ARRAY = new String[0];
+ 
+     // How many bytes to write into the dropbox log before truncating
+@@ -6776,6 +6783,11 @@ public class ActivityManagerService extends IActivityManager.Stub
+             app.setPersistent(true);
+             app.mState.setMaxAdj(ProcessList.PERSISTENT_PROC_ADJ);
+         }
++        // FiiO: apps do DAP sao persistentes e ficam acima do persistente padrao
++        if (isHighPackage(info.packageName)) {
++            app.setPersistent(true);
++            app.mState.setMaxAdj(-900);
++        }
+         if (app.getThread() == null && mPersistentStartingProcesses.indexOf(app) < 0) {
+             mPersistentStartingProcesses.add(app);
+             mProcessList.startProcessLocked(app, new HostingRecord(
