@@ -152,3 +152,28 @@ app.
 
 `[?]` A chave de preferência gravada por esse diálogo não foi recuperada (a
 classe `d2` não saiu no JADX), então o ajuste tem de ser feito pela interface.
+
+### ALL TO DSD como amplificador do diagnóstico (não como correção)
+
+O painel tem **"All To DSD"** (off por padrão). Ele **não** conserta o bug de DSD
+nativo por USB — são caminhos diferentes:
+
+| | All To DSD | Bug do DSD nativo USB |
+|---|---|---|
+| onde vive | `persist.sys.all.to.dsd` + `init_pcm2dsd`/shaper na `libfiioaudio.so`, gravado por `all2dsd_ctl_value` (Settings) | `audio.usb.bengal.so` + rota `UsbAudio` (UAC2 no DAC externo) |
+| saída | DAC **interno** (cs43198) | DAC **externo** por USB host |
+| o que faz | converte **PCM -> DSD** dentro da HAL | transporte DSD nativo |
+
+**Mas ele é um separador de hipóteses excelente:** com "All To DSD" **ligado**,
+qualquer FLAC comum passa pelo *pipeline* DSD. Então:
+
+- DAC USB toca normal com o toggle **off** e fica **mudo** com o toggle **on**
+  -> o defeito está no **transporte DSD**, não na decodificação de arquivo DSD;
+- toca nos dois casos -> o defeito é só do *decode* de arquivo DSD nativo.
+
+É um teste de dois minutos que fecha uma das duas metades do bug. `[?]` Vale
+registrar também o reverso (DSD64 nativo com o toggle off continua mudo — já
+observado).
+
+Bônus: com o toggle ligado, a captura de pacotes GPR (§docs/48 11.15) mostra a
+**variante DSD** dos pacotes, o que documenta o segundo formato do protocolo.

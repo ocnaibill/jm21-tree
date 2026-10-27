@@ -291,3 +291,22 @@ Links oficiais e distinção completo × incremental estão em
 4. `[?]` `libhello-jni.so` contém decodificador DSD/MQA proprietário?
 5. `[?]` Lista real em `FIIO_PACKAGE_NAMES` (extrair do dex).
 6. `[?]` Diff exato de `framework.jar` e `services.jar` contra AOSP-13.
+
+## INVENTÁRIO: o que a FiiO pôs FORA do vendor (medido nas imagens stock)
+
+Pergunta que isso responde: numa ROM custom, o que **sobrevive** (vendor) e o
+que **precisa ser re-empacotado** (system/system_ext)?
+
+| Local | Conteúdo FiiO/OEM | Numa ROM custom |
+|---|---|---|
+| `/system/app` | **18 apps**: `FiiOMusic`, `FiiOEq`, `FiiOTape`, `FiiOCast`, `FiiOIpod`, `FiiOMarket`, `FiiOUpdate`, `AboutFiio`, `ModeSelection`, `DeviceVendor`, `EnterSleep`, `FactoryTest`, `DebugTool`, `EcaiTestAPP`, `Roon`, `Scrcpy`, `WIFI` | **perdido** — re-empacotar como prebuilt |
+| `system_ext/priv-app` | **`Settings` modificado** (95 MB, 324 refs a `fiio`; `handleAllToDSD`, `updateAllToDsdStatus`, `all2dsd_ctl_value`), `SystemUI`, Launcher3QuickStep, pacotes Qualcomm | **perdido** — Settings com a aba de áudio é fork da AOSP |
+| `vendor` / `vendor_dlkm` | HALs (`audio.primary.bengal`, `audio.usb.bengal`), `libfiioaudio.so` (`init_pcm2dsd`, `get_alltodsd_config`), `libfiioaqm.so`, módulos de kernel | **preservado** |
+| props / sysfs | `persist.sys.all.to.dsd`, `persist.sys.pcm2dsd.level`, `persist.sys.dsd.*`, `fiio.*`, `soc:fiio_attr/*` | parcial: props voltam se `vendor`/`odm` forem mantidos |
+
+**Consequência para a ROM:** as customizações visíveis do DAP (aba de áudio do
+Settings, player, tema, modo veículo) estão no **system**, não no vendor. O
+trabalho de port não é reescrever o áudio — é **re-empacotar esses APKs** e
+resolver **assinatura/permissões** (se usarem `sharedUserId` ou permissões de
+plataforma, uma ROM assinada com outra chave de plataforma os quebra) e os
+**overlays/RRO** de resources.
