@@ -1286,3 +1286,47 @@ Proximo passo (precisa de reboot para Android): descobrir **por onde o Android
 toca de verdade** — `/proc/asound/cards` (tem mais de um card?),
 `/proc/asound/pcm`, e qual processo segura o PCM aberto. O caminho do DAC da
 FiiO (`cs43198.ko` + `fpga_audio_interface.ko` + `gw_fpga`) pode nao ser ALSA.
+
+### 11.12 DESCOBERTA: o audio do JM21 nao passa por ALSA — e FPGA -> cs43198
+
+Comparacao Android x TWRP no mesmo boot/card:
+
+| | Android | TWRP |
+|---|---|---|
+| `/proc/asound/cards` | 1 card (`bengal-idp-snd-card`) | igual |
+| `/proc/asound/pcm` | mesmos 25 PCMs (**com `msm-stub-rx`**) | igual |
+| `/sys/kernel/debug/asoc/platforms` | **arquivo nao existe** | existe e vazio |
+| `/sys/kernel/debug/asoc/components` | mesmos codecs | igual |
+
+O Android tambem **nao tem platform component**. Ou seja: nenhum dos dois toca
+por ALSA PCM — os PCMs do card sao stubs de verdade.
+
+O caminho real, encontrado nos devices/processos do Android:
+
+```
+/dev/usb_dac            misc 10:121, root, criado por gw-fpga.ko
+                        (fpga_enter_usb_dac_mode, ioctls FPGA_AUDIO_*)
+processos               android.hardware.audio.service_64, audioadsprpcd,
+                        uaudio_svc, media.audio.qc.codec
+```
+
+`gw-fpga.ko` expoe uma **API de audio por ioctl**:
+
+```
+FPGA_AUDIO_PCM  FPGA_AUDIO_DSD  FPGA_AUDIO_DOP
+FPGA_I2S_BIT_16 / _24 / _32      FPGA_I2S_FORMAT_L ...
+FPGA_AUDIO_HAL_CH_I2S_CH_{SOC,UAC,BT,HDMI,OPT,SPDIF}
+FIIO_CONFIG_FPGA_CONTRL_{POWER_ON,READ_REG,GET_INFO}
+```
+
+Leitura: o caminho de playback e **userspace -> /dev/usb_dac (ioctl) -> FPGA ->
+I2S -> cs43198**. O `DAC Playback Volume`/`DAC PO Gain` que vimos no `tinymix` sao
+o controle do codec; o *transporte* e o FPGA.
+
+Consequencia para a opcao B: **nao e ALSA que falta — e um cliente do FPGA.**
+O caminho minimo passa a ser: abrir `/dev/usb_dac`, por o FPGA em modo DAC
+(`fpga_enter_usb_dac_mode`), selecionar canal I2S SOC/bit depth e alimentar
+`FPGA_AUDIO_PCM` com os frames.
+
+Proximo passo: extrair o ABI dos ioctls (struct sizes/campos e numeros) por
+REA/Ghidra no `gw-fpga.ko`.
