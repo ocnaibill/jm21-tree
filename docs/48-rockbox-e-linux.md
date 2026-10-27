@@ -1189,3 +1189,28 @@ o PCM abre, o machine driver aceita, e a falha esta em **prepare/trigger/write**
 Consequencia pratica: a frente "stub de HAL" que eu propus **nao e o caminho**.
 O caminho e achar por que o `spf_core`/DSP recusa o `RUN` (provavelmente
 topologia/calibracao ACDB ausente, que e justamente o que o HAL carregaria).
+
+### 11.9 Onde exatamente falha: write devolve -EINVAL
+
+Instrumentamos o `tinyplay` (`pcm_get_error`) e medimos a cadeia ALSA com kprobes:
+
+| etapa | retorno |
+|---|---|
+| `snd_pcm_open` | 0 |
+| `msm_common_snd_startup` | 0 |
+| `snd_pcm_hw_params` / `msm_common_snd_hw_params` | 0 |
+| `snd_pcm_prepare` | 0 |
+| **write (`SNDRV_PCM_IOCTL_WRITEI_FRAMES`)** | **-EINVAL** (`cannot write initial data: Invalid argument`) |
+| `snd_pcm_trigger` | nunca chamado |
+
+Periodo minimo do device: 512 frames (`-p 256` e recusado com
+"device only supports >= 512 frames"); com 512/1024/2048 o erro e sempre o
+mesmo `-EINVAL`. Ou seja, **nao e tamanho de buffer**.
+
+Leitura: o stream do DSP nunca foi realmente aberto no `hw_params` — o machine
+driver devolve 0 sem configurar o `spf_core`, e o `copy` do PCM falha com
+EINVAL porque o runtime nao tem DMA/stream do lado do ADSP. E exactamente o que
+o HAL faria antes de qualquer `write`.
+
+Nota de metodo: os simbolos `audio_pcm_*` do kallsyms sao do gadget USB (UAC),
+nao do DSP — nao servem para tracar este caminho.
