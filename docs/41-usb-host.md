@@ -177,3 +177,41 @@ observado).
 
 Bônus: com o toggle ligado, a captura de pacotes GPR (§docs/48 11.15) mostra a
 **variante DSD** dos pacotes, o que documenta o segundo formato do protocolo.
+
+### TESTE 2026-10-27: o transporte USB ACEITA DSD (corrige a leitura anterior)
+
+Feito com o **Sonata** como DAC USB (host) + FT1 no Sonata, e depois FT1 direto
+no JM21:
+
+| cenario | resultado |
+|---|---|
+| PCM comum, **All To DSD OFF**, pelo Sonata | **toca** |
+| PCM comum, **All To DSD ON**, pelo Sonata | **toca** |
+| `decaud-goldberg-var5-dsd256.dsf` pelo Sonata | **silencio, nao toca de forma alguma** |
+| mesmo `.dsf` no DAC interno (FT1 balanceado) | **toca normalmente** |
+
+**O que isso derruba:** a frase "DSD nativo esta quebrado neste stack"
+(secoes anteriores) era **larga demais**. Com All To DSD ligado, o mesmo caminho
+USB leva DSD e toca — logo o **transporte USB suporta DSD**; o `libfiioaudio`
+converte PCM->DSD e o Sonata reproduz.
+
+**O que sobra como causa:** o problema e especifico do **arquivo DSD nativo em
+taxa DSD256** (11,2896 MHz) por USB. Hipoteses, em ordem:
+
+1. **Taxa fora do alcance do Sonata**: DoP de DSD256 exigiria 705,6 kHz (acima
+   dos 384 kHz ja recusados com `Audio open failure : UNSUPPORTED`); o caminho
+   nativo DSD256 (altsetting DSD do UAC2) pode nao estar sendo negociado.
+2. **"DSD out mode"** do app (Native vs DoP) — se estiver em DoP, DSD256 nao
+   cabe em taxa nenhuma; se estiver em Native, o altsetting nao foi aceito.
+3. O DAC interno aceita DSD256 nativamente (por isso toca no FT1 direto), o que
+   **nao** diz nada sobre o Sonata.
+
+**Experimento decisivo (barato):** tocar um arquivo **DSD64** (2,8224 MHz) pelo
+Sonata em modo **Native**.
+- DSD64 Native toca -> "nativo quebrado" e falso: o limite e de **taxa**
+  (DSD256), e o diagnostico muda de "bug de transporte" para "limite do DAC".
+- DSD64 Native tambem fica mudo -> o nativo so funciona ate certa taxa ou nao
+  funciona, e o alvo passa a ser o altsetting/negociacao.
+
+`[?]` Registrado que `persist.sys.all.to.dsd` voltou a `0` e a rota a `SPEAKER`
+depois do teste (Sonata removido).
