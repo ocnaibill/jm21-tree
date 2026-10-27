@@ -250,3 +250,77 @@ do TWRP mistura forks de snapshots diferentes do AOSP (`build/make` 14.1 ×
 - `~/jm21-artifacts/twrp-jm21-crypto-experimental.img` (rota A, trava no splash)
 - `device-tree/fiio/jm21/` no repo = build reproduzível
 - `tools/audit-exported.py` = auditoria Q20
+
+## 9. Sessao 5 (2026-10-27) — audio fora do Android, mapa do DSD e GSI medida
+
+### 9.1 O que foi fechado
+
+| tema | resultado |
+|---|---|
+| #13-B (audio no TWRP) | card `bengal-idp-snd-card` sobe; `tinymix` com 160 controles; **playback impossivel por ALSA** (ver 9.2) |
+| bug do "DSD nativo por USB" | **era falso** — ver 9.3 |
+| #12 (GSI) | **medida**: A13 GSI boota, vendor sobrevive, audio nao (ver 9.4) |
+| #22 (termico/carga) | JEITA confirmado em campo (51 C, `health=Overheat`, carga 0 = correto) |
+| mapa do fork oficial | framework/SystemUI/Settings patcheados; 18 apps; chave de plataforma e da FIIO |
+
+### 9.2 Por que ALSA nao toca neste aparelho
+
+O kernel do JM21 **nao tem platform component de ASoC**
+(`/sys/kernel/debug/asoc/platforms` vazio; nenhum driver `*-pcm` em 264). Os PCMs
+do card sao stubs. O audio real vai por outro caminho:
+
+```
+HAL -> write() em /dev/aud_pasthru_adsp (pacotes GPR, ABI extraida por REA)
+    -> ADSP (APM faz o hw_params) -> I2S -> FPGA (I2C) -> cs43198
+```
+
+Capturamos os pacotes reais de playback (kprobe em `gpr_send_pkt`) e a sequencia
+de setup nao aparece ao dar play — o HAL mantem o stream aberto desde o boot.
+
+### 9.3 O bug do DSD era configuracao
+
+`dsd256.dsf` ficava mudo no Sonata e tocava no DAC interno. Com o descritor USB
+lido (`lsusb -v`): o Sonata **anuncia DSD nativo** (`alt 4`, `bmFormats
+0x80000000`, banda suficiente). O que faltava era **"DSD out mode = Native"**:
+o default e DoP, e DoP de DSD256 exigiria 705,6 kHz. Com Native, toca.
+Licao registrada: antes de chamar de bug, variar as chaves do app.
+
+### 9.4 GSI: o que ela provou
+
+GSI A13 AOSP puro: boota em 35 s; kernel, modulos `vendor_dlkm`, card ALSA, HAL
+QCOM, SD e charging **seguem vivos**. Mas:
+
+- apps FiiO desaparecem (viviam em `/system`);
+- o FiiOMusic (de `/data`) abre e navega, mas **nao toca**:
+  `NumberFormatException: "unknown"` em `FiiOAUtils`;
+- players genericos (Poweramp) tocam 0,8 s e pausam, com
+  `AudioFlinger: write blocked ... 4 delayed writes` e
+  `Unable to set property "mqa.audio.type" ... 0x18`.
+
+**Conclusao:** nao basta manter o vendor. O DAP depende de um **contrato de
+system**: `framework.jar`/`framework-res`/`services.jar` patcheados (que
+sintetizam `fiio.current.play.device` e outras props) + apps + overlays.
+Para um port fiel, **A13 e o teto** — porque A14+ nao aceita esses jars.
+
+### 9.5 Caminho recomendado para ROM custom
+
+1. `jadx` no `framework.jar`/`services.jar` -> diff contra AOSP 13 -> lista real
+   de patches (a medir).
+2. Estrategia barata: **LineageOS 20 empacotando os componentes da FIIO como
+   prebuilts** (framework, framework-res, services, SystemUI, Settings + 18 apps).
+3. Assinatura: reusar os jars da FIIO evita o muro da chave de plataforma.
+
+### 9.6 Custos aprendidos (para nao repetir)
+
+- **Trocar system com FBE exige factory reset na volta.** O userdata nao
+  sobrevive; o SD nao e afetado.
+- **`fastboot reboot fastboot` trava com a TWRP**: fastbootd mora no recovery
+  stock. Sequencia: stock recovery -> fastbootd -> stock recovery de volta ->
+  TWRP por ultimo.
+- `fastboot 37` nao remenda vbmeta (`AVB_MAGIC`): editar `flags` no offset 120
+  (`=3`) resolve.
+
+### 9.7 Estado do aparelho ao fim da sessao
+
+Stock 1.1.1, userdata limpo, TWRP `own-funcional` regravada em `recovery`,
+`vbmeta` stock. Card de audio presente, boot em ~30 s.
