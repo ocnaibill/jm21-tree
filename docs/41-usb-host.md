@@ -215,3 +215,39 @@ Sonata em modo **Native**.
 
 `[?]` Registrado que `persist.sys.all.to.dsd` voltou a `0` e a rota a `SPEAKER`
 depois do teste (Sonata removido).
+
+### CONFIRMADO 2026-10-27: o limite e de TAXA, nao de "DSD nativo"
+
+Teste completo com o Sonata (FiiO Music, "DSD out" no padrao):
+
+| arquivo | DAC interno (FT1 direto) | Sonata (USB) |
+|---|---|---|
+| DSD64 | toca | **toca** |
+| DSD128 | toca | **toca** |
+| DSD256 | toca | **silencio** |
+| PCM (All To DSD on/off) | toca | **toca** |
+
+A conta fecha sem misterio:
+
+| formato | taxa DSD | DoP exigiria | Sonata (<=384 kHz) |
+|---|---|---|---|
+| DSD64 | 2,8224 MHz | 176,4 kHz | cabe |
+| DSD128 | 5,6448 MHz | 352,8 kHz | cabe |
+| DSD256 | 11,2896 MHz | **705,6 kHz** | **nao cabe** |
+
+Leitura definitiva: **o stack nao esta quebrado para DSD nativo.** DSD64/128
+tocam por USB — por DoP, que e o caminho que o app usa por padrao. O DSD256
+falha porque nao cabe em DoP e o caminho **nativo** (altsetting DSD do UAC2) nao
+e engajado.
+
+Questao remanescente (a unica): **de quem e a limitacao?**
+- se o **Sonata** nao anunciar DSD nativo nos descritores UAC2 -> e limite do
+  DAC, o JM21 esta inocente;
+- se anunciar -> o app/HAL nao tenta o modo nativo, e isso e o bug de verdade.
+
+Como decidir sem o DAP: plugar o Sonata num PC e ler os descritores
+(`lsusb -v -d <vid:pid>`), procurando altsettings com formato DSD (DSD_U32 /
+`DSD` no AS Interface Descriptor). `[?]`
+
+Nota: "SPDIF OUT = DoP" e uma opcao **diferente** do "DSD out mode" da tela de
+USB audio; nenhuma das duas foi alterada no teste.
