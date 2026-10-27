@@ -1056,3 +1056,49 @@ O que falta para "Linux minimo tocando":
 
 Ou seja: o item mais arriscado da opcao B (audio sob Linux) **deixou de ser
 risco**.
+
+### 11.4 Player e mixer funcionando; playback barrado por um gate do driver
+
+`tinyplay` e `tinymix` compilados do AOSP (`external/tinyalsa`) e empurrados
+para o ramdisk do TWRP (sem reflashar):
+
+```
+$ tinymix
+Mixer name: 'bengal-idp-snd-card'
+Number of controls: 160
+... DAC Playback Volume / DAC PO Gain / DAC Digital Filter Mode   <- controles do cs43198
+```
+
+Ou seja: **mixer 100% acessivel**, incluindo os controles do DAC da FiiO.
+
+Ao tentar tocar (`tinyplay test440.wav -D 0 -d N`), todos os PCMs recusam com:
+
+```
+bengal-asoc-snd ...: check_userspace_service_state: pcm_id 5 state 0
+  -> tinyplay: "Error playing sample"
+```
+
+O `machine_dlkm` **exige que o "userspace audio service" esteja registrado**
+antes de abrir qualquer PCM. E o gate e interno:
+
+- nao ha parametro de modulo (`/sys/module/machine_dlkm/parameters` nao existe);
+- nao ha atributo em sysfs no device do card;
+- nao ha property lida (as strings do modulo nao mostram nenhuma);
+- a mensagem companheira e `"%s userspace service crashed"`, tipica de SSR do
+  audio.
+
+Hipotese: esse flag e setado pelo **HAL** (userspace QCOM) via ioctl/notifier no
+`audio_pd` do ADSP. Ou seja: mais um gate que existe justamente porque o HAL
+"avisa" que esta vivo.
+
+### 11.5 Onde a opcao B para (e o que faltaria)
+
+Estado: card ✓, mixer ✓, PCM nodes ✓, player ✓ — **falta o gate do
+`check_userspace_service_state`**.
+
+Caminhos:
+1. Descobrir o canal do "userspace service" (kprobe em
+   `check_userspace_service_state` para ver o que ele le; ou procurar o misc
+   device que o machine driver cria quando o `audio_pd` sobe).
+2. Implementar um "stub de HAL" minimo que faca esse registro (pode ser so abrir
+   um device/ioctl uma vez).
