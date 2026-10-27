@@ -37,10 +37,8 @@ echo
 printf "fase            : %s\n" "$(phase)"
 
 # --- progresso do ninja (ultimo log que tiver %)
-LOG=""
-for f in /tmp/lineage-build.log /tmp/fixconf.log /tmp/soong-b9.log /tmp/fixconf-out3.log; do
-    [ -f "$f" ] && LOG="$f"
-done
+LOG=$(ls -t /tmp/lineage-full.log /tmp/lineage-build.log /tmp/fixconf.log \
+        /tmp/soong-b*.log /tmp/fixconf-out*.log 2>/dev/null | head -1)
 if [ -n "$LOG" ]; then
     last=$(grep -oE "\[ *[0-9]+% [0-9]+/[0-9]+\]" "$LOG" 2>/dev/null | tail -1)
     if [ -n "$last" ]; then
