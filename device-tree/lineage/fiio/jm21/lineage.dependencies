@@ -1,0 +1,9 @@
+[
+]
+# Quando os blobs forem publicados, apontar para o repositorio de vendor, ex.:
+# {
+#   "remote": "github",
+#   "repository": "ocnaibill/proprietary_vendor_fiio",
+#   "target_path": "vendor/fiio",
+#   "branch": "lineage-20"
+# }
