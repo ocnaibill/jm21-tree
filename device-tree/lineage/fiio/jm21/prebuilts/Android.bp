@@ -1,0 +1,211 @@
+// Gerado a partir de dumps/fw-1.1.1 (system/app e system_ext/priv-app).
+// Assinatura: certificate "platform" (o Soong assina com a chave da ROM).
+// ATENCAO: re-assinar muda o certificado; todos os apps FiiO precisam sair
+// juntos para continuarem se reconhecendo (ver prebuilts/README.md).
+
+android_app_import {
+    name: "AboutFiio",
+    apk: "files/app/AboutFiio.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "DebugTool",
+    apk: "files/app/DebugTool.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "DeviceVendor",
+    apk: "files/app/DeviceVendor.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "EcaiTestAPP",
+    apk: "files/app/EcaiTestAPP.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "EnterSleep",
+    apk: "files/app/EnterSleep.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FactoryTest",
+    apk: "files/app/FactoryTest.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOCast",
+    apk: "files/app/FiiOCast.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOEq",
+    apk: "files/app/FiiOEq.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOIpod",
+    apk: "files/app/FiiOIpod.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOMarket",
+    apk: "files/app/FiiOMarket.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOMusic",
+    apk: "files/app/FiiOMusic.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOTape",
+    apk: "files/app/FiiOTape.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "FiiOUpdate",
+    apk: "files/app/FiiOUpdate.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "ModeSelection",
+    apk: "files/app/ModeSelection.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "Roon",
+    apk: "files/app/Roon.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "Scrcpy",
+    apk: "files/app/Scrcpy.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+android_app_import {
+    name: "WIFI",
+    apk: "files/app/WIFI.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: true,
+    },
+}
+
+
+// SystemUI e Settings: privilegiados e MUITO acoplados ao framework.
+// Deixados fora do primeiro build de proposito — entram depois que o resto
+// bootar (ver prebuilts/README.md, ordem de risco).
+//
+// android_app_import {
+//     name: "FiioSystemUI",
+//     apk: "files/system_ext/SystemUI.apk",
+//     certificate: "platform",
+//     privileged: true,
+//     overrides: ["SystemUI"],
+// }
+//
+// android_app_import {
+//     name: "FiioSettings",
+//     apk: "files/system_ext/Settings.apk",
+//     certificate: "platform",
+//     privileged: true,
+//     overrides: ["Settings"],
+// }

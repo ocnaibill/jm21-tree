@@ -14,7 +14,6 @@ $(call inherit-product-if-exists, vendor/fiio/jm21/jm21-vendor.mk)
 
 # ------------------------------------------------------- configs do device
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/media_codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml
 
 # ------------------------------------------------------- permissao privilegiada
 # Os 18 APKs da FIIO sao priv-app no stock (Settings/SystemUI tambem).
@@ -29,7 +28,13 @@ PRODUCT_PACKAGES += \
     AboutFiio \
     ModeSelection \
     DeviceVendor \
-    EnterSleep
+    EnterSleep \
+    FactoryTest \
+    DebugTool \
+    EcaiTestAPP \
+    Roon \
+    Scrcpy \
+    WIFI
 
 # SystemUI/Settings da FIIO entram como prebuilt (ver prebuilts/README.md).
 # Manter desligado ate o re-assinamento estar resolvido:

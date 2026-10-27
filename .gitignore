@@ -80,3 +80,6 @@ tools/abi-test/*.mod.c
 tools/abi-test/.*.cmd
 tools/abi-test/modules.order
 tools/abi-test/Module.symvers
+
+# APKs e blobs extraidos nao entram no repo (ver prebuilts/README.md)
+device-tree/lineage/fiio/jm21/prebuilts/files/
