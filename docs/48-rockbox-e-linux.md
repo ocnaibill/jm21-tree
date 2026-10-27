@@ -1386,3 +1386,57 @@ pacotes que o Android envia durante um playback real).
 **Rota mais barata para descobrir o protocolo:** kprobe em `gpr_send_pkt` /
 `audio_pkt_write` no Android durante uma musica, despejando os primeiros bytes
 de cada pacote. Isso da o vocabulario exato sem engenharia reversa as cegas.
+
+### 11.15 Captura dos pacotes reais (kprobe em `gpr_send_pkt`, playback do Android)
+
+Com o probe em `gpr_send_pkt` lendo 40 bytes do pacote (ponteiro de kernel, ja
+copiado pelo `memdup_user`), durante playback real:
+
+```
+w0 = 0x00004460   header: size = w0>>8 = 68 bytes, low byte 0x60
+w1 = 0x00000302
+w2 = 0x00002010
+w3 = 0x00004001
+w4 = 0x00000001 | 0x00000000   (alterna por pacote)
+w5 = 0x0400100A
+w6 = 0x0        w7 = 0x0
+w8 = 0xB081BAF8 (endereco fisico; alterna de 80 em 80 bytes)
+w9 = 0x00003C00 (15360 = 15 KiB)
+```
+
+`w0>>8` bate **exatamente** com o `count` do `write()` (0x28, 0x48, 0x58 nas
+capturas anteriores) — confirma a checagem vista no pseudo-codigo do
+`audio_pkt_write`.
+
+Limitacao da captura: **so apareceram pacotes de dados**. O stream do HAL fica
+aberto desde o boot, entao a sequencia de setup (formato / shared-mem map / run)
+nao acontece ao dar play — ela ocorre na inicializacao do HAL. Para captura-la
+seria preciso armar o kprobe **antes do boot** (ou reiniciar com o probe
+persistente), o que ficou para depois.
+
+### 11.16 Avaliacao final da opcao B (honesta)
+
+Cadeia completa descoberta:
+
+```
+Android HAL (android.hardware.audio.service_64)
+   -> write() em /dev/aud_pasthru_adsp  (pacotes GPR: header/opcode/token + PA de buffer ION)
+   -> gpr_send_pkt -> ADSP (APM faz o hw_params de verdade)
+   -> I2S do SoC
+   -> FPGA (fpga_audio_interface.ko, I2C: input channel = soc, MCLK 22/45/90)
+   -> cs43198 (DAC FiiO)
+```
+
+Nada disso e ALSA. Reproduzir playback fora do Android exige **reescrever o
+cliente APM/GPR do HAL**: alocar ION, mapear shared memory, mandar media format,
+run, e entao os pacotes de dados com PA. E as opcodes de setup nao estao
+documentadas — teriam de ser descobertas capturando o boot.
+
+**Conclusao:** a opcao B (Linux minimo) e excelente como **bancada de
+manutencao** — recovery proprio, backup, diagnostico, shell com o kernel stock —
+mas **nao e viavel como player de audio** sem reimplementar o HAL de audio da
+Qualcomm. Para tocar musica, a rota barata e a **opcao A**: Rockbox como app
+sobre o Android (a HAL real, ja funcionando).
+
+Recomendacao de sequencia: manter a TWRP como bancada; atacar #12 (GSI) e, para
+audio, voltar para a opcao A.
