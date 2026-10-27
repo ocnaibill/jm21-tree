@@ -1214,3 +1214,38 @@ o HAL faria antes de qualquer `write`.
 
 Nota de metodo: os simbolos `audio_pcm_*` do kallsyms sao do gadget USB (UAC),
 nao do DSP — nao servem para tracar este caminho.
+
+### 11.10 CAUSA RAIZ: falta o *platform component* do ASoC (o DSP nao tem ops)
+
+```
+$ cat /sys/kernel/debug/asoc/platforms
+                                  <-- VAZIO
+
+$ cat /sys/kernel/debug/asoc/components
+btfmslim_slave
+soc:qcom,msm-stub-codec
+soc:spf_core_platform:bolero-codec
+soc:fiio,dac-core
+soc:snd_soc_dummy  (x2) ...
+                                  <-- NAO existe componente spf_core/platform
+```
+
+O driver `spf-core-platform` **esta** registrado e vinculado ao device
+`/sys/bus/platform/devices/soc:spf_core_platform` (modulo `live`, refcnt 8), mas
+ele **nao registrou o platform component no ASoC core**.
+
+Consequencia mecanica, que explica todos os numeros da §11.9:
+
+| etapa | com platform component | sem platform component |
+|---|---|---|
+| `snd_pcm_open` | 0 | 0 |
+| `hw_params` | configura o DSP | **no-op** (devolve 0) |
+| `prepare` | 0 | 0 |
+| `write` | entrega ao DSP | **-EINVAL** (sem `dma_area`/`copy`) |
+
+Ou seja: nao havia gate nenhum — o PCM estava **oco**. O `check_userspace_service_state`
+da §11.8 era apenas o boletim do shutdown, como o Ghidra ja tinha mostrado.
+
+Proximo passo: no `spf_core_dlkm.ko`, ver sob que condicao o
+`devm_snd_soc_register_component` e chamado (provavelmente amarrado ao
+`spf_core_is_apm_ready`), e o que falta para o APM subir.
