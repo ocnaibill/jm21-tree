@@ -173,3 +173,69 @@ fastboot flash system system.img
 
 `[?]` Confirmar em campo se o `fastboot` desta versao aceita
 `snapshot-update cancel` e `delete-logical-partition` antes de depender deles.
+
+## 8. Execucao: medicao ao vivo (2026-10-27)
+
+### 8.1 Estado real do `super` (medido no aparelho)
+
+```
+super            = 10491136 setores = 5122,6 MiB   (/dev/block/mmcblk0p88)
+system_a         = 2133,4 MiB
+system_a-cow     = 1850472 setores = 903,6 MiB
+odm_a-cow        = 2368 setores   = 1,2 MiB
+product_a-cow    = 9752 setores   = 4,8 MiB
+grupo qti_dynamic_partitions_a max = 5367267328 bytes
+snapshotctl: "Update state: none"  -> COW sao restos, sem OTA pendente
+slot: _a   (virtual A/B, dynamic partitions)
+```
+
+### 8.2 A GSI escolhida CABE sem deletar nada
+
+```
+aosp_arm64-exp-TQ3A.230805.001.A3-10454027-66e107ed.zip   (794 MiB)
+  -> system.img = 1,8 GiB (ext2, nao esparso)
+system_a = 2133,4 MiB   ->  cabe (folga ~230 MiB)
+```
+
+Isso **simplifica muito** o plano da §7.5: nao e preciso apagar COW nem
+redimensionar o `super`. Basta `fastboot flash system`.
+
+### 8.3 Ferramenta
+
+```
+fastboot 37.0.0p1  -> tem create/delete/resize-logical-partition e snapshot-update
+fingerprint: qti/bengal_515/bengal_515:13/TKQ1.230110.001/eng.fiio.20260428.144644:user/dev-keys
+```
+
+### 8.4 Assinatura: a chave de plataforma e da FIIO (nao e testkey)
+
+`ro.build.tags=dev-keys` engana. O certificado de `system_ext/priv-app/Settings.apk`:
+
+```
+subject/issuer: C=CN, ST=Guangdong, L=Guangzhou, OU=Android, CN=Android,
+                emailAddress=pengweizhong@fiio.net
+SHA-256: B3:CA:AA:E4:C3:64:FB:E0:D9:15:F9:74:3A:31:B5:3D:76:C0:0D:B9:8B:A2:0B:FE:60:1B:57:CB:3E:5C:B9:19
+```
+
+Nem `Settings` nem `FiiOMusic` declaram `sharedUserId` (bom). Mas permissoes de
+**nivel signature** ligadas ao framework so continuam valendo se a ROM for
+assinada com essa chave — que so a FiiO tem. Consequencia para o port:
+pre-empacotar os APKs mantem a assinatura deles entre si; o que quebra e a
+conversa com um framework re-assinado.
+
+### 8.5 Sequencia de flash (decidida)
+
+```
+# 1. bootloader
+fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img
+# 2. fastbootd (particoes logicas)
+fastboot snapshot-update cancel            # limpa as COW restantes
+fastboot flash system ~/jm21-gsi/system.img
+fastboot reboot
+```
+
+Rollback: `fastboot flash system dumps/fw-1.1.1/system.img` + `vbmeta.img`.
+
+Criterio da primeira rodada (A13, controle): **boota? audio? roda de volume?**
+A resposta mede quanto do DAP vem do `system` e quanto vem do `vendor` — que e
+exatamente a pergunta aberta na §"MAPA DO FORK OFICIAL" (docs/05).
