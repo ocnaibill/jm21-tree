@@ -52,5 +52,3 @@ PRODUCT_PRODUCT_PROPERTIES += \
 # DEVICE_PACKAGE_OVERLAYS := $(LOCAL_PATH)/overlay
 
 # ------------------------------------------------------- sepolicy
-BOARD_VENDOR_SEPOLICY_DIRS += $(LOCAL_PATH)/sepolicy/vendor
-SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(LOCAL_PATH)/sepolicy/private
