@@ -1440,3 +1440,29 @@ sobre o Android (a HAL real, ja funcionando).
 
 Recomendacao de sequencia: manter a TWRP como bancada; atacar #12 (GSI) e, para
 audio, voltar para a opcao A.
+
+### 11.17 Repeticao controlada: parar/play nao reabre o stream
+
+Teste feito com o buffer de trace limpo e `tracing_on=1`, musicas paradas e
+depois tocadas de novo: **comportamento identico** ao da §11.15.
+
+- so pacotes de dados (`w0=0x4460`, `w1=0x302`, `w2=0x2010`, `w3=0x4001`,
+  `w5=0x0400100A`, `w9=0x3C00`);
+- `w8` (endereco fisico) faz **ping-pong entre dois enderecos separados por 80
+  bytes**, e o par avanca pelo ring:
+
+```
+agora:  0xb081bb98 / 0xb081bbe8
+antes:  0xb081baa8 / 0xb081baf8
+ring:   0x3C00 = 15 KiB
+```
+
+Conclusao: **parar e dar play nao reabre o stream** — o HAL mantem o stream vivo
+desde o boot. A sequencia de setup (media format / shared-mem map / run) so
+pode ser capturada armando o kprobe **antes** da inicializacao do HAL.
+
+Receita para a proxima tentativa (quando puder reiniciar):
+1. `setprop`/init script ou `adb shell` bem cedo + `kprobe_events` em
+   `gpr_send_pkt` e `audio_pkt_write`;
+2. deixar `tracing_on=1` desde antes do `audio.hal` subir;
+3. filtrar por `w1`/`w2` diferentes de `0x302`/`0x2010` — esses serao os de setup.
