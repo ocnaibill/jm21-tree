@@ -125,7 +125,9 @@ force-stop → 49/3 (som).
 ## 7. Conclusões do modo host
 
 1. **PCM no host vai até 384 kHz nativo** (com um DAC que anuncie).
-2. **DSD por DoP funciona**; **DSD nativo está quebrado** neste stack (HAL/USB).
+2. ~~**DSD nativo está quebrado** neste stack (HAL/USB)~~ — **ERRADO, corrigido em
+   2026-10-27**: DSD nativo funciona; o que falha é o **default DoP**, que não
+   consegue carregar DSD256 (ver §"RESPOSTA DEFINITIVA" abaixo).
 3. A **permissão USB é por app** e o UAPP conflita.
 4. O app precisa do **evento de attach** para escolher o modo certo — reiniciar
    depois do plugue o joga no caminho nativo (silencioso).
@@ -138,25 +140,38 @@ force-stop → 49/3 (som).
 | DSD128 (5 644 800) | **352 800** | 49 / 3 | toca |
 | DSD256 (11 289 600) | — | — | **`Audio open failure : UNSUPPORTED`** |
 
-`[FATO]` O DSD256 é recusado porque o DoP exigiria **705,6 k** (11 289 600/16),
-acima dos 384 k do Sonata; o caminho nativo, que aceitaria, é o que está mudo.
-Depois da falha, o app **volta para a faixa anterior**.
+`[FATO]` O DSD256 é recusado porque o DoP exigiria **705,6 k** (11 289 600/16).
+A frase seguinte que estava aqui — "o caminho nativo, que aceitaria, é o que está
+mudo" — **estava errada**, e caiu no teste de 2026-10-27: escolhendo **Native**,
+o DSD256 toca. O problema nunca foi o caminho nativo; era o **default DoP**.
+Depois de uma falha, o app volta para a faixa anterior.
 
-### Workaround para o bug do DSD nativo
+### "DSD out mode": por que DoP não basta (corrigido em 2026-10-27)
 
 O app tem a opção **"DSD out mode"** na tela de USB audio
 (`ExclusiveUsbFragment`), com o aviso: *"Please choose DSD mode according to the
-USB DAC, and note that not all DACs support DoP/Native DSD."* Escolher **DoP**
-evita o caminho nativo (silencioso) sem depender do truque de não reiniciar o
-app.
+USB DAC, and note that not all DACs support DoP/Native DSD."*
+
+Leitura corrigida: **DoP não é o caminho "seguro"** — é o default, e ele tem um
+teto de taxa. DoP empacota DSD em PCM 16 bits, então:
+
+```
+DoP(D) = taxa_DSD / 16
+DSD64  -> 176,4 kHz   ok
+DSD128 -> 352,8 kHz   ok
+DSD256 -> 705,6 kHz   <- fora do que o caminho USB do JM21 entrega
+```
+
+Por isso **Native** é obrigatório a partir de DSD256 (e é o único caminho que
+usa o `alt 4` RAW_DATA/DSD_U32 do DAC).
 
 `[?]` A chave de preferência gravada por esse diálogo não foi recuperada (a
 classe `d2` não saiu no JADX), então o ajuste tem de ser feito pela interface.
 
 ### ALL TO DSD como amplificador do diagnóstico (não como correção)
 
-O painel tem **"All To DSD"** (off por padrão). Ele **não** conserta o bug de DSD
-nativo por USB — são caminhos diferentes:
+O painel tem **"All To DSD"** (off por padrão). Ele **não** tem relação com o
+teto de DoP discutido acima (são caminhos diferentes), mas é útil como sonda:
 
 | | All To DSD | Bug do DSD nativo USB |
 |---|---|---|
@@ -287,3 +302,28 @@ FiiO Music, mudar **"DSD out mode" para Native** e repetir o DSD256.
 - tocar -> confirmado: o defeito e o default DoP + ausencia de 705,6 kHz.
 - continuar mudo -> o caminho nativo esta quebrado no HAL, e o alvo passa a ser
   `audio.usb.bengal.so`.
+
+### FECHADO 2026-10-27: com "DSD out mode = Native", DSD256 toca no Sonata
+
+Confirmado em campo: mudando **"DSD out mode" para Native** na tela de USB audio
+do FiiO Music, o arquivo `dsd256.dsf` **tocou normalmente** pelo Sonata.
+
+Resultado final do caso:
+
+| | antes (default) | depois (Native) |
+|---|---|---|
+| DSD64 / DSD128 | tocavam (DoP) | tocam |
+| **DSD256** | **mudo** | **toca** |
+
+**Nao era bug de hardware, nem do DAC, nem do "caminho nativo".** Era o
+**default DoP**, que tem teto de taxa (705,6 kHz para DSD256) e que o caminho
+USB do JM21 nao entrega.
+
+Recomendacao de uso: para DACs externos que anunciam `RAW_DATA`, deixar
+**DSD out mode = Native**. Para DACs que so aceitam DoP, manter DoP (que e
+limitado a DSD128 na pratica, com 384 kHz disponivel).
+
+Nota de metodo: este caso ficou **meses** registrado como "DSD nativo quebrado"
+porque a primeira reproducao usou o modo default sem variar a configuracao do
+app. A licao vale para o resto do repo: **antes de chamar de bug, variar todas
+as chaves que influenciam o caminho.**
