@@ -319,7 +319,7 @@ Busca por `fiio` dentro dos binarios stock (`system.img`, `system_ext.img`,
 | camada | arquivo | refs `fiio` | particao | numa ROM custom |
 |---|---|---|---|---|
 | framework (codigo) | `framework.jar` | **93 unicas** | system | **perdido** |
-| framework (recursos) | `framework-res.apk` | **62 flags `config_fiio_*`** | system | **perdido** |
+| framework (recursos) | `framework-res.apk` | **61 flags `config_fiio_*`** | system | **perdido** |
 | services | `services.jar` | **34** | system | **perdido** |
 | SystemUI | `SystemUI.apk` | **164** | system_ext | **perdido** |
 | Settings | `Settings.apk` (95 MB) | **324** | system_ext | **perdido** |
@@ -340,7 +340,7 @@ SystemUIDialogForFiiO                                  -> dialogo do SystemUI
 config_fiio_{dac_balance,dac_config,dac_thdc2,bt_ldac,bt_lhdc,
    spdif_in_mode,spdif_out_switch,audio_vol_default,
    battery_charger_optimize,control_double_leds,custom_key,
-   custom_screen_saver,personality_screen_saver,...}   -> 62 flags de feature
+   custom_screen_saver,personality_screen_saver,...}   -> 61 flags de feature
 ```
 
 `services.jar`: `FIIO_POWER_KEY_DIALOG`, checagens de pacote em AMS/CE

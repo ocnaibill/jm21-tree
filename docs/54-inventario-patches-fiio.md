@@ -24,7 +24,7 @@ grep -rl -i fiio /tmp/jadx-XX/sources --include=*.java | wc -l
 | `android/media/AudioSystem.java` | constante `CODEC_PARAM_FIIO_MQA = 9` |
 | `android/content/ContentProvider.java` | casos especiais de pacote (`com.fiio.music`, `com.android.music`, `com.android.dreams.phototable`) |
 
-Mais os **62 recursos `config_fiio_*`** declarados em `framework-res.apk`
+Mais os **61 recursos `config_fiio_*`** declarados em `framework-res.apk`
 (valores default no próprio framework-res; o overlay do device **não** os
 contém — ver docs/05).
 
@@ -100,7 +100,7 @@ O medo era ter de reimplementar "o framework". A medição mostra outra coisa:
 
 | artefato | tamanho do fork | estratégia |
 |---|---|---|
-| `framework.jar` | **5 classes** + 62 recursos | **reimplementar** (patch pequeno) ou empacotar como prebuilt |
+| `framework.jar` | **5 classes** + 61 recursos | **reimplementar** (patch pequeno) ou empacotar como prebuilt |
 | `services.jar` | **11 classes**, patches triviais | **reimplementar** |
 | `SystemUI.apk` | 51 classes (1 pacote próprio) | **prebuilt** (é app) |
 | `Settings.apk` | a medir | **prebuilt** (é app) |
@@ -115,14 +115,14 @@ se reconhecendo entre si.
 ## 6. Próximos passos concretos
 
 1. fechar o número do `Settings.apk`;
-2. extrair os **valores** dos 62 `config_fiio_*` do `framework-res.apk` stock
+2. extrair os **valores** dos 61 `config_fiio_*` do `framework-res.apk` stock
    (são as flags que ligam cada feature do DAP);
 3. escrever os patches de `framework.jar`/`services.jar` como **diff contra o
    AOSP 13** (temos a árvore em `~/twrp13`);
 4. montar o device tree de LineageOS 20 com: patches + prebuilts + overlays +
    `property_contexts`/sepolicy da FIIO.
 
-## 7. As 62 flags `config_fiio_*` — o mapa de features do JM21
+## 7. As 61 flags `config_fiio_*` — o mapa de features do JM21
 
 Extraidas do `framework-res.apk` stock (jadx `-e`, `res/values/bools.xml` e
 `integers.xml`). Total **61** recursos: **28 ligados**, **32 desligados**, **1 inteiro**.
