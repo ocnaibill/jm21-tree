@@ -95,3 +95,81 @@ total, a ROM própria teria de **levar os patches da FiiO** para o framework.
 3. **Redimensionar o `super`** (o GPT tem folga? `[?]`).
 
 Ou seja: a GSI exige planejamento de espaço, não é só `fastboot flash system`.
+
+## 7. Plano de medicao da GSI (preparado em 2026-10-27)
+
+O objetivo desta medicao **nao** e "ter uma GSI": e descobrir empiricamente **ate
+que versao de Android o vendor A13 do JM21 continua conversando**. Isso decide
+se a ROM custom pode ir para A14/A15 ou se o teto pratico e o A13.
+
+### 7.1 O que ja esta medido
+
+| item | valor | fonte |
+|---|---|---|
+| `super` | 5122,6 MiB, **~1 MiB livre** | `super.img` do dump |
+| `system_a` | 2133,4 MiB | idem |
+| `system_a-cow` | 903,6 MiB (snapshot Virtual A/B) | idem |
+| kernel | 5.15.41-android13 | `uname -r` ao vivo |
+| `board.api_level` / `vendor.api_level` / `vndk` | **33 / 33 / 33** | `getprop` ao vivo |
+| treble | true | idem |
+
+Consequencia: a GSI **nao cabe com o `super` como esta**. Antes de qualquer
+flash e preciso liberar espaco (cancelar o snapshot e apagar as `-cow`) ou
+redimensionar o `super`.
+
+### 7.2 Rede de seguranca (ja existe no repo)
+
+`dumps/fw-1.1.1/` tem o conjunto **completo** do firmware stock (4,5 GB):
+
+```
+abl boot dtbo init_boot modem odm product recovery rpm
+system (2,1G) system_dlkm system_ext (506M) vbmeta vbmeta_system
+vendor (622M) vendor_boot vendor_dlkm (718M) xbl xbl_config
+```
+
+Rollback = `fastboot flash` dessas imagens. Nao ha risco de brick
+irreversivel enquanto esse diretorio existir.
+
+### 7.3 Ordem dos testes (cada um responde uma pergunta)
+
+1. **GSI A13 (controle)** — "uma system limpa boota neste vendor?". Se falhar
+   aqui, o problema e de metodo/compatibilidade, nao de versao, e nada mais
+   adianta.
+2. **GSI A14** — a primeira pergunta real: o vendor 33 continua funcionando?
+3. **GSI A15 / A16** — ate onde vai.
+
+### 7.4 Criterios de sucesso/falha (por subsistema)
+
+| subsistema | como verificar | leitura |
+|---|---|---|
+| boot | tela inicial + `adb` responde | binario |
+| audio | tocar musica | a HAL do vendor continua? |
+| DAC/FPGA | `tinymix` lista `DAC Playback Volume`; volume/filtro mudam | vendor intacto |
+| roda de volume / teclas | girar e ver volume mudar | hook de framework presente? |
+| SD | montar e ler | vendor ok |
+| modo USB DAC | plugar no PC e aparecer como DAC | FPGA + app FiiO |
+
+O item **roda de volume** e o que mais provavelmente falha: e o unico que parece
+estar em *framework*, nao em vendor. Se falhar so ele, a ROM custom e viavel
+(porta-se o hook). Se falharem audio e DAC, a resposta e "vendor nao conversa".
+
+### 7.5 Comandos previstos (quando for executar)
+
+```
+# 1. cancelar snapshot e liberar COW
+fastboot snapshot-update cancel
+fastboot delete-logical-partition system_a-cow
+
+# 2. desabilitar verificacao (guardar o vbmeta stock para voltar)
+fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img
+
+# 3. gravar a GSI
+fastboot flash system <gsi>.img
+
+# 4. voltar ao stock (rollback)
+fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img
+fastboot flash system system.img
+```
+
+`[?]` Confirmar em campo se o `fastboot` desta versao aceita
+`snapshot-update cancel` e `delete-logical-partition` antes de depender deles.
