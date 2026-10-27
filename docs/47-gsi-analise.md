@@ -334,3 +334,67 @@ Nao foi possivel setar a mao (`setprop` negado pelo SELinux em build user).
   vendor esta viva e so o app quebra.
 - Proximo passo natural: **rodada 2 com A14** (mesma GSI AOSP, so system) para
   medir o teto de versao — e o mesmo teste, repetido.
+
+## 10. Rodada 1: o segundo mecanismo (alem do app) e o veredito
+
+Testando com players **genericos** (nao-FiiO) no GSI, para separar "app quebrado"
+de "audio quebrado":
+
+| player | comportamento |
+|---|---|
+| Poweramp | `state=3` (PLAYING) por ~0,8 s -> volta a `state=2` (PAUSED) |
+| AOSP Music / AudioPreview | track criado, nunca ativa |
+| FiioMusic | `NumberFormatException` + `audioPause` |
+
+E no log do `AudioFlinger`:
+
+```
+W AudioFlinger: write blocked for 862 msecs, 4 delayed writes, thread 29
+W libc: Unable to set property "mqa.audio.type" to "0": error code: 0x18
+```
+
+### 10.1 O que isso significa
+
+`write blocked ... 4 delayed writes` = a HAL **nao consome** o buffer. O player
+toca 0,8 s, o buffer enche, e ele pausa. E a segunda negacao diz por que:
+`libfiioaudio`/`libfiioaqm` (vendor) tentam **setar properties** que so existem no
+`property_contexts` do sistema da FIIO. Em AOSP puro o SELinux nega (`0x18`) —
+exactamente como negou `fiio.current.play.device`.
+
+Ou seja, existem **dois** acoplamentos system<->vendor, e nao um:
+
+1. **app -> framework**: `fiio.current.play.device` e sintetizada pelo
+   `framework.jar` patcheado. Sem ela o player oficial nao reproduz.
+2. **vendor -> system**: as libs da FIIO dependem de **properties declaradas no
+   `property_contexts` (system)** — `mqa.audio.type`, `persist.sys.*`, etc. Sem
+   elas, o HAL/VAD nao consegue nem sinalizar seu estado, e o audio trava.
+
+### 10.2 Veredito da medicao (a pergunta da issue #12)
+
+| camada | sobrevive ao GSI? |
+|---|---|
+| kernel + modulos (`vendor_dlkm`) | **sim** |
+| HALs QCOM/FIIO, card ALSA, `aud_pasthru_adsp` | **sim** (processos de pe) |
+| SD, charging, teclas de hardware basicas | **sim** |
+| apps FiiO | nao estao (viviam em `system`) |
+| **contrato de properties + sepolicy** | **NAO** -> audio quebra |
+| **framework patcheado** | **NAO** -> app oficial quebra |
+
+**Conclusao:** nao basta "manter o vendor". Uma ROM custom para o JM21 tem de
+carregar tambem o **contrato de system que a FIIO estendeu**: `property_contexts`
+(propriedades `fiio.*`, `mqa.*`, `persist.sys.*`), a sepolicy correspondente e o
+`framework.jar`/`framework-res.apk`/`services.jar` patcheados. E exatamente o que
+o mapa da docs/05 previu — agora **medido**, nao inferido.
+
+E valida o teto pratico: esses componentes sao A13; A14+ exigiria reimplementar
+os patches. **A13 e o teto para um port fiel.**
+
+### 10.3 Estado do aparelho ao fim da rodada
+
+Esta rodando a **GSI A13** (system AOSP), com:
+- recovery **stock** (a TWRP foi substituida para termos fastbootd);
+- `vbmeta` com flags=3 (verificacao desligada);
+- userdata e SD intactos (apps instalados em `/data` continuam).
+
+Rollback (voltar ao oficial): `fastboot flash system dumps/fw-1.1.1/system.img`,
+`fastboot flash recovery <twrp.img>`, e `fastboot flash vbmeta vbmeta.img`.
