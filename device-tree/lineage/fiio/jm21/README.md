@@ -81,7 +81,22 @@ Se **áudio e DAC** passarem, o port está no caminho. Se a **roda** falhar, é 
 - [x] as 61 flags extraídas com valores
 - [x] patches de framework escritos (docs/55)
 - [x] patches de services escritos (docs/56)
-- [ ] árvore LineageOS 20 sincronizada
-- [ ] blobs extraídos
-- [ ] patches aplicados e buildando
-- [ ] prebuilts re-assinados
+- [x] árvore LineageOS 20 sincronizada (`~/lineage20`, lineage-20.0, depth=1, 100 GB)
+- [x] blobs extraídos (`vendor/fiio/jm21/proprietary`: 2675 arquivos, 703M vendor + 711M vendor_dlkm + 1,1M odm)
+- [x] patches aplicados na árvore (16/16, **sem fuzz**)
+- [x] 61 flags mescladas em `frameworks/base/core/res/res/values/config.xml`
+- [x] `lunch lineage_jm21-userdebug` aceito
+- [ ] build completo
+- [ ] prebuilts (SystemUI/Settings/apps) re-assinados
+
+## Lacunas conhecidas
+
+1. **262 symlinks** do vendor não são recriados: `PRODUCT_COPY_FILES` copia arquivos, não
+   cria links. Os importantes são os applets de `vendor/bin/* -> toybox_vendor` e
+   `vendor/odm -> /odm`. Precisa de script de pós-instalação ou `TARGET_FS_CONFIG_GEN`.
+2. `recovery.fstab` ainda é cópia do `twrp.fstab` (formato TWRP) — revisar para o
+   formato do recovery AOSP.
+3. `vendor/build.prop` é referenciado por `TARGET_VENDOR_PROP`, mas ainda não foi
+   validado no build.
+4. Kernel é **prebuilt** (sem fonte GPL): qualquer módulo out-of-tree novo é
+   impossível até a issue #17 andar.
