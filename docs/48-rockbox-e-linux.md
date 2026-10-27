@@ -1330,3 +1330,59 @@ O caminho minimo passa a ser: abrir `/dev/usb_dac`, por o FPGA em modo DAC
 
 Proximo passo: extrair o ABI dos ioctls (struct sizes/campos e numeros) por
 REA/Ghidra no `gw-fpga.ko`.
+
+### 11.13 O caminho de audio real: HAL -> /dev/aud_pasthru_adsp (pacotes GPR) -> ADSP
+
+O que o HAL de audio do Android tem aberto (pid 1054,
+`android.hardware.audio.service_64`):
+
+```
+/dev/aud_pasthru_adsp     <-- o caminho de dados
+/dev/msm_audio_ion         <-- buffers ION
+/dev/snd/control           <-- so controle de mixer
+```
+
+Confirmacao por `audio_pkt_dlkm.ko` (quem cria o device). O `write()` do
+dispositivo recebe um **pacote GPR** (`audio_pkt_write`, 0x1018b0):
+
+```c
+count >= 0x18 && count <= 0x1000
+hdr.header >> 8   == tamanho minimo exigido
+hdr.opcode == 0x100100c   -> pacote de dado:
+       count >= 0x2c
+       audpkt_chk_and_update_physical_addr(pkt)   /* VA -> PA, buffer ION */
+gpr_send_pkt(handle, pkt)                          /* -> ADSP */
+```
+
+E no lado do FPGA (`fpga_audio_interface.ko`, driver **I2C** do FPGA):
+
+```
+"AUDIO_LINK: set input channel to soc|xmos|bt"
+"AUDIO_LINK: pcm mode, rate %d, bits %d"
+AUDIO_DAC_MCLK_22 / _45 / _90
+FIIO_CONFIG_FPGA_CONTRL_POWER_ON / READ_REG / GET_INFO
+```
+
+Isto e: o SoC manda I2S, o FPGA chaveia/relogia (MCLK, formato) e entrega ao
+cs43198. O `hw_params` de verdade acontece **no APM do ADSP**, via pacotes.
+
+### 11.14 Consequencia para a opcao B (avaliacao honesta)
+
+O que falta para tocar audio fora do Android **nao e um driver de ALSA** — e um
+**cliente GPR/APM minimo**:
+
+1. alocar buffer ION (`/dev/msm_audio_ion` ou `dma_heap`);
+2. `open("/dev/aud_pasthru_adsp")`;
+3. enviar os pacotes de controle (media format / shared-mem map / run) com
+   `opcode` e `hdr.header >> 8` corretos;
+4. enviar `opcode 0x100100c` com os frames, atualizando VA->PA;
+5. configurar o FPGA por I2C (`set input channel to soc`, mclk, bits).
+
+O passo 3 e o dificil: os opcodes/campos do APM nao estao documentados no
+modulo (so existe o caso `0x100100c`), e teriam de ser descobertos por
+observacao do HAL em execucao (kprobe em `audio_pkt_write` para capturar os
+pacotes que o Android envia durante um playback real).
+
+**Rota mais barata para descobrir o protocolo:** kprobe em `gpr_send_pkt` /
+`audio_pkt_write` no Android durante uma musica, despejando os primeiros bytes
+de cada pacote. Isso da o vocabulario exato sem engenharia reversa as cegas.
