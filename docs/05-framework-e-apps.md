@@ -310,3 +310,58 @@ trabalho de port não é reescrever o áudio — é **re-empacotar esses APKs** 
 resolver **assinatura/permissões** (se usarem `sharedUserId` ou permissões de
 plataforma, uma ROM assinada com outra chave de plataforma os quebra) e os
 **overlays/RRO** de resources.
+
+## MAPA DO FORK OFICIAL (medido nas imagens 1.1.1, 2026-10-27)
+
+Busca por `fiio` dentro dos binarios stock (`system.img`, `system_ext.img`,
+`vendor.img`):
+
+| camada | arquivo | refs `fiio` | particao | numa ROM custom |
+|---|---|---|---|---|
+| framework (codigo) | `framework.jar` | **93 unicas** | system | **perdido** |
+| framework (recursos) | `framework-res.apk` | **62 flags `config_fiio_*`** | system | **perdido** |
+| services | `services.jar` | **34** | system | **perdido** |
+| SystemUI | `SystemUI.apk` | **164** | system_ext | **perdido** |
+| Settings | `Settings.apk` (95 MB) | **324** | system_ext | **perdido** |
+| apps OEM | `/system/app` | 18 pacotes | system | **perdido** |
+| overlay do device | `vendor/overlay/FrameworksResTarget_Vendor_JM21.apk` | 0 (so `config_dozeAlwaysOnEnabled`, `config_showNavigationBar`, `config_tether_wifi_regexs`) | vendor | preservado |
+| libs de audio | `vendor/lib64/libfiioaudio.so`, `libfiioaqm.so` | — | vendor | preservado |
+| modulos de kernel | `vendor_dlkm` (`dac_core_module`, `cs43198`, `gw-fpga`, `fpga_audio_interface`, `fiio_*`) | — | vendor_dlkm | preservado |
+
+### O que o framework patcheado faz (amostra do `framework.jar`)
+
+```
+fiio.current.play.device / FIIO_CURRENT_PLAY_DEVICE   -> dispositivo de reproducao atual
+fiio.media.router.change                               -> MediaRouter (roteamento de saida)
+fiio.cur.session.id                                    -> sessao de midia
+CODEC_PARAM_FIIO_MQA                                   -> parametro de MediaCodec p/ MQA
+/sys/devices/platform/soc/soc:fiio_attr/cw_batt_capacity -> capacidade da bateria do FIIO
+SystemUIDialogForFiiO                                  -> dialogo do SystemUI
+config_fiio_{dac_balance,dac_config,dac_thdc2,bt_ldac,bt_lhdc,
+   spdif_in_mode,spdif_out_switch,audio_vol_default,
+   battery_charger_optimize,control_double_leds,custom_key,
+   custom_screen_saver,personality_screen_saver,...}   -> 62 flags de feature
+```
+
+`services.jar`: `FIIO_POWER_KEY_DIALOG`, checagens de pacote em AMS/CE
+("AMS fiio check package"), intents `ACTION_EXTERNAL_CHARGING/DISCHARGING`, e a
+lista de pacotes `com.fiio.*` / `com.android.fiio*`.
+
+### Consequencia (corrige a avaliacao anterior)
+
+O gargalo de uma ROM custom **nao e o vendor — e o framework patcheado**. As
+integracoes que fazem o aparelho ser um DAP (play device, media router, dialogos
+de energia, screen savers, teclas) vivem no **topo**, na particao system.
+
+Portanto, para um port **fiel**:
+
+- **A13 e o teto pratico**, nao por causa do vendor, mas porque A14+ nao aceita
+  `framework.jar`/`services.jar` de A13. A frase anterior deste repo ("nao
+  estamos presos no 13") era otimista para o caso fiel.
+- Em **LineageOS 20 (A13)** da para reaproveitar `framework.jar`,
+  `framework-res.apk`, `services.jar`, `SystemUI.apk` e `Settings.apk` da FiiO
+  como **prebuilts** — preserva 100% das features, ao custo de congelar as
+  mudancas do Lineage nesses componentes.
+- O overlay do device **nao** contem os valores `config_fiio_*` (e minusculo e
+  so trata doze/navbar); eles estao no proprio `framework-res.apk`. Isso ajuda:
+  `framework.jar` + `framework-res.apk` andam sempre em par.
