@@ -398,3 +398,21 @@ Esta rodando a **GSI A13** (system AOSP), com:
 
 Rollback (voltar ao oficial): `fastboot flash system dumps/fw-1.1.1/system.img`,
 `fastboot flash recovery <twrp.img>`, e `fastboot flash vbmeta vbmeta.img`.
+
+### 10.4 Consequencia obrigatoria: o userdata NAO sobrevive ao voltar para o stock
+
+Ao restaurar o `system.img` oficial depois da GSI, o aparelho caiu em
+**"Can't load Android system. Your data may be corrupt"** (recovery AOSP), mesmo
+com `Try again` duas vezes.
+
+Causa: o userdata e **FBE** e as chaves ficam atreladas ao sistema/vendor que as
+criou. Trocando o system (GSI <-> stock), o antigo nao consegue mais decifrar o
+userdata e o framework trata como corrupcao. Nao e dano de hardware nem de
+particao.
+
+**Regra para as proximas rodadas:** trocar system com FBE **exige factory reset**
+na volta. Antes de qualquer GSI:
+1. avisar que o userdata sera perdido;
+2. confirmar que o que importa esta no cartao SD (que **nao** e afetado);
+3. anotar que a TWRP sai do aparelho (fastbootd precisa do recovery stock) e
+   precisa ser re-gravada depois.
