@@ -435,3 +435,60 @@ com o "USB some" da #22. `[?]`
 
 Monitor em curso no aparelho (30 s) para pegar o corte:
 `/data/local/tmp/thermal-monitor.log`.
+
+### CONFIRMAÇÃO EM CAMPO (2026-10-27): o JEITA agiu como documentado
+
+Durante uma sessão longa de escrita no cartão SD (Android, USB conectado,
+download pesado), o System UI mostrou **"Battery temperature too HIGH, stop
+charging!"**. Estado medido no momento:
+
+```
+status          Not charging
+capacity        100
+temp            510            <- 51,0 °C  (acima do t4 = 50 °C)
+voltage_now     4338000
+current_now     1600           <- ~0 A (carga realmente parada)
+health          Overheat
+input_current_limit 2300000
+```
+
+E no `dmesg` do `fiio-charger-manager`:
+
+```
+fcm_bat_temp_state_update ichrg_limit = 2000000 ichrg_current = 1000000
+fcm_bat_temp_state_update ichrg_limit = 2000000 ichrg_current = 500000
+fcm_check_thermal_status Temperatures heat!!!
+```
+
+Isto é **exactamente** o comportamento descrito acima: 51 °C > 50 °C (t4) →
+corrente de carga **0**, `health = Overheat`, e rearme só abaixo de 48 °C.
+**Não é bug** — é a proteção JEITA funcionando.
+
+#### Quem estava quente (thermal zones)
+
+```
+76600 cpuss-1 / cpu-1-3 / cpu-1-2      <- SoC a 76,6 °C
+76200 cpuss-0       75800 cpu-1-1/1-0
+72300 cpuss-2       71500 mapss       69900 video
+```
+
+O **SoC** estava a 76 °C; a bateria a 51 °C é consequência. Nesse estado os
+little cores já estavam limitados a **1.516 MHz de 1.900 MHz** (-20%), enquanto
+os big cores seguiam em 2.400 MHz (máximo). `android.thermal-hal` e
+`thermal-engine` ativos.
+
+#### Achado lateral (vale investigar)
+
+```
+init: Service 'fiio_drop_caches' (pid 20447) exited with status 0
+      oneshot service took 14.422000 seconds in background
+```
+
+O `fiio_drop_caches` (prop `fiio.start.dropcaches=1`) roda oneshot e levou
+**14–16 s** durante I/O pesado. Um `drop_caches` de 16 s martelando o SD é
+candidato a piorar tanto o aquecimento quanto a sensação de lentidão. `[HIP]`
+
+#### Recomendação prática
+
+Para downloads longos: deixar esfriar / tirar da carga, ou aceitar que a carga
+para acima de 50 °C e só retoma abaixo de 48 °C — **por desenho**.
