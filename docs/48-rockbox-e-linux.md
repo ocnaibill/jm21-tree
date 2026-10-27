@@ -1249,3 +1249,40 @@ da §11.8 era apenas o boletim do shutdown, como o Ghidra ja tinha mostrado.
 Proximo passo: no `spf_core_dlkm.ko`, ver sob que condicao o
 `devm_snd_soc_register_component` e chamado (provavelmente amarrado ao
 `spf_core_is_apm_ready`), e o que falta para o APM subir.
+
+### 11.11 O kernel do JM21 nao tem *platform component* nenhum (card e uma casca)
+
+Varreduras no aparelho com o card de pe:
+
+```
+$ ls /sys/bus/platform/drivers | grep -i pcm      -> (vazio, entre 264 drivers)
+$ cat /sys/kernel/debug/asoc/platforms            -> (vazio)
+$ ls /sys/kernel/debug/asoc/<card>/               -> btfmslim_slave, soc:fiio,dac-core,
+                                                     soc:qcom,msm-stub-codec,
+                                                     soc:snd_soc_dummy (x2),
+                                                     soc:spf_core_platform:bolero-codec
+```
+
+Os 12 filhos do `spf_core_platform` **todos** tem driver (`spf-core-platform`,
+`bolero-codec`, `msm-cdc-pinctrl` x6, `qcom-lpi-pinctrl`, `msm-audio-ion`,
+`bengal-asoc-snd`). O `spf_core_dlkm.ko` **nao importa**
+`devm_snd_soc_register_component` — so faz `of_platform_populate` — entao ele
+nao registra platform nenhum: quem deveria registrar sao os filhos, e nenhum
+registra.
+
+Nos 219 `.ko` do firmware nao existe nenhum driver de PCM de DSP
+(`msm-pcm-q6-v2` e afins). Os modulos que registram componente ASoC sao:
+`bolero_cdc`, `bt_fm_slim`, `dac_core_module` (FiiO), `fiio_snd_soc_dummy_dai`
+(FiiO), `stub_dlkm`, `wcd937x`, `wsa881x`.
+
+E nenhum deles importa `snd_pcm_lib_*` (alocacao de DMA) — ou seja, **nenhum
+deles e um platform de PCM**.
+
+Consequencia: o card `bengal-idp-snd-card` monta (codecs + DAIs) mas usa o
+platform *dummy*; por isso `hw_params` e no-op, `prepare` e no-op e **qualquer**
+PCM devolve `-EINVAL` no write — testamos 5, 6, 14, 16, 18: todos iguais.
+
+Proximo passo (precisa de reboot para Android): descobrir **por onde o Android
+toca de verdade** — `/proc/asound/cards` (tem mais de um card?),
+`/proc/asound/pcm`, e qual processo segura o PCM aberto. O caminho do DAC da
+FiiO (`cs43198.ko` + `fpga_audio_interface.ko` + `gw_fpga`) pode nao ser ALSA.
