@@ -121,3 +121,72 @@ se reconhecendo entre si.
    AOSP 13** (temos a árvore em `~/twrp13`);
 4. montar o device tree de LineageOS 20 com: patches + prebuilts + overlays +
    `property_contexts`/sepolicy da FIIO.
+
+## 7. As 62 flags `config_fiio_*` — o mapa de features do JM21
+
+Extraidas do `framework-res.apk` stock (jadx `-e`, `res/values/bools.xml` e
+`integers.xml`). Total **61** recursos: **28 ligados**, **32 desligados**, **1 inteiro**.
+
+### 7.1 Ligadas (28) — o que ESTE aparelho tem
+
+| flag | |
+|---|---|
+| `config_fiio_35mm_multiplexing_spdif_enabled` | ✅ |
+| `config_fiio_bal_po_lo_select_enabled` | ✅ |
+| `config_fiio_battery_charger_optimize_available` | ✅ |
+| `config_fiio_battery_disable_charger_setting_available` | ✅ |
+| `config_fiio_bluetooth_absolute_volume_enabled` | ✅ |
+| `config_fiio_bluetooth_audio_encoder_enabled` | ✅ |
+| `config_fiio_bt_ldac_enabled` | ✅ |
+| `config_fiio_bt_lhdc_enabled` | ✅ |
+| `config_fiio_custom_key_enabled` | ✅ |
+| `config_fiio_custom_screen_saver_enabled` | ✅ |
+| `config_fiio_dac_balance_enabled` | ✅ |
+| `config_fiio_dac_thdc2_enabled` | ✅ |
+| `config_fiio_digital_filter_enabled` | ✅ |
+| `config_fiio_lineout_vol_adjust_enabled` | ✅ |
+| `config_fiio_noheadset_auto_pause_enabled` | ✅ |
+| `config_fiio_output_gain_enabled` | ✅ |
+| `config_fiio_p2d_enabled` | ✅ |
+| `config_fiio_po_lo_spdif_select_enabled` | ✅ |
+| `config_fiio_roon_enabled` | ✅ |
+| `config_fiio_soft_hold_in_enable` | ✅ |
+| `config_fiio_spdif_output_mode_enabled` | ✅ |
+| `config_fiio_system_suspend_wifi_connect_enabled` | ✅ |
+| `config_fiio_tape_mode_enabled` | ✅ |
+| `config_fiio_temp_manage_enabled` | ✅ |
+| `config_fiio_touch_panel_gesture_wakeup_enabled` | ✅ |
+| `config_fiio_usb_boot_enabled` | ✅ |
+| `config_fiio_usbaudio_vol_adjust_enabled` | ✅ |
+| `config_fiio_vehicle_mode_enabled` | ✅ |
+
+### 7.2 Desligadas (32) — modelos/features que o JM21 nao usa
+
+`config_fiio_aes_in_enabled`, `config_fiio_bluetooth_playback_quality_enabled`, `config_fiio_control_double_leds_enabled`, `config_fiio_dac_config_enabled`, `config_fiio_desktop_mode_available`, `config_fiio_device_no_battery`, `config_fiio_gsensor_in_enable`, `config_fiio_hdmi_in_enabled`, `config_fiio_hdmi_out_arc_enabled`, `config_fiio_led_aw22xxx_in_enable`, `config_fiio_leds_breath_enabled`, `config_fiio_leds_fixed_brightness_enabled`, `config_fiio_leds_fixed_charge_style_enabled`, `config_fiio_leds_fixed_color_enabled`, `config_fiio_leds_rhythm_enabled`, `config_fiio_leds_strip_enabled`, `config_fiio_multi_button_in_enable`, `config_fiio_opt_decode_enabled`, `config_fiio_over_gain_enabled`, `config_fiio_project_members_enable`, `config_fiio_qcc_bt_enabled`, `config_fiio_spdif_decode_enabled`, `config_fiio_spdif_input_mode_enabled`, `config_fiio_spdif_out_switch_enabled`, `config_fiio_status_bar_cutout_enabled`, `config_fiio_super_over_gain_enabled`, `config_fiio_sw_hold_in_enable`, `config_fiio_sw_hold_special_node`, `config_fiio_tape_mode_auto_det_sw`, `config_fiio_touch_bar_max_volume_enabled`, `config_fiio_uac_kernel_enabled`, `config_fiio_xmos_in_enabled`
+
+### 7.3 Inteiros
+
+| flag | valor |
+|---|---|
+| `config_fiio_audio_vol_default` | 60 |
+
+### 7.4 Leitura
+
+O conjunto ligado descreve o JM21 com precisao:
+
+- **saida**: `bal_po_lo_select` (balanceado / PO / line-out), `po_lo_spdif_select`,
+  `lineout_vol_adjust`, `output_gain`, `usbaudio_vol_adjust`,
+  `spdif_output_mode`, `35mm_multiplexing_spdif` -> o aparelho tem **multiplas
+  saidas selecionaveis**, coerente com 3,5 / 4,4 / LO / SPDIF.
+- **DAC**: `digital_filter`, `dac_balance`, `dac_thdc2`, `p2d` (**PCM->DSD**),
+  `EQ` -> e a base da aba de audio e do "All To DSD".
+- **DAP**: `tape_mode`, `vehicle_mode`, `custom_key`, `custom_screen_saver`,
+  `noheadset_auto_pause`, `usb_boot`.
+- **energia**: `battery_charger_optimize`, `battery_disable_charger_setting`,
+  `temp_manage` -> liga o `fiio-charger-manager` e o JEITA.
+- **sem fio**: `bt_ldac`, `bt_lhdc`, `bluetooth_absolute_volume`,
+  `bluetooth_audio_encoder`, `system_suspend_wifi_connect`, `roon`.
+
+Desligadas que valem notar: `hdmi_in/out_arc`, `xmos_in`, `aes_in`, `spdif_in`,
+`opt_decode`, `leds_*` (todas), `qsensor`, `uac_kernel`, `desktop_mode`,
+`project_members` — features de **outros modelos** da linha FiiO.
