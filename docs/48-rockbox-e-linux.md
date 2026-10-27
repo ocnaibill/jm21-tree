@@ -1102,3 +1102,24 @@ Caminhos:
    device que o machine driver cria quando o `audio_pd` sobe).
 2. Implementar um "stub de HAL" minimo que faca esse registro (pode ser so abrir
    um device/ioctl uma vez).
+
+### 11.6 Investigando o gate do userspace service (sem sucesso ainda)
+
+Tentativas desta rodada:
+
+| caminho | resultado |
+|---|---|
+| parametros de modulo | `/sys/module/machine_dlkm/parameters` **nao existe** |
+| atributo sysfs no card | so os dirs de PCM + padroes (`uevent`, `power`...) |
+| property lida pelo modulo | as strings nao mostram nenhuma (`props`/`property` so em mensagens de DT) |
+| simbolo no `.ko` | `check_userspace_service_state` **nao esta** no symtab (80 FUNC) — foi inlinado; so existe como texto de log |
+| desmontagem | a string esta em `.rodata+0x44` e em `.debug_str`; o `objdump -dr` nao resolveu a referencia de forma util |
+
+Conclusao: o flag e interno ao `machine_dlkm` e e setado por algo externo
+(provavelmente o HAL, quando o **`audio_pd`** do ADSP sobe e o servico de audio
+do userspace se registra — a mensagem companheira e
+`"%s userspace service crashed"`, tipica de SSR).
+
+Proximo passo mais promissor: **comparar `/dev` e `/sys` entre Android e TWRP**
+procurando o canal de registro (um misc device ou um notifier de `audio_pd` que
+existe no Android e nao no recovery).
