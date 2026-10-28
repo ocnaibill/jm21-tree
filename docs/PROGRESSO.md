@@ -324,3 +324,55 @@ Para um port fiel, **A13 e o teto** — porque A14+ nao aceita esses jars.
 
 Stock 1.1.1, userdata limpo, TWRP `own-funcional` regravada em `recovery`,
 `vbmeta` stock. Card de audio presente, boot em ~30 s.
+
+## 10. Sessao 6 (2026-10-28) — PRIMEIRA ROM COMPILADA
+
+**Marco:** o LineageOS 20 para o JM21 **compilou pela primeira vez**, com os 16
+patches da FIIO aplicados.
+
+```
+lineage-20.0-20261028-UNOFFICIAL-jm21.zip   1,1 GB
+lineage_jm21-ota-eng.ocnaibill.zip          1,1 GB
+boot.img 48M   dtbo.img 8M   recovery.img 58M
+tempo de build: 5min34s (incremental, apos ~26 rodadas)
+```
+
+### 10.1 O que foi montado
+
+| item | estado |
+|---|---|
+| árvore LineageOS 20 | `~/lineage20` (lineage-20.0, depth=1) |
+| device tree | `device/fiio/jm21` + `vendor/fiio/jm21` (2675 arquivos) |
+| patches framework/services | 16/16 aplicados, compilando |
+| 61 flags `config_fiio_*` | em `core/res/res/values/config.xml` |
+| 17 apps FIIO + `FiioDapUtils.jar` | prebuilts, `certificate: platform` |
+| 41 fragmentos VINTF | `DEVICE_MANIFEST_FILE` |
+
+### 10.2 Os ~19 erros e o que ensinaram
+
+A contagem final: **~26 rodadas** de build. Desses erros, **13 eram meus**, e
+quase todos do mesmo tipo: assumir que uma funcao do codigo decompilado da FIIO
+(`sysfsRead`, `typeToString`, `isHighPackage`, `getAppName`, `mPowerInChanged`,
+`mAppContext`) existia no AOSP. **O decompilado mostra o resultado da FIIO, nao
+o AOSP puro.**
+
+Os demais: ambiente (`libncurses.so.5` — resolvido com symlink no RUNPATH dos
+prebuilts, porque o soong roda com `env -i`), empacotamento (particoes pequenas,
+`BOARD_ROOT_EXTRA_FOLDERS` criando labels fantasma, `vendor_ramdisk` vazio) e
+dados (`build.prop` do stock duplicando 46 props geradas pelo build).
+
+### 10.3 Armadilhas de ambiente (valem para a proxima maquina)
+
+- soong precisa de **>6 GB**; com 15 GB de RAM + zram o build era morto pelo
+  `systemd-oomd`. Resolvido com **swapfile de 12 GB em btrfs** (exige NOCOW:
+  `btrfs filesystem mkswapfile`).
+- prebuilts do AOSP (llvm-rs-cc, clang.real) querem `libncurses.so.5`; o Arch so
+  tem 6. `LD_LIBRARY_PATH` **nao funciona** (soong usa `env -i`): o symlink tem
+  de ir no diretorio do **RUNPATH** do binario.
+- `mka` em foreground derruba a sessao do GNOME por OOM — **sempre** em
+  `systemd-run`.
+
+### 10.4 Proximo passo
+
+Flash da OTA e os 6 criterios de aceitacao (docs/47 §7.4): boot, audio, DAC/FPGA,
+roda de teclas, SD, modo USB DAC.
