@@ -1,29 +1,33 @@
 diff --git a/services/usb/java/com/android/server/usb/UsbAlsaManager.java b/services/usb/java/com/android/server/usb/UsbAlsaManager.java
-index 17c354a8..df179b9a 100644
+index 17c354a8..e3517053 100644
 --- a/services/usb/java/com/android/server/usb/UsbAlsaManager.java
 +++ b/services/usb/java/com/android/server/usb/UsbAlsaManager.java
-@@ -251,6 +251,12 @@ public final class UsbAlsaManager {
+@@ -17,6 +17,7 @@
+ package com.android.server.usb;
+ 
+ import android.content.Context;
++import android.content.Intent;
+ import android.content.pm.PackageManager;
+ import android.content.res.Resources;
+ import android.hardware.usb.UsbDevice;
+@@ -251,6 +252,10 @@ public final class UsbAlsaManager {
              if (alsaDevice != null) {
                  alsaDevice.setDeviceNameAndDescription(
                            cardRec.getCardName(), cardRec.getCardDescription());
 +        // FiiO: avisa o sistema sobre a entrada do DAC USB
-+        if (Process.myUid() == Process.SYSTEM_UID) {
-+            Intent fiioIntent = new Intent("fiio.intent.action.USB_AUDIO_DEVICE_CHANGE");
-+            fiioIntent.putExtra("EXTRA_ACTION", 1);
-+            mContext.sendBroadcast(fiioIntent);
-+        }
++        Intent fiioIntent = new Intent("fiio.intent.action.USB_AUDIO_DEVICE_CHANGE");
++        fiioIntent.putExtra("EXTRA_ACTION", 1);
++        mContext.sendBroadcast(fiioIntent);
                  mAlsaDevices.add(0, alsaDevice);
                  selectAlsaDevice(alsaDevice);
              }
-@@ -322,6 +328,11 @@ public final class UsbAlsaManager {
+@@ -322,6 +327,9 @@ public final class UsbAlsaManager {
          UsbAlsaDevice alsaDevice = removeAlsaDeviceFromList(deviceAddress);
          Slog.i(TAG, "USB Audio Device Removed: " + alsaDevice);
          if (alsaDevice != null && alsaDevice == mSelectedDevice) {
-+            if (Process.myUid() == Process.SYSTEM_UID) {
-+                Intent fiioIntent = new Intent("fiio.intent.action.USB_AUDIO_DEVICE_CHANGE");
-+                fiioIntent.putExtra("EXTRA_ACTION", 0);
-+                mContext.sendBroadcast(fiioIntent);
-+            }
++            Intent fiioIntent = new Intent("fiio.intent.action.USB_AUDIO_DEVICE_CHANGE");
++            fiioIntent.putExtra("EXTRA_ACTION", 0);
++            mContext.sendBroadcast(fiioIntent);
              deselectAlsaDevice();
              selectDefaultDevice(); // if there any external devices left, select one of them
          }

@@ -1,5 +1,5 @@
 diff --git a/media/java/android/media/MediaRouter.java b/media/java/android/media/MediaRouter.java
-index 7d57734d..3e8b7060 100644
+index 7d57734d..8092b0dd 100644
 --- a/media/java/android/media/MediaRouter.java
 +++ b/media/java/android/media/MediaRouter.java
 @@ -36,6 +36,7 @@ import android.hardware.display.WifiDisplay;
@@ -10,19 +10,40 @@ index 7d57734d..3e8b7060 100644
  import android.os.Handler;
  import android.os.IBinder;
  import android.os.Process;
-@@ -78,6 +79,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
+@@ -78,6 +79,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
  @SystemService(Context.MEDIA_ROUTER_SERVICE)
  public class MediaRouter {
      private static final String TAG = "MediaRouter";
 +
 +    /* FiiO: rota de reproducao atual (consumida pelos apps do DAP) */
++    /* FiiO: nome textual da rota principal (o AOSP so tem a cadeia inline) */
++    private static String typeToString(int mainType) {
++        if ((mainType & AudioRoutesInfo.MAIN_HEADPHONES) != 0) return "HEADPHONES";
++        if ((mainType & AudioRoutesInfo.MAIN_HEADSET) != 0) return "HEADSET";
++        if ((mainType & AudioRoutesInfo.MAIN_DOCK_SPEAKERS) != 0) return "SPEAKER";
++        if ((mainType & AudioRoutesInfo.MAIN_HDMI) != 0) return "HDMI";
++        if ((mainType & AudioRoutesInfo.MAIN_USB) != 0) return "USB";
++        return "SPEAKER";
++    }
++
 +    private static final String FIIO_CURRENT_PLAY_DEVICE = "fiio.current.play.device";
 +    private static final String MEDIA_ROUTER_CHANGE = "fiio.media.router.change";
 +    private static final String OUT_DEVICE_USB_CARD_ID = "output.device.usb.card.id";
      private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
      private static final boolean DEBUG_RESTORE_ROUTE = true;
  
-@@ -268,6 +274,21 @@ public class MediaRouter {
+@@ -135,7 +151,10 @@ public class MediaRouter {
+             }
+         };
+ 
++        private final Context mFiioContext;
++
+         Static(Context appContext) {
++            mFiioContext = appContext;
+             mPackageName = appContext.getPackageName();
+             mResources = appContext.getResources();
+             mHandler = new Handler(appContext.getMainLooper());
+@@ -268,6 +287,21 @@ public class MediaRouter {
  
              if (audioRoutesChanged) {
                  Log.v(TAG, "Audio routes updated: " + newRoutes + ", a2dp=" + isBluetoothA2dpOn());
@@ -39,7 +60,7 @@ index 7d57734d..3e8b7060 100644
 +                if (Process.myUid() == Process.SYSTEM_UID) {
 +                    Log.d(TAG, "Current is System process send media route change "
 +                            + fiioRoute);
-+                    mAppContext.sendBroadcast(new Intent(MEDIA_ROUTER_CHANGE));
++                    mFiioContext.sendBroadcast(new Intent(MEDIA_ROUTER_CHANGE));
 +                }
                  if (mSelectedRoute == null || mSelectedRoute.isDefault()
                          || mSelectedRoute.isBluetooth()) {

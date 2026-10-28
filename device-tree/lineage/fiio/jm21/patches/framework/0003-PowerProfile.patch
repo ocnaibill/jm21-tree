@@ -1,5 +1,5 @@
 diff --git a/core/java/com/android/internal/os/PowerProfile.java b/core/java/com/android/internal/os/PowerProfile.java
-index 54e65e07..a7eee7db 100644
+index 54e65e07..802f5591 100644
 --- a/core/java/com/android/internal/os/PowerProfile.java
 +++ b/core/java/com/android/internal/os/PowerProfile.java
 @@ -297,6 +297,9 @@ public class PowerProfile {
@@ -12,10 +12,20 @@ index 54e65e07..a7eee7db 100644
      /**
       * A map from Power Use Item to an array of its power consumption
       * (for items with variable power e.g. CPU).
-@@ -359,7 +362,22 @@ public class PowerProfile {
+@@ -359,7 +362,32 @@ public class PowerProfile {
          initModem();
      }
  
++    /* FiiO: leitura de valor numerico de sysfs (helper proprio) */
++    private static String sysfsRead(String path) {
++        try (java.io.BufferedReader reader =
++                     new java.io.BufferedReader(new java.io.FileReader(path))) {
++            return reader.readLine();
++        } catch (java.io.IOException e) {
++            return null;
++        }
++    }
++
 +    /* FiiO: a placa expoe a capacidade da bateria via sysfs */
 +    private void getKernelBattCapacity() {
 +        String value = sysfsRead("/sys/devices/platform/soc/soc:fiio_attr/cw_batt_capacity");
@@ -35,7 +45,7 @@ index 54e65e07..a7eee7db 100644
          final Resources resources = context.getResources();
          XmlResourceParser parser = resources.getXml(xmlId);
          boolean parsingArray = false;
-@@ -752,6 +770,9 @@ public class PowerProfile {
+@@ -752,6 +780,9 @@ public class PowerProfile {
       */
      @UnsupportedAppUsage
      public double getBatteryCapacity() {

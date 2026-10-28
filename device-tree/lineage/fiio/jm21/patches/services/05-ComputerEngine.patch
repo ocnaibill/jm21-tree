@@ -1,8 +1,26 @@
 diff --git a/services/core/java/com/android/server/pm/ComputerEngine.java b/services/core/java/com/android/server/pm/ComputerEngine.java
-index 46b7460d..b2c5e0cc 100644
+index 1578ee00..8169937e 100644
 --- a/services/core/java/com/android/server/pm/ComputerEngine.java
 +++ b/services/core/java/com/android/server/pm/ComputerEngine.java
-@@ -5535,7 +5535,8 @@ public class ComputerEngine implements Computer {
+@@ -181,6 +181,17 @@ import java.util.UUID;
+ @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+ public class ComputerEngine implements Computer {
+ 
++    /* FiiO: apps do DAP tratados como "sempre visiveis" */
++    private static final String[] FIIO_PACKAGE_NAMES = {
++        "com.fiio.music", "com.android.aboutfiio", "com.fiio.control",
++        "com.fiio.android", "com.fiio.devicevendor", "com.android.fiioupdate",
++        "com.android.fiio.scrcpy", "com.fiio.market"
++    };
++
++    static boolean isHighPackage(String pkg) {
++        return java.util.Arrays.asList(FIIO_PACKAGE_NAMES).indexOf(pkg) != -1;
++    }
++
+     // TODO: Move this to its own interface implemented by the pm.Settings implementation
+     protected class Settings {
+ 
+@@ -5617,7 +5628,8 @@ public class ComputerEngine implements Computer {
              final boolean matchesAware = ((flags & MATCH_DIRECT_BOOT_AWARE) != 0)
                      && p.isDirectBootAware();
  
