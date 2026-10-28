@@ -38,6 +38,8 @@ BOARD_KERNEL_IMAGE_NAME := Image
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/Image
 BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)/prebuilt
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+# vendor_boot: ramdisk minimo (o grosso dos modulos vive no vendor_dlkm)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(DEVICE_PATH)/prebuilt/vendor_ramdisk/*.ko)
 BOARD_KERNEL_SEPARATED_DTBO := true
 BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
 BOARD_BOOT_HEADER_VERSION := 4
@@ -46,6 +48,7 @@ BOARD_MKBOOTIMG_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION) --pagesize
 # ---------------------------------------------------------------- particoes
 BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
 BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE := 8388608
+# vendor_boot: nao geramos (o stock vai no flash; os modulos estao no vendor_dlkm)
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 100663296
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
@@ -57,8 +60,19 @@ BOARD_QTI_DYNAMIC_PARTITIONS_PARTITION_LIST := \
     system system_ext product vendor odm
 BOARD_QTI_DYNAMIC_PARTITIONS_SIZE := 5367267328
 
+
+# tamanhos das particoes dinamicas (medidos no lpdump do aparelho, docs/47 8.1)
+BOARD_ODMIMAGE_PARTITION_SIZE := 2097152
+BOARD_PRODUCTIMAGE_PARTITION_SIZE := 536870912
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2237026304
+BOARD_SYSTEM_DLKMIMAGE_PARTITION_SIZE := 4194304
+BOARD_SYSTEM_EXTIMAGE_PARTITION_SIZE := 529584128
+BOARD_VENDORIMAGE_PARTITION_SIZE := 734003200
+BOARD_VENDOR_DLKMIMAGE_PARTITION_SIZE := 752041984
+
 BOARD_USES_METADATA_PARTITION := true
-BOARD_ROOT_EXTRA_FOLDERS := firmware persist
+# mountpoints de /firmware e /persist: criados pelo init/fstab, nao no root image
+# BOARD_ROOT_EXTRA_FOLDERS := firmware persist
 
 # ------------------------------------------------------------------ A/B
 AB_OTA_UPDATER := true
@@ -153,3 +167,13 @@ include vendor/lineage/config/BoardConfigLineage.mk
 
 # Copiamos .so e binarios QCOM do stock: o build precisa permitir ELF em PRODUCT_COPY_FILES
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
+
+# O DeviceVendor (FiiO) declara uses-library android.fiio.dap.utils;
+# o jar/xml vao por PRODUCT_COPY_FILES, entao relaxamos a checagem de manifest.
+RELAX_USES_LIBRARY_CHECK := true
+
+# AIDs extras do vendor (vendor_qrtr, vendor_qdss, ...)
+TARGET_FS_CONFIG_GEN += $(DEVICE_PATH)/configs/config.fs
+
+# init_boot precisa do header v4 (sem isto sai v0 e o bootloader recusa)
+BOARD_MKBOOTIMG_INIT_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION)

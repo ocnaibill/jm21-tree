@@ -376,3 +376,28 @@ dados (`build.prop` do stock duplicando 46 props geradas pelo build).
 
 Flash da OTA e os 6 criterios de aceitacao (docs/47 §7.4): boot, audio, DAC/FPGA,
 roda de teclas, SD, modo USB DAC.
+
+### 10.5 Bring-up: os tres defeitos que impediam o boot
+
+A ROM compila, mas ainda **nao subia**. Depuracao de 2026-10-28:
+
+| # | defeito | evidencia | correcao |
+|---|---|---|---|
+| 1 | `init_boot.img` em **header v0** | nosso: `header_version=0`, `ramdisk=268468224` (lixo); stock: `v4`, `ramdisk=2005925` | `BOARD_MKBOOTIMG_INIT_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION)` |
+| 2 | `vendor/etc/init/*.rc` **ausentes** (93 arquivos) | build tinha 4 `.rc`, stock tem 72; `init.qcom.rc` faltava | regenerar o `proprietary.mk` sem a remocao em lote |
+| 3 | AIDs do vendor **nao declarados** | `host_init_verifier`: `Unable to find UID for 'vendor_qrtr'` | `TARGET_FS_CONFIG_GEN` com 13 AIDs (2901-2913) do `/vendor/etc/passwd` stock |
+
+**Como o (1) foi encontrado:** comparar o header binario do nosso `boot.img`/`init_boot.img`
+com o stock. O `boot.img` estava certo (v4, kernel identico ao stock, ramdisk 0); o
+`init_boot` estava invalido — e por isso **nem o recovery stock** entrava em
+fastbootd quando o `init_boot` do Lineage estava gravado. Esse sintoma foi o que
+isolou a causa.
+
+**Armadilha de metodo:** testar "boot stock + sistema Lineage" antes de corrigir
+(2) e (3) deu falso negativo — o teste rodou com dois defeitos ainda presentes.
+
+### 10.6 Ferramenta de progresso
+
+`tools/lineage-status.sh` (+ `tools/lineage-live.py`): painel com fase, % do
+ninja, conflitos, blobs, patches, disco/memoria e artefatos. O live serve a
+mesma pagina por HTTP com auto-refresh 8 s (usado via tailnet durante a sessao).
