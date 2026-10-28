@@ -74,13 +74,15 @@ printf "mem / swap      : %s / %s\n" \
 if [ -n "$LOG" ]; then
     echo
     echo "--- ultimas linhas ($LOG):"
-    grep -E "^FAILED|error:|removido|build stopped|SUCESSO|####" "$LOG" 2>/dev/null | tail -4
+    grep -E "^FAILED|^[a-z].*error:|removido|build stopped|SUCESSO|####" "$LOG" 2>/dev/null \
+        | grep -v "Validation error" | grep -v "Signature is ignored" | tail -4
 fi
 
 # --- artefatos
 echo
-if [ -f "$TREE/out/target/product/jm21/lineage_jm21-ota.zip" ]; then
-    echo ">>> OTA gerada: $(ls -lh "$TREE/out/target/product/jm21/lineage_jm21-ota.zip" | awk '{print $5}')"
+OTA=$(ls -t "$TREE"/out/target/product/*/lineage-*-UNOFFICIAL-*.zip 2>/dev/null | head -1)
+if [ -n "$OTA" ]; then
+    echo ">>> OTA gerada: $(basename "$OTA") ($(ls -lh "$OTA" | awk '{print $5}'))"
 elif [ -f "$TREE/out/target/product/jm21/system.img" ]; then
     echo ">>> system.img gerada: $(ls -lh "$TREE/out/target/product/jm21/system.img" | awk '{print $5}')"
 else
