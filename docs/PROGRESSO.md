@@ -401,3 +401,46 @@ isolou a causa.
 `tools/lineage-status.sh` (+ `tools/lineage-live.py`): painel com fase, % do
 ninja, conflitos, blobs, patches, disco/memoria e artefatos. O live serve a
 mesma pagina por HTTP com auto-refresh 8 s (usado via tailnet durante a sessao).
+
+### 10.7 CAUSA RAIZ do nao-boot: falta o `snapuserd` no init_boot
+
+Depuracao offline (sem aparelho): desempacotar os dois `init_boot.img` e comparar o
+ramdisk arquivo por arquivo (`tools/unpack-boot.py`).
+
+```
+stock:  ramdisk = 2.005.925 bytes, lz4  ->  16 entradas
+nosso:  ramdisk = 1.355.295 bytes, gzip ->  12 entradas
+```
+
+Diferenca (so no stock):
+
+```
+system/bin/snapuserd
+system/etc/init/snapuserd.rc
+```
+
+`snaperuserd` e o daemon de **snapshot** — o aparelho e **Virtual A/B**
+(`Header flags: virtual_ab_device` no lpdump). Sem ele, o `init` de primeira fase
+nao consegue montar as particoes dinamicas e o boot morre **antes de levantar o
+USB** — exatamente o sintoma observado (tela preta com backlight, zero
+enumeracao).
+
+**Por que faltou:** o produto nao herdava `build/make/target/product/generic_ramdisk.mk`,
+que e quem adiciona `snapuserd.ramdisk` ao ramdisk generico.
+
+Tentativa 1: herdar `generic_ramdisk.mk` -> quebra o soong
+(`generated_kernel_includes` usa `$(PATH_OVERRIDE_SOONG)`, que so existe com
+fonte de kernel; usamos kernel prebuilt).
+
+**Correcao adotada:** adicionar **apenas** `snapuserd.ramdisk` a
+`PRODUCT_PACKAGES` em `device.mk`, sem herdar o `generic_ramdisk.mk`.
+
+### 10.8 Metodo que faltou nas primeiras rodadas
+
+Os dois artefatos que falhavam (`boot.img`, `init_boot.img`) tinham header e
+kernel **corretos** — o build nao reclamava. O que os denunciou foi **comparar
+binario com binario** contra o stock: header (`header_version`), tamanho do
+ramdisk e, por fim, a **lista de arquivos** do ramdisk. Nenhuma dessas coisas
+aparece em log de build.
+
+Regra para a proxima: antes de flashar, `cmp`/parse do artefato contra o stock.
