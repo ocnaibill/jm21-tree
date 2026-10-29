@@ -444,3 +444,51 @@ ramdisk e, por fim, a **lista de arquivos** do ramdisk. Nenhuma dessas coisas
 aparece em log de build.
 
 Regra para a proxima: antes de flashar, `cmp`/parse do artefato contra o stock.
+
+### 10.9 Onde o bring-up parou (e um erro de metodo)
+
+Estado ao fim da sessao 6, com o aparelho **restaurado ao stock**:
+
+| item | estado |
+|---|---|
+| build | OK (1,1 GB), 16 patches, 61 flags, 17 apps |
+| `boot.img` | header v4, kernel identico ao stock |
+| `init_boot.img` | header v4, ramdisk com **as mesmas 16 entradas** do stock (inclui `snapuserd`) |
+| `system.img` | estrutura correta (`/system/bin/init` 2,09 MB, `init.rc`, `build.prop`) |
+| fastbootd | **sobe** com os nossos `boot`+`init_boot` |
+| boot normal | **nao** sobe: para no logo da FIIO |
+
+**Erro de metodo que invalidou uma rodada inteira:** para bisectar eu revertí
+`system` e `vendor` ao stock mas deixei `system_ext`, `product`, `odm`,
+`vendor_dlkm` e `system_dlkm` do Lineage. Um sistema *hibrido* nao boota por
+motivo obvio, e a conclusao tirada dali ("o problema e o boot/init_boot") nao
+vale.
+
+### 10.10 Roteiro correto de bisseccao (proxima sessao)
+
+Sempre com **todo o resto em stock**, um artefato por vez, e wipe so quando o
+conjunto muda:
+
+1. tudo stock -> confirma que boota (baseline);
+2. so o `init_boot` nosso -> se falhar, e ele;
+3. so o `boot` nosso (init_boot stock) -> se falhar, e ele;
+4. depois as logicas, uma por vez: `system` primeiro (e a que monta), depois
+   `vendor`, depois `system_ext`/`product`/`odm`/`*_dlkm`.
+
+Hipoteses ainda nao testadas, em ordem de custo:
+
+- `fstab` de primeira fase: o stock vem do `vendor_boot`; comparar com o que o
+  nosso build gera;
+- `vendor_boot` do nosso build (32 KB, so 3 modulos, sem DTB) — provavelmente
+  inutilizavel, mas explica a diferenca de 96 MB;
+- `lpdump` no aparelho apos gravar as logicas: conferir se os tamanhos
+  (system 2133 MiB, vendor 700 MiB, product 512 MiB) cabem no metadata do `super`.
+
+### 10.11 Ganhos concretos desta sessao (para nao parecer zero)
+
+- o build **passa** e e reproduzivel (device tree versionado, patches reais);
+- os tres defeitos de empacotamento foram encontrados **por comparacao binaria
+  com o stock**, nao por tentativa: sepolicy dirs, `init_boot` v0, `snapuserd`;
+- `tools/unpack-boot.py` deixa essa comparacao repetivel;
+- o painel (`lineage-status.sh` / `lineage-live.py`) e o `gen-vendor-mk.py`
+  ficam para as proximas rodadas.
