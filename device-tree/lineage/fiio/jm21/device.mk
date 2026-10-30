@@ -18,6 +18,9 @@ PRODUCT_COPY_FILES += \
 # ------------------------------------------------------- permissao privilegiada
 # Os 18 APKs da FIIO sao priv-app no stock (Settings/SystemUI tambem).
 PRODUCT_PACKAGES += \
+    first_stage_fstab_default \
+    first_stage_fstab_emmc \
+    snapuserd.ramdisk \
     FiiOMusic \
     FiiOEq \
     FiiOTape \
@@ -52,3 +55,10 @@ PRODUCT_PRODUCT_PROPERTIES += \
 # DEVICE_PACKAGE_OVERLAYS := $(LOCAL_PATH)/overlay
 
 # ------------------------------------------------------- sepolicy
+
+# biblioteca do DAP (android.fiio.dap.utils): o DeviceVendor declara uses-library
+PRODUCT_COPY_FILES += \
+    device/fiio/jm21/prebuilts/files/system_ext/framework/FiioDapUtils.jar:$(TARGET_COPY_OUT_SYSTEM_EXT)/framework/FiioDapUtils.jar \
+    device/fiio/jm21/prebuilts/files/system_ext/etc/permissions/fiiodaputilslib.xml:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/permissions/fiiodaputilslib.xml
+
+PRODUCT_COPY_FILES += \

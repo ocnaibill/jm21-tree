@@ -1,0 +1,18 @@
+// fstab do primeiro estagio — precisa ser MODULO para entrar no vendor_ramdisk
+// (arquivos de PRODUCT_COPY_FILES nao sao dependencia do ramdisk)
+
+prebuilt_etc {
+    name: "first_stage_fstab_default",
+    src: "fstab.default",
+    filename: "fstab.default",
+    sub_dir: "first_stage_ramdisk",
+    vendor_ramdisk: true,
+}
+
+prebuilt_etc {
+    name: "first_stage_fstab_emmc",
+    src: "fstab.emmc",
+    filename: "fstab.emmc",
+    sub_dir: "first_stage_ramdisk",
+    vendor_ramdisk: true,
+}
