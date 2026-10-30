@@ -13,6 +13,8 @@ ROOT = pathlib.Path.home() / "lineage20"
 PROP = ROOT / "vendor/fiio/jm21"
 TREE = PROP / "proprietary"
 MK_OUT = TREE / "proprietary.mk"
+PRODUCT_OUT = pathlib.Path(os.environ.get("ANDROID_PRODUCT_OUT",
+    "/home/ocnaibill/lineage20/out/target/product/jm21"))
 INSTALLS = ROOT / "out/soong/installs-lineage_jm21.mk"
 
 SKIP_DIRS = {"lost+found", "firmware", "firmware_mnt", "bt_firmware", "dsp"}
@@ -47,6 +49,25 @@ EXTRA_SKIP = {
     "vendor/lib64/libcld80211.so", "vendor/lib64/libjson.so",
     "vendor/lib64/libreference-ril.so", "vendor/lib64/libril.so",
 }
+
+# Firmware do vendor que NUNCA pode ser substituido por saida do Soong:
+# politica SELinux, init scripts, configs e implementacoes de HAL. Se o Soong
+# "instala" um equivalente, o dele e um stub (vendor_sepolicy.cil de 136 KB em
+# vez de 880 KB) e o resultado e vendor capado -> no boot.
+# caminhos que o kati acusou como "overriding commands" (o Soong define a regra)
+AUTO_SKIP = set()
+_auto = pathlib.Path(__file__).with_name("vendor-auto-skip.txt")
+if _auto.exists():
+    AUTO_SKIP = {ln.strip() for ln in _auto.read_text().splitlines() if ln.strip() and not ln.startswith("#")}
+
+KEEP_PREFIX = ("etc/selinux/", "etc/init/", "etc/vintf/", "etc/permissions/",
+               "etc/firmware/", "firmware/", "bin/hw/")
+
+def _keep(part, rel):
+    path = f"{part}/{rel}"
+    if path.startswith(KEEP_PREFIX) or rel.startswith(KEEP_PREFIX) or "/hw/" in path:
+        return True
+    return path.endswith((".conf", ".xml", ".rc", ".json", ".txt", ".cil", ".sha256"))
 
 VINTF_TOP = {"etc/vintf/manifest.xml", "etc/vintf/compatibility_matrix.xml"}
 
@@ -86,7 +107,12 @@ for part, dest in OUT.items():
             if f"{part}/{rel}".split("/", 1)[1] in VINTF_TOP or "/etc/vintf/manifest/" in f"/{rel}":
                 skip_vintf += 1
                 continue
-            if f"{part}/{rel}" in installed or f"{part}/{rel}" in EXTRA_SKIP:
+            if f"{part}/{rel}" in AUTO_SKIP:
+                skip_conflict += 1
+                continue
+            if _keep(part, rel):
+                pass
+            elif f"{part}/{rel}" in installed or f"{part}/{rel}" in EXTRA_SKIP:
                 skip_conflict += 1
                 continue
             lines.append(f"    vendor/fiio/jm21/proprietary/{part}/{rel}:{dest}/{rel} \\")
