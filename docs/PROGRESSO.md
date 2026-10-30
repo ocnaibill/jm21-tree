@@ -581,3 +581,58 @@ Pendencias da proxima sessao, em ordem:
    `adb` em recovery, que destrava o diagnostico do sistema;
 2. com recovery funcionando: montar `/system` na mao e ver o erro real;
 3. revisar o achado de hardware (docs/12) antes de sessoes longas.
+
+## 13. Sessao 9 (2026-10-30) — o CONTRATO do firmware (e dois achados grandes)
+
+### 13.1 O recovery do Lineage boota (era o formato AVB)
+
+Sequencia que fechou:
+1. recovery deste aparelho e **kernel-less** (kernel vive no `boot`);
+2. ramdisk em **lz4**;
+3. vbmeta AVB **NAO ASSINADO** embutido — `avbtool add_hash_footer --algorithm NONE`
+   (eu vinha assinando com testkey, o que muda `auth`/`alg` e o bootloader recusa);
+4. preenchida ate o tamanho da particao.
+
+Com isso o recovery sobe, mostra a UI e — depois de trazermos
+`recovery/root/init.recovery.qcom.rc` da arvore do TWRP — **levanta USB e adb root**.
+
+Empacotamento reproduzivel: `tools/make-recovery.sh`.
+
+### 13.2 O fstab do firmware diz o que cada particao exige
+
+Extraido de `dumps/fw-1.1.1/vendor_boot.img` -> `first_stage_ramdisk/fstab.default`:
+
+```
+system        /system    ... wait,slotselect,avb=vbmeta_system,logical,first_stage_mount,
+                              avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey
+system_ext    ... avb=vbmeta_system,logical
+product       ... avb=vbmeta_system,logical
+vendor        ... avb,logical
+vendor_dlkm   ... avb,logical
+system_dlkm   ... avb,logical
+odm           ... avb,logical
+```
+
+**Consequencia:** `system`/`system_ext`/`product` sao verificados contra
+**`vbmeta_system`**. O nosso build **nunca gerou `vbmeta_system.img`** (so o
+`vbmeta.img`), e a particao `vbmeta_system_a` continuava com o do stock —
+descrevendo o hashtree do sistema **stock**. Portanto `/system` nao monta e o
+boot morre depois do logo, exatamente como vinhamos vendo.
+
+**E explica o GSI:** o fstab aceita as chaves `q/r/s-gsi.avbpubkey` — o GSI e
+assinado com elas, por isso bootou no mesmo aparelho.
+
+Correcao minima: `avbtool make_vbmeta_image --flags 3` -> `vbmeta_system` com
+HASHTREE_DISABLED, gravado na particao. (Para um build "de verdade", o caminho
+e `BOARD_AVB_VBMETA_SYSTEM := system system_ext product` + chave.)
+
+### 13.3 Licao de metodo (a que custou 3 dias)
+
+O contrato estava no **dump do firmware** desde o primeiro dia: o fstab do
+vendor_boot, os descritores do vbmeta, os manifestos VINTF. Eu passei dois dias
+investigando o *nosso* build (header, ramdisk, politica SELinux) sem nunca ler o
+que o **aparelho** exige.
+
+**Regra:** antes de gerar imagem, ler o contrato do firmware — `fstab.*` do
+vendor_boot, `vbmeta.img` (descritores), `/vendor/etc/vintf/`. E o equivalente a
+ler a interface antes de implementar.
