@@ -23,16 +23,21 @@ import struct, sys, pathlib
 d = pathlib.Path(sys.argv[1]).read_bytes()
 w = pathlib.Path(sys.argv[2])
 vrs = struct.unpack_from('<I', d, 24)[0]
+cmdline = d[28:28+2048].split(b'\x00', 1)[0]
 hsz = struct.unpack_from('<I', d, 2096)[0]
 dtbsz = struct.unpack_from('<I', d, 2100)[0]
+vrt_size = struct.unpack_from('<I', d, 2112)[0]
+bootcfg_sz = struct.unpack_from('<I', d, 2124)[0]
 page = 4096
 off = ((hsz + page - 1)//page)*page
 (w/'vendor_ramdisk.lz4').write_bytes(d[off:off+vrs])
 off += ((vrs + page - 1)//page)*page
-# o dtb vem logo depois do ramdisk no header v4? nao: mkbootimg grava o dtb
-# a partir do tamanho declarado; extraimos pelo tamanho do campo dtb_size.
 (w/'dtb').write_bytes(d[off:off+dtbsz] if dtbsz else b'')
-print(f"ramdisk={vrs} dtb={dtbsz}")
+off += ((dtbsz + page - 1)//page)*page
+off += ((vrt_size + page - 1)//page)*page
+(w/'bootconfig').write_bytes(d[off:off+bootcfg_sz] if bootcfg_sz else b'')
+(w/'cmdline').write_bytes(cmdline)
+print(f"ramdisk={vrs} dtb={dtbsz} bootconfig={bootcfg_sz} cmdline={cmdline.decode()}")
 PY
 
 lz4 -d -c "$W/vendor_ramdisk.lz4" > "$W/rd.cpio"
@@ -48,9 +53,14 @@ done
 (cd "$W/x" && find . -print0 | cpio --null -o -H newc --quiet > "$W/rd-new.cpio")
 lz4 -l -12 --no-frame-crc -f "$W/rd-new.cpio" "$W/rd-new.lz4" >/dev/null
 
-ARGS=(--header_version 4 --pagesize 4096 --os_version 12.0.0 --os_patch_level 2022-04
+CMDLINE="$(cat "$W/cmdline")"
+ARGS=(--header_version 4 --pagesize 4096 --base 0x00000000
+      --kernel_offset 0x00008000 --ramdisk_offset 0x01000000
+      --tags_offset 0x00000100 --dtb_offset 0x01f00000
+      --vendor_cmdline "$CMDLINE"
       --vendor_ramdisk "$W/rd-new.lz4" --vendor_boot "$W/vb.img")
 [ -s "$W/dtb" ] && ARGS+=(--dtb "$W/dtb")
+[ -s "$W/bootconfig" ] && ARGS+=(--vendor_bootconfig "$W/bootconfig")
 "$MKBOOTIMG" "${ARGS[@]}"
 python3 "$AVBTOOL" add_hash_footer --image "$W/vb.img" --partition_name vendor_boot \
     --partition_size 100663296 --algorithm NONE >/dev/null

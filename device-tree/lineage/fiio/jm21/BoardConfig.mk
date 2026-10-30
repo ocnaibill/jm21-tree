@@ -116,7 +116,8 @@ TARGET_COPY_OUT_PRODUCT := product
 TARGET_COPY_OUT_VENDOR_DLKM := vendor_dlkm
 TARGET_COPY_OUT_SYSTEM_DLKM := system_dlkm
 
-# --------------------------------------------------------------- sepolic y
+# --------------------------------------------------------------- sepolicy
+BOARD_VNDK_VERSION := current
 
 # ------------------------------------------------------------------ recovery
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab

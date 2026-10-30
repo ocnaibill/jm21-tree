@@ -45,6 +45,7 @@ PRODUCT_PACKAGES += \
 # ------------------------------------------------------- propriedades
 PRODUCT_PRODUCT_PROPERTIES += \
     persist.sys.fiio.config=FiiODPA \
+    persist.sys.usb.config=adb \
     ro.vendor.build.security_patch=2026-04-05
 
 # ------------------------------------------------------- overlay de recursos
