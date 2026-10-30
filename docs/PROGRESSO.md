@@ -492,3 +492,45 @@ Hipoteses ainda nao testadas, em ordem de custo:
 - `tools/unpack-boot.py` deixa essa comparacao repetivel;
 - o painel (`lineage-status.sh` / `lineage-live.py`) e o `gen-vendor-mk.py`
   ficam para as proximas rodadas.
+
+## 11. Sessao 7 (2026-10-29) — os quatro defeitos de empacotamento
+
+Ontem a ROM compilava mas nao subia. Hoje o problema foi **fechado por completo**
+com comparacao binaria contra o stock, e o aparelho bootou com os nossos
+artefatos de boot. Os quatro defeitos, todos de embalagem:
+
+| # | defeito | como apareceu | correcao |
+|---|---|---|---|
+| 1 | ramdisk em **gzip** (stock usa **lz4**) | comparar o magic do ramdisk | `BOARD_RAMDISK_USE_LZ4 := true` |
+| 2 | imagem **sem AVB footer** e sem padding | `AVBf` ausente; 1,8 MB vs 8 MB | `BOARD_AVB_ENABLE := true` (testkey rsa2048) |
+| 3 | DTB **fora** do vendor_boot | stock tinha FDT em 7,3 MB; o nosso nao | renomear `prebuilt/dtb` -> `bengal-jm21.dtb` (o AOSP busca `*.dtb`) |
+| 4 | vendor_boot com **3 modulos** (stock: 251) e sem `first_stage_ramdisk/fstab.*` | comparar o ramdisk do vendor_boot | copiar a arvore stock; `BOARD_VENDOR_RAMDISK_KERNEL_MODULES(_LOAD)` + copy do fstab |
+
+**Provado em campo (o que cada combinacao faz):**
+
+| boot | init_boot | vendor_boot | vbmeta | sistema | resultado |
+|---|---|---|---|---|---|
+| stock | **nosso** | stock | stock | stock | **boota em 25 s** |
+| **nosso** | **nosso** | stock | stock | stock | **boota** |
+| nosso | nosso | nosso | nosso | stock | nao boota (outro defeito) |
+| nosso | nosso | stock | remendado | **nosso** | tela preta |
+
+### 11.1 Metodo que funcionou
+
+Tudo saiu de **comparar artefato com artefato**: magic de compressao, tamanho,
+offset do footer AVB, presenca de FDT, lista de arquivos do ramdisk, tamanho de
+cada arquivo. Nenhuma dessas diferencas aparece em log de build — e todas as
+quatro passaram despercebidas por varias rodadas.
+
+### 11.2 O que falta
+
+O boot funciona com o **sistema stock**. Quando entra o nosso `system` (com
+`vbmeta` remendado), trava com tela preta. Restam **duas** variaveis juntas, o
+que e exatamente o erro de metodo que ja custou uma rodada:
+
+- proximo teste: **system nosso** com boot/init_boot/vendor_boot/**vbmeta todos
+  stock** — se falhar, o problema e o `system.img`; se bootar, e o `vendor_boot`
+  do build ou o `vbmeta`.
+
+Ferramentas novas: `tools/unpack-boot.py` (parser de boot/vendor_boot) e
+`tools/gen-vendor-mk.py`.
