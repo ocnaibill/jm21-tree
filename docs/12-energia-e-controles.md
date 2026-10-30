@@ -523,6 +523,15 @@ Depois de varios dias de bancada (flash + recovery + fastboot por horas), o dono
 relatou: **"sinto que esbranqueceu um pouco nos cantos, nada feio, mas no modo
 escuro e mais perceptivel"**.
 
+**Atribuicao (importante):** a ROM nao causou isto, e nenhum software gravado
+causou. Nada do que fizemos aquece ou pressiona o painel por si. O que ocorreu foi
+exposicao prolongada a uma condicao para a qual o aparelho **nao foi projetado**
+(tela ligada + carga continua por horas, varias vezes).
+
+O ponto e justamente esse: um DAP de bancada, num aparelho que se anuncia como
+portatil de uso diario, **nao deveria** degradar o painel por ficar horas ligado
+carregando. Condicao de uso dura nao e desculpa para defeito de engenharia.
+
 Leitura: coerente com o problema de projeto ja registrado acima (flex da tela
 sobre a area de carga). Calor cronico na regiao + pressao mecanica do conjunto
 tendem a produzir **perda de uniformidade do backlight/panel** nos cantos.
@@ -533,7 +542,10 @@ para OLED burn-in.
 
 **Para garantir:** se houver abertura de garantia, este relato + o do flicker
 sob calor (acima) sao o mesmo defeito — documentar data, condicao (USB
-prolongado) e sintoma.
+prolongado) e sintoma. Formula segura: *"o painel perdeu uniformidade e apresenta
+flicker quando o aparelho fica em carga por periodo prolongado; o flex da tela
+passa sobre a area de carga/carga termica"* — sem mencionar modificacao de
+software, que nao tem relacao com o sintoma.
 
 **Protocolo de bancada revisado** (o anterior era insuficiente):
 
