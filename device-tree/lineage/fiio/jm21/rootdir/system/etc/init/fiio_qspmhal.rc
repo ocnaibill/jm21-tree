@@ -1,0 +1,5 @@
+# Workaround: o qspmhal do vendor stock roda com filtro seccomp que bloqueia
+# nanosleep; o libadreno_app_profiles.so recebe DEAD_OBJECT no meio da transacao
+# HIDL e aborta o surfaceflinger, que reinicia o zygote/system_server em loop.
+on late-init
+    stop vendor.qti.qspmhal@1.0-service

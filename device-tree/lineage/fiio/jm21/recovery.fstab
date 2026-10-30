@@ -1,0 +1,16 @@
+# recovery.fstab — formato AOSP (o TWRP usa outro; ver twrp.fstab)
+#
+# <mount point>   <fstype>  <device>                        <flags>
+#
+/system_root      ext4      /dev/block/mapper/system        ro wait,slotselect,logical
+/system_ext       ext4      /dev/block/mapper/system_ext    ro wait,slotselect,logical
+/product          ext4      /dev/block/mapper/product       ro wait,slotselect,logical
+/vendor           ext4      /dev/block/mapper/vendor        ro wait,slotselect,logical
+/vendor_dlkm      ext4      /dev/block/mapper/vendor_dlkm   ro wait,slotselect,logical
+/system_dlkm      ext4      /dev/block/mapper/system_dlkm   ro wait,slotselect,logical
+/odm              ext4      /dev/block/mapper/odm           ro wait,slotselect,logical
+
+/misc             emmc      /dev/block/bootdevice/by-name/misc      defaults
+/metadata         ext4      /dev/block/by-name/metadata             noatime,nosuid,nodev,barrier=1  wait
+/persist          ext4      /dev/block/bootdevice/by-name/persist   noatime,nosuid,nodev,barrier=1  wait
+/userdata         ext4      /dev/block/bootdevice/by-name/userdata  noatime,nosuid,nodev,barrier=1  wait

@@ -4,8 +4,15 @@
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+# ramdisk generico (init_first_stage + snapuserd) — sem isto o
+# init_boot sai sem snapuserd e o aparelho nao boota (Virtual A/B)
 $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 $(call inherit-product, device/fiio/jm21/device.mk)
+
+# SEM isto: ro.treble.enabled=false -> linkerconfig em modo legacy -> as duas
+# libbinder colidem (SIGABRT "Binder threadpool cannot be shrunk") e o
+# audioserver morre em loop. Tambem e o que faz o build gerar a APEX do VNDK.
+PRODUCT_FULL_TREBLE_OVERRIDE := true
 
 PRODUCT_NAME := lineage_jm21
 PRODUCT_DEVICE := jm21

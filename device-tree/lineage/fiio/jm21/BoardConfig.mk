@@ -31,7 +31,17 @@ TARGET_USES_VULKAN := true
 # Sem fonte GPL (issues #10/#17): o kernel entra como PREBUILT, extraido do
 # boot.img stock. Os modulos de vendor (vendor_dlkm) sao os do firmware.
 BOARD_KERNEL_CMDLINE := console=ttyMSM0,115200n8 androidboot.hardware=qcom \
-    androidboot.console=ttyMSM0
+    androidboot.console=ttyMSM0 androidboot.selinux=permissive
+# bootconfig do vendor_boot — SEM isto o kernel ignora o trailer do ABL e
+# perdemos ro.boot.bootdevice (monta /data), ro.boot.usbcontroller (sobe o
+# gadget USB/ADB) e ro.boot.verifiedbootstate. Valores extraidos do stock.
+BOARD_BOOTCONFIG := \
+    androidboot.hardware=qcom \
+    androidboot.memcg=1 \
+    androidboot.load_modules_parallel=true \
+    androidboot.usbcontroller=4e00000.dwc3 \
+    androidboot.qhardware=SC200VWF
+
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_KERNEL_PAGESIZE := 4096
 BOARD_KERNEL_IMAGE_NAME := Image
@@ -39,7 +49,9 @@ TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/Image
 BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)/prebuilt
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 # vendor_boot: ramdisk minimo (o grosso dos modulos vive no vendor_dlkm)
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(DEVICE_PATH)/prebuilt/vendor_ramdisk/*.ko)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(wildcard $(DEVICE_PATH)/prebuilt/vendor_ramdisk/lib/modules/*.ko)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := $(patsubst $(DEVICE_PATH)/prebuilt/vendor_ramdisk/lib/modules/%,%,$(wildcard $(DEVICE_PATH)/prebuilt/vendor_ramdisk/lib/modules/*.ko))
+BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := $(BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD)
 BOARD_KERNEL_SEPARATED_DTBO := true
 BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
 BOARD_BOOT_HEADER_VERSION := 4
@@ -68,7 +80,7 @@ BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2237026304
 BOARD_SYSTEM_DLKMIMAGE_PARTITION_SIZE := 4194304
 BOARD_SYSTEM_EXTIMAGE_PARTITION_SIZE := 529584128
 BOARD_VENDORIMAGE_PARTITION_SIZE := 734003200
-BOARD_VENDOR_DLKMIMAGE_PARTITION_SIZE := 752041984
+BOARD_VENDOR_DLKMIMAGE_PARTITION_SIZE := 838860800
 
 BOARD_USES_METADATA_PARTITION := true
 # mountpoints de /firmware e /persist: criados pelo init/fstab, nao no root image
@@ -185,3 +197,11 @@ BOARD_MKBOOTIMG_INIT_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION)
 
 # o stock usa ramdisk em lz4 (o nosso saia gzip)
 BOARD_RAMDISK_USE_LZ4 := true
+
+# O fstab do firmware exige um vbmeta_system para system/system_ext/product
+# (avb=vbmeta_system). Sem isto o build nao gera o arquivo e /system nao monta.
+BOARD_AVB_VBMETA_SYSTEM := system system_ext product
+BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
+BOARD_AVB_VBMETA_SYSTEM_ALGORITHM := SHA256_RSA2048
+BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := 0
+BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX_LOCATION := 1

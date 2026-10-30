@@ -127,6 +127,8 @@ def check_partition(name, built_path, verbose):
         cmp("offset do footer AVB", sf, bf)
 
     if bh["kind"] == "vendor_boot":
+        # bootconfig: sem ele o kernel ignora ro.boot.* (usbcontroller, bootdevice)
+        cmp("bootconfig presente", b"#BOOTCONFIG" in sd, b"#BOOTCONFIG" in bd)
         cmp("DTB presente", sd.find(MAGIC_FDT) >= 0, bd.find(MAGIC_FDT) >= 0)
         sl = dump_ramdisk_list(sh["ramdisk_bytes"], "stock")
         bl = dump_ramdisk_list(bh["ramdisk_bytes"], "built")
@@ -140,6 +142,11 @@ def check_partition(name, built_path, verbose):
         return
 
     gl = dump_ramdisk_list(sh["ramdisk_bytes"], "stock")
+    bl = dump_ramdisk_list(bh["ramdisk_bytes"], "built")
+    if name == "init_boot" and bl is not None:
+        if "force_debuggable" not in bl:
+            fail += 1
+            print("  AVISO  force_debuggable ausente: nao havera adb no boot do sistema")
     bl = dump_ramdisk_list(bh["ramdisk_bytes"], "built")
     if gl and bl:
         missing = sorted(set(gl) - set(bl))

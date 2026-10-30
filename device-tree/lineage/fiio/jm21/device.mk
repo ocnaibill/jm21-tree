@@ -18,8 +18,7 @@ PRODUCT_COPY_FILES += \
 # ------------------------------------------------------- permissao privilegiada
 # Os 18 APKs da FIIO sao priv-app no stock (Settings/SystemUI tambem).
 PRODUCT_PACKAGES += \
-    first_stage_fstab_default \
-    first_stage_fstab_emmc \
+    adb_debug.prop \
     snapuserd.ramdisk \
     FiiOMusic \
     FiiOEq \
@@ -62,3 +61,15 @@ PRODUCT_COPY_FILES += \
     device/fiio/jm21/prebuilts/files/system_ext/etc/permissions/fiiodaputilslib.xml:$(TARGET_COPY_OUT_SYSTEM_EXT)/etc/permissions/fiiodaputilslib.xml
 
 PRODUCT_COPY_FILES += \
+
+PRODUCT_COPY_FILES += \
+
+# /force_debuggable faz o init carregar o adb_debug.prop (ro.adb.secure=0,
+# ro.debuggable=1); sem ele nao ha adb no boot do sistema — o recovery usa
+# outro caminho e por isso funcionava.
+PRODUCT_COPY_FILES += \
+    device/fiio/jm21/prebuilt/init_boot/force_debuggable:$(TARGET_COPY_OUT_RAMDISK)/force_debuggable
+
+# workaround do qspmhal (ver o proprio .rc)
+PRODUCT_COPY_FILES += \
+    device/fiio/jm21/rootdir/system/etc/init/fiio_qspmhal.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/fiio_qspmhal.rc
