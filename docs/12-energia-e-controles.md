@@ -554,3 +554,24 @@ software, que nao tem relacao com o sintoma.
 - preferir testar **na bateria** quando o teste nao exigir USB;
 - nao deixar plugado "so por deixar";
 - anotar qualquer mudanca de uniformidade — e o indicador mais precoce.
+
+### RELATO EXTERNO (2026-10-30): o mesmo defeito em uso normal
+
+O dono trouxe um relato do r/FiiO — **usuario comum, apenas ouvindo musica**, sem
+nada de bancada, com **flickering de tela** no JM21:
+
+https://www.reddit.com/r/FiiO/comments/1u7amoc/fiio_jm21_screen_flickering_issue/
+
+`[RES]` Nao foi possivel ler o corpo do post: o Reddit bloqueia acesso
+automatizado (HTTP 429/403 e desafio Cloudflare) e os espelhos Redlib tambem.
+O conteudo acima e o resumo do proprio dono, nao uma citacao verificada.
+
+**Por que isto importa:** e a confirmacao que faltava de que **nao e o nosso uso
+que causa** — e a condicao de uso apenas **acelera/expoe** um defeito que aparece
+em uso normal. Muda a natureza da reclamacao: nao e "meu aparelho aguentou mal um
+teste pesado", e "o aparelho tem um defeito que se manifesta ouvindo musica".
+
+Vale procurar mais relatos (r/FiiO, forum.fiio.com, Head-Fi) antes de abrir a
+garantia: **dois ou mais relatos independentes** transformam isto de incidente
+isolado em padrao de fabricacao.
+
