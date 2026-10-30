@@ -113,7 +113,12 @@ TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 # ------------------------------------------------------------------- avb
 # A verificacao fica DESLIGADA (flags=3 no vbmeta) enquanto o sistema nao for
 # assinado com a chave da FIIO. Aplicar no flash, ver docs/47 §9.1.
-BOARD_AVB_ENABLE := false
+# o stock tem AVB (footer no init_boot + vbmeta com descritores); sem isso o
+# bootloader recusa boot/init_boot nao assinados
+BOARD_AVB_ENABLE := true
+BOARD_AVB_ALGORITHM := SHA256_RSA2048
+BOARD_AVB_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
+BOARD_AVB_ROLLBACK_INDEX := 0
 
 # VINTF: nao pode ir por PRODUCT_COPY_FILES (checagem do build)
 DEVICE_MANIFEST_FILE += vendor/fiio/jm21/proprietary/vendor/etc/vintf/manifest.xml
@@ -177,3 +182,6 @@ TARGET_FS_CONFIG_GEN += $(DEVICE_PATH)/configs/config.fs
 
 # init_boot precisa do header v4 (sem isto sai v0 e o bootloader recusa)
 BOARD_MKBOOTIMG_INIT_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION)
+
+# o stock usa ramdisk em lz4 (o nosso saia gzip)
+BOARD_RAMDISK_USE_LZ4 := true
