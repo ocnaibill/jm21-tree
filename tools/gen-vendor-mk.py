@@ -21,6 +21,33 @@ OUT = {
     "odm": "$(TARGET_COPY_OUT_ODM)",
     "vendor_dlkm": "$(TARGET_COPY_OUT_VENDOR_DLKM)",
 }
+
+# Destinos que o *Kati* tambem instala (nao aparecem em installs-lineage_jm21.mk).
+# Extraidos dos logs de resolucao de conflito -- NAO incluir vendor/etc/init/*.rc
+# genericos aqui: eles sao necessarios para o vendor iniciar (init.qcom.rc etc.).
+EXTRA_SKIP = {
+    "vendor/bin/hw/android.hardware.wifi@1.0-service",
+    "vendor/etc/fs_config_dirs", "vendor/etc/fs_config_files",
+    "odm/etc/fs_config_dirs", "odm/etc/fs_config_files",
+    "vendor_dlkm/etc/fs_config_dirs", "vendor_dlkm/etc/fs_config_files",
+    "vendor/etc/init/android.hardware.atrace@1.0-service.rc",
+    "vendor/etc/init/android.hardware.boot@1.2-service.rc",
+    "vendor/etc/init/android.hardware.cas@1.2-service.rc",
+    "vendor/etc/init/android.hardware.drm-service.clearkey.rc",
+    "vendor/etc/init/android.hardware.health-service.qti.rc",
+    "vendor/etc/init/android.hardware.media.omx@1.0-service.rc",
+    "vendor/etc/init/android.hardware.thermal@2.0-service.qti-v2.rc",
+    "vendor/etc/init/android.hardware.wifi@1.0-service.rc",
+    "vendor/etc/init/vendor.qti.hardware.vibrator.service.rc",
+    "vendor/etc/init/vndservicemanager.rc",
+    "vendor/etc/selinux/vendor_mac_permissions.xml",
+    "vendor/lib/libreference-ril.so", "vendor/lib/libril.so",
+    "vendor/lib/hw/android.hardware.soundtrigger@2.1-impl.so",
+    "vendor/lib/hw/gralloc.default.so",
+    "vendor/lib64/libcld80211.so", "vendor/lib64/libjson.so",
+    "vendor/lib64/libreference-ril.so", "vendor/lib64/libril.so",
+}
+
 VINTF_TOP = {"etc/vintf/manifest.xml", "etc/vintf/compatibility_matrix.xml"}
 
 # destinos que o Soong instala
@@ -59,7 +86,7 @@ for part, dest in OUT.items():
             if f"{part}/{rel}".split("/", 1)[1] in VINTF_TOP or "/etc/vintf/manifest/" in f"/{rel}":
                 skip_vintf += 1
                 continue
-            if f"{part}/{rel}" in installed:
+            if f"{part}/{rel}" in installed or f"{part}/{rel}" in EXTRA_SKIP:
                 skip_conflict += 1
                 continue
             lines.append(f"    vendor/fiio/jm21/proprietary/{part}/{rel}:{dest}/{rel} \\")
