@@ -636,3 +636,47 @@ que o **aparelho** exige.
 **Regra:** antes de gerar imagem, ler o contrato do firmware — `fstab.*` do
 vendor_boot, `vbmeta.img` (descritores), `/vendor/etc/vintf/`. E o equivalente a
 ler a interface antes de implementar.
+
+### 13.4 O fstab do firmware restringe as chaves AVB do system
+
+Achado da sessao 9 que explica tudo o que faltava:
+
+```
+system /system ... avb=vbmeta_system,
+       avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey
+```
+
+Nao basta existir `vbmeta_system`: o `fs_mgr` so aceita um assinado com as
+**chaves GSI** da Qualcomm/Google. O nosso e assinado com a testkey da AOSP ->
+rejeitado -> `/system` nao monta -> morre antes do bootanimation.
+
+(De novo: e por isso que o **GSI bootava** — ele e assinado com essas chaves.)
+
+### 13.5 O que foi tentado e o resultado de cada um
+
+| tentativa | resultado |
+|---|---|
+| `vbmeta_system` vazio com flags=3 | backlight (nao monta) |
+| `vbmeta_system` do build (testkey) | backlight (chave rejeitada) |
+| `vendor_boot` repackado com fstab **sem** `avb=`/`avb_keys` | para na **logo** (o repack manual nao agrada o bootloader, apesar de passar no preflight) |
+
+O item 3 e o caminho certo, mas tem de ser feito **pelo build**. O preflight
+aprovou o repack (mesmo header, mesmo dtb, mesmo tamanho, AVB no mesmo offset) —
+logo o defeito esta em algo que o preflight ainda nao cobre ou no proprio
+processo de montagem do vendor_boot.
+
+### 13.6 Ferramentas novas
+
+- `tools/make-recovery.sh` — recovery kernel-less + lz4 + AVB **nao assinado**
+  (`--algorithm NONE`), formato que o JM21 aceita. **Boota, com adb root.**
+- `tools/make-vendor-boot.sh` — vendor_boot a partir do stock com fstab editavel.
+- `tools/preflight.py` — valida as imagens contra o stock antes de gravar.
+
+### 13.7 Estado e proximo passo
+
+Aparelho **restaurado ao stock** (1.1.1), bootado, userdata limpo.
+
+Proximo passo, para sessao limpa: gerar o `vendor_boot` com o fstab proprio
+**dentro do build**. O `mkbootfs` so inclui arquivos vindos de modulos, entao as
+opcoes sao: `BOARD_VENDOR_RAMDISK_*` (se houver a variavel certa) ou build serial
+(sem `-j`) para evitar a corrida entre as copias e o mkbootfs.
