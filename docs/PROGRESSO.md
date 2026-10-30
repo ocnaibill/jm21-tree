@@ -534,3 +534,50 @@ que e exatamente o erro de metodo que ja custou uma rodada:
 
 Ferramentas novas: `tools/unpack-boot.py` (parser de boot/vendor_boot) e
 `tools/gen-vendor-mk.py`.
+
+## 12. Sessao 8 (2026-10-30) — recovery e sistema: mais duas camadas
+
+### 12.1 O recovery deste aparelho e KERNEL-LESS
+
+Comparando as tres imagens de recovery (`tools/unpack-boot.py`):
+
+| imagem | kernel | ramdisk | resultado |
+|---|---|---|---|
+| stock | **0** | 14.534.532 (lz4) | funciona |
+| TWRP nossa | **0** | 27.001.056 (lz4) | funciona |
+| Lineage (do build) | **49.646.080** | 11.825.229 | **nao sobe** |
+
+O kernel vive no `boot`; o `recovery` e so ramdisk. **O nosso build embute o
+kernel no recovery** — e o bootloader recusa. O script da TWRP ja fazia certo:
+`mkbootimg --ramdisk ... --header_version 4` **sem `--kernel`**.
+
+### 12.2 Mas kernel-less nao basta: o formato AVB do recovery e diferente
+
+Teste A/B:
+
+1. ramdisk **stock** repackado kernel-less (14 MB) -> **nao sobe**;
+2. o mesmo + AVB footer + padding ate 100.663.296 -> **nao sobe**.
+
+Ou seja: nao e o conteudo do ramdisk do Lineage. O stock tem, logo **depois do
+ramdisk**, um **vbmeta embutido** (`AVB0`), e nao apenas um footer — formato
+proprio que ainda nao reproduzimos. Proximo passo e offline: comparar a estrutura
+AVB das duas imagens.
+
+### 12.3 O sistema falha antes de tudo, e nao e SELinux
+
+- nosso `system` + tudo stock + `vbmeta` flags=3 -> cai no fastbootd;
+- o mesmo com `androidboot.selinux=permissive` -> **igual**: nao e politica;
+- o **GSI** (A13 de fora) no mesmo cenario **bootava** -> o vendor esta bom e o
+  problema e especifico do nosso `system`;
+- o hash da plat policy difere (`011a0d45` stock vs `012c15e6` nosso), mas o GSI
+  prova que essa diferenca **nao e fatal**.
+
+### 12.4 Estado
+
+Aparelho **stock, bootado**, userdata limpo. Nada pendente na placa.
+
+Pendencias da proxima sessao, em ordem:
+1. comparar a estrutura AVB do recovery stock (offline) e reproduzir -> ganhamos
+   `adb` em recovery, que destrava o diagnostico do sistema;
+2. com recovery funcionando: montar `/system` na mao e ver o erro real;
+3. revisar o achado de hardware (docs/12) antes de sessoes longas.

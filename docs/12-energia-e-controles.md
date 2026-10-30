@@ -492,3 +492,27 @@ candidato a piorar tanto o aquecimento quanto a sensação de lentidão. `[HIP]`
 
 Para downloads longos: deixar esfriar / tirar da carga, ou aceitar que a carga
 para acima de 50 °C e só retoma abaixo de 48 °C — **por desenho**.
+
+### FALHA DE PROJETO (2026-10-30): cabo da tela sobre a area de carga
+
+Relatado pelo dono do aparelho, observado em uso real:
+
+> "o cabo da tela fica logo acima da parte de carregamento. Ao ficar um tempo
+> consideravel no USB, essa parte esquenta e o cabo fica meio estranho: a tela
+> fica *flickering* por alguns segundos e depois volta ao normal. Quanto mais
+> tempo na USB, mais calor, mais tempo leva para voltar. Desligado, em um minuto
+> em temperatura ambiente, volta ao normal."
+
+**Leitura:** e falha **fisica de montagem**, nao firmware. O aquecimento do
+circuito de carga (a 50+ C, ver JEITA acima) atinge o flex da tela, que fica logo
+acima; o contato degrada por dilatacao e a tela pisca.
+
+**Consequencias praticas — protocolo de bancada:**
+
+- sessoes de USB **curtas**; nao deixar o aparelho plugado "so por deixar";
+- pausa de resfriamento entre rodadas longas de flash;
+- **nao** usar o aparelho como bancada continua (build + teste o dia inteiro);
+- acompanhar: flicker por calor tende a **piorar** com o tempo (flex resseca).
+
+`[?]` Vale abrir issue propria e, se o aparelho estiver na garantia, considerar
+acionar a FIIO — e defeito de projeto, nao desgaste.
