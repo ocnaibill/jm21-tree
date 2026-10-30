@@ -680,3 +680,65 @@ Proximo passo, para sessao limpa: gerar o `vendor_boot` com o fstab proprio
 **dentro do build**. O `mkbootfs` so inclui arquivos vindos de modulos, entao as
 opcoes sao: `BOARD_VENDOR_RAMDISK_*` (se houver a variavel certa) ou build serial
 (sem `-j`) para evitar a corrida entre as copias e o mkbootfs.
+
+## 14. SETUP WIZARD: o LineageOS 20 do JM21 BOOTOU (2026-10-30)
+
+`sys.boot_completed=1`, `mFocusedApp = org.lineageos.setupwizard/.WelcomeActivity`,
+`ro.lineage.version = 20.0-20261030-UNOFFICIAL-jm21`. Servicos de pe por 9+
+minutos: surfaceflinger, system_server, power/lights/identity HALs, audio.service_64,
+audioserver, systemui, launcher3, settings.
+
+### 14.1 As quatro causas (todas na fronteira system <-> vendor)
+
+**1. `vendor_boot` sem bootconfig** -> sem `/data` e sem USB/ADB no sistema.
+O video mostrou `vendor bootconfig size: 0`. Sem o trailer bootconfig, o kernel 5.15
+ignora o que o ABL passa (`ro.boot.bootdevice=4744000.sdhci`,
+`ro.boot.usbcontroller=4e00000.dwc3`, `ro.boot.verifiedbootstate=orange`).
+Correcao: `BOARD_BOOTCONFIG` (gera `vendor-bootconfig.img` -> `--vendor_bootconfig`).
+O recovery funcionava porque tem caminho proprio (`init.recovery.qcom.rc`).
+
+**2. `qspmhal` derrubando o surfaceflinger (loop de 5 s).**
+`libadreno_app_profiles.so` chama HIDL no `vendor.qti.qspmhal@1.0-service`; o filtro
+seccomp (`libminijail`) do qspmhal bloqueia `nanosleep` -> SIGSYS no meio da
+transacao -> a Adreno recebe DEAD_OBJECT sem checar e aborta o surfaceflinger
+(SIGABRT) -> `onrestart restart zygote` -> system_server morre junto.
+Workaround: parar o qspmhal (a Adreno so loga "Could not find QSPM HAL service").
+
+**3. APEX do VNDK 33 ausente** -> HALs do vendor nao linkam
+(`android.hardware.power-V3-ndk.so not found`) -> system_server trava no
+`PowerManagerService.nativeInit()`.
+
+**4. `PRODUCT_FULL_TREBLE` desligado** -> `ro.treble.enabled=false` -> linkerconfig
+em modo `[legacy]` -> as duas `libbinder` (a do vendor/VNDK e a do system) viram a
+MESMA -> SIGABRT `Binder threadpool cannot be shrunk after starting` -> audioserver
+em loop. E e a mesma raiz do item 3: sem Treble o build nao gera a APEX do VNDK.
+
+### 14.2 Correcoes no device tree (commit)
+
+| item | onde |
+|---|---|
+| `BOARD_BOOTCONFIG` com usbcontroller/bootdevice | `BoardConfig.mk` |
+| `PRODUCT_FULL_TREBLE_OVERRIDE := true` | `lineage_jm21.mk` |
+| `force_debuggable` + `adb_debug.prop` (adb no boot) | `prebuilt/init_boot/`, `device.mk` |
+| workaround do qspmhal | `rootdir/system/etc/init/fiio_qspmhal.rc` |
+
+`tools/preflight.py` agora **reprova** vendor_boot sem `#BOOTCONFIG` e avisa se
+falta `force_debuggable`.
+
+### 14.3 Metodo (o que teria economizado dias)
+
+As quatro causas estao na **fronteira system <-> vendor**, e tres delas so
+aparecem em log de runtime (`libminijail`, `linkerconfig [legacy]`, `CANNOT LINK`).
+Regra que fica:
+1. **ler o contrato do firmware** (fstab, vbmeta descriptors, bootconfig) antes de
+   gerar imagem;
+2. com o sistema de pe, **`logcat` e a fonte**, nao o binario — e para ter logcat
+   no boot o `force_debuggable`/`adb_debug.prop` tem de estar la desde o inicio.
+
+### 14.4 Estado / proximo passo
+
+Aparelho **restaurado ao stock** (1.1.1), bootado, userdata limpo.
+
+Proximo: build com as quatro correcoes, `preflight` verde, e um flash limpo do
+conjunto Treble-coerente (system/system_ext/product nossos + vendor/odm/
+vendor_dlkm/vendor_boot/vbmeta_system stock + `vbmeta` top-level flags=3).
