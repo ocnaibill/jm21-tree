@@ -516,3 +516,29 @@ acima; o contato degrada por dilatacao e a tela pisca.
 
 `[?]` Vale abrir issue propria e, se o aparelho estiver na garantia, considerar
 acionar a FIIO — e defeito de projeto, nao desgaste.
+
+### DESGASTE OBSERVADO (2026-10-30): tela esbranquicando nos cantos
+
+Depois de varios dias de bancada (flash + recovery + fastboot por horas), o dono
+relatou: **"sinto que esbranqueceu um pouco nos cantos, nada feio, mas no modo
+escuro e mais perceptivel"**.
+
+Leitura: coerente com o problema de projeto ja registrado acima (flex da tela
+sobre a area de carga). Calor cronico na regiao + pressao mecanica do conjunto
+tendem a produzir **perda de uniformidade do backlight/panel** nos cantos.
+
+`[HIP]` Nao e queima de imagem por conteudo estatico (o TWRP/recovery fica em
+telas escuras); a distribuicao nos **cantos** aponta para backlight/painel, nao
+para OLED burn-in.
+
+**Para garantir:** se houver abertura de garantia, este relato + o do flicker
+sob calor (acima) sao o mesmo defeito — documentar data, condicao (USB
+prolongado) e sintoma.
+
+**Protocolo de bancada revisado** (o anterior era insuficiente):
+
+- sessoes de flash com **teto de ~30 min**, pausa de resfriamento real;
+- **brilho minimo** em recovery/TWRP (o calor vem da tela + carga somados);
+- preferir testar **na bateria** quando o teste nao exigir USB;
+- nao deixar plugado "so por deixar";
+- anotar qualquer mudanca de uniformidade — e o indicador mais precoce.
